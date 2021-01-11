@@ -1,3 +1,5 @@
+![Tests](https://github.com/johannes-mueller/test-cockpit.el/workflows/Tests/badge.svg)
+
 # testcockpit.el
 
 Run tests for multiple languages from emacs.
