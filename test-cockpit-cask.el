@@ -23,8 +23,7 @@
 
 (defun test-cockpit--cask--infix ()
   ["Cask specific switches"
-   ("-i" "Run `cask install` before test" "install")]
-  )
+   ("-i" "Run `cask install` before test" "install")])
 
 (provide 'test-cockpit-cask)
 

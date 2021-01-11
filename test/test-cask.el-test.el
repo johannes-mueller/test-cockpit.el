@@ -32,9 +32,12 @@
 		  "cask install && cask exec ert-runner -p func-to-test"))))
 
 (ert-deftest test-cask-infix ()
-  (let ((infix (test-cockpit-infix)))
-    (should (and (equal (aref infix 0) "Cask specific switches")
-		 (equal (aref infix 1) '("-i" "Run `cask install` before test" "install"))))))
+  (mocker-let
+   ((projectile-project-type () ((:output 'emacs-cask))))
+   (let ((infix (test-cockpit-infix)))
+     (should
+      (and (equal (aref infix 0) "Cask specific switches")
+	   (equal (aref infix 1) '("-i" "Run `cask install` before test" "install")))))))
 
 (ert-deftest test-cask-insert-install-command-unset ()
   (should (equal (test-cockpit--cask--insert-install-command "foo" nil) "foo")))
