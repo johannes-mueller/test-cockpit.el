@@ -10,6 +10,15 @@
     (should (equal (test-cockpit-test-project-command nil)
 		   "cargo test"))))
 
+(ert-deftest test-cargo-project-insert-append-command ()
+  (dolist (struct '((("--doc") "cargo test --doc")
+		    (("--doc" "--ignored") "cargo test --doc -- --ignored")
+		    (("--tests" "--ignored" "--nocapture") "cargo test --tests -- --ignored --nocapture")))
+    (let ((args (pop struct))
+	  (expected (pop struct)))
+      (should (equal (test-cockpit--cargo--test-project-command args)
+		     expected)))))
+
 (ert-deftest test-cargo-module-command ()
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
@@ -17,12 +26,34 @@
     (should (equal (test-cockpit-test-module-command nil)
 		   "cargo test bar::"))))
 
+(ert-deftest test-cargo-module-insert-append-command ()
+  (dolist (struct '((("--doc") "cargo test --doc bar::")
+		    (("--doc" "--ignored") "cargo test --doc bar:: -- --ignored")
+		    (("--tests" "--ignored" "--nocapture")
+		     "cargo test --tests bar:: -- --ignored --nocapture")))
+    (mocker-let ((test-cockpit--cargo--build-module-path () ((:output "bar" :max-occur 1))))
+      (let ((args (pop struct))
+	    (expected (pop struct)))
+	(should (equal (test-cockpit--cargo--test-module-command args)
+		       expected))))))
+
 (ert-deftest test-cargo-function-command ()
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
-       (test-cockpit--cargo--build-test-fn-path() ((:output "bar::foo_function"))))
+       (test-cockpit--cargo--build-test-fn-path () ((:output "bar::foo_function"))))
     (should (equal (test-cockpit-test-function-command nil)
-		"cargo test bar::foo_function"))))
+		   "cargo test bar::foo_function"))))
+
+(ert-deftest test-cargo-function-insert-append-command ()
+  (dolist (struct '((("--doc") "cargo test --doc bar::foo_function")
+		    (("--doc" "--ignored") "cargo test --doc bar::foo_function -- --ignored")
+		    (("--tests" "--ignored" "--nocapture")
+		     "cargo test --tests bar::foo_function -- --ignored --nocapture")))
+    (mocker-let ((test-cockpit--cargo--build-test-fn-path () ((:output "bar::foo_function" :max-occur 1))))
+      (let ((args (pop struct))
+	    (expected (pop struct)))
+	(should (equal (test-cockpit--cargo--test-function-command args)
+		       expected))))))
 
 (ert-deftest test-track-module-path ()
   (let ((buffer-contents "
@@ -86,7 +117,7 @@ mod bar {
 					       ((:input '(1) :output "" :max-occur 1))))
     (should (equal (test-cockpit--cargo--build-module-path) nil))))
 
-(ert-deftest test-find-test-fn-nname ()
+(ert-deftest test-find-test-fn-name ()
   (dolist (struct '((1 nil "use std::ptr;")
 		    (31 "foo" "#[test]\nfn foo(f: i32) -> i32 { }")
 		    (31 "bar" "#[test]\nfn bar(b: f32) -> f32 { }")
@@ -134,14 +165,29 @@ mod bar {
 	  (expected (pop struct)))
       (should (equal (test-cockpit--cargo--insert-test-switches switches) expected)))))
 
+(ert-deftest test-cargo-append-test-switches ()
+  (dolist (struct '((() "")
+		    (("--tests") "")
+		    (("--ignored") " -- --ignored")
+		    (("--include-ignored") " -- --include-ignored")
+		    (("--nocapture") " -- --nocapture")
+		    (("--ignored" "--nocapture") " -- --ignored --nocapture")))
+    (let ((switches (pop struct))
+	  (expected (pop struct)))
+      (should (equal (test-cockpit--cargo--append-test-switches switches) expected)))))
+
 (ert-deftest test-cargo-infix ()
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo))))
     (let ((infix (test-cockpit-infix)))
-      (should (and (equal (aref infix 0) "Targets")
-		   (equal (aref infix 1) '("-t" "tests" "--tests"))
-		   (equal (aref infix 2) '("-b" "with benchmarks" "--benches"))
-		   (equal (aref infix 3) '("-x" "with examples" "--examples"))
-		   (equal (aref infix 4) '("-d" "only doctests" "--doc")))))))
+      (should (and (equal (aref (aref infix 0) 0) "Targets")
+		   (equal (aref (aref infix 0) 1) '("-t" "tests" "--tests"))
+		   (equal (aref (aref infix 0) 2) '("-b" "with benchmarks" "--benches"))
+		   (equal (aref (aref infix 0) 3) '("-x" "with examples" "--examples"))
+		   (equal (aref (aref infix 0) 4) '("-d" "only doctests" "--doc"))
+		   (equal (aref (aref infix 1) 0) "Switches")
+		   (equal (aref (aref infix 1) 1) '("-I" "only ignored tests" "--ignored"))
+		   (equal (aref (aref infix 1) 2) '("-i" "include ignored tests" "--include-ignored"))
+		   (equal (aref (aref infix 1) 3) '("-n" "print output" "--nocapture")))))))
 
 ;;; test-rust.el-test.el ends here

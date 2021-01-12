@@ -7,15 +7,22 @@
 				    'test-cockpit--cargo--test-function-command
 				    'test-cockpit--cargo--infix)
 
-(defun test-cockpit--cargo--test-project-command (args) "cargo test")
+(defun test-cockpit--cargo--test-project-command (args)
+  (concat (test-cockpit--cargo--command-with-inserted-switches args)
+	  (test-cockpit--cargo--append-test-switches args)))
 
 (defun test-cockpit--cargo--test-module-command (args)
-  (concat "cargo test " (concat (or (test-cockpit--cargo--build-module-path)
-				    (file-name-base (buffer-file-name)))) "::"))
+  (concat (test-cockpit--cargo--command-with-inserted-switches args)
+	  " "
+	  (concat (or (test-cockpit--cargo--build-module-path)
+		      (file-name-base (buffer-file-name))) "::")
+	  (test-cockpit--cargo--append-test-switches args)))
 
 (defun test-cockpit--cargo--test-function-command (args)
-  (concat "cargo test " (test-cockpit--cargo--build-test-fn-path)))
-(provide 'test-cockpit-cargo)
+  (concat (test-cockpit--cargo--command-with-inserted-switches args)
+	  " "
+	  (test-cockpit--cargo--build-test-fn-path)
+	  (test-cockpit--cargo--append-test-switches args)))
 
 (defconst test-cockpit---cargo---mod-regexp
   "^\s*mod\s+\\([[:word:][:multibyte:]_][[:word:][:multibyte:]_[:digit:]]*\\)\s*{")
@@ -79,10 +86,33 @@
 						  '("--tests" "--benches" "--examples")))
     ""))
 
+(defun test-cockpit--cargo--append-test-switches (switches)
+  (if-let ((result-string
+	    (let ((might-be-empty
+		   (test-cockpit--cargo--join-filter-switches switches
+							      '("--ignored"
+								"--include-ignored"
+								"--nocapture"))))
+	      (if (equal might-be-empty "") nil might-be-empty))))
+      (concat " -- " result-string)
+    ""))
+
+(defun test-cockpit--cargo--command-with-inserted-switches (args)
+  (string-trim-right
+   (concat "cargo test "
+	   (test-cockpit--cargo--insert-test-switches args))))
+
 (defun test-cockpit--cargo--infix ()
-  ["Targets"
-   ("-t" "tests" "--tests")
-   ("-b" "with benchmarks" "--benches")
-   ("-x" "with examples" "--examples")
-   ("-d" "only doctests" "--doc")])
+  [["Targets"
+    ("-t" "tests" "--tests")
+    ("-b" "with benchmarks" "--benches")
+    ("-x" "with examples" "--examples")
+    ("-d" "only doctests" "--doc")]
+   ["Switches"
+    ("-I" "only ignored tests" "--ignored")
+    ("-i" "include ignored tests" "--include-ignored")
+    ("-n" "print output" "--nocapture")]])
+
+
+(provide 'test-cockpit-cargo)
 ;;; test-cockpit-cargo.el ends here
