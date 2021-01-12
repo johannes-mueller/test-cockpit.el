@@ -83,10 +83,10 @@ Planned
 * `-t` runs only the usual tests (`--tests` option)
 * `-b` runs the benchmarks (`--bench` option)
 * `-x` checks i the example build succeeds (`--examples` option)
+* some others
 
 Planned:
 * `-f` toggles a feature defined in `Cargo.toml`
-* `-i` run also the tests that are marked with `#[ignore]` (`--ignored` option)
 
 
 The planned feature list is not complete. I will implement what turns out to be
@@ -107,6 +107,10 @@ have the core module as dependency. This would have the advantage that one does
 not need to install the dependencies for a language module that one does not
 want to use.
 
+### Interesting feature ideas
+
+* Test discovery
+* Parsing test results to determine failed tests
 
 ## Issues
 
