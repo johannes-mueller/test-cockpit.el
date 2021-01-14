@@ -100,4 +100,11 @@
 		       (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
 		       '(:description "Run test")))))
 
+(ert-deftest test-join-filter-switches ()
+  (let ((allowed '("foo" "bar")))
+    (should (equal (test-cockpit--join-filter-switches '("bar" "foo") allowed) "foo bar"))
+    (should (equal (test-cockpit--join-filter-switches '("bar" "boing") allowed) "bar"))))
+
+
+
 ;;; test-cockpit.el-test.el ends here

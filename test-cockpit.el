@@ -84,6 +84,13 @@
   (test-cockpit-prefix)
   )
 
+(defun test-cockpit--join-filter-switches (candidates allowed)
+  (mapconcat 'identity
+	     (delete 'exclude
+		     (mapcar (lambda (sw) (if (member sw candidates) sw 'exclude))
+			     allowed))
+	     " "))
+
 (provide 'test-cockpit)
 
 ;;; test-cockpit.el ends here

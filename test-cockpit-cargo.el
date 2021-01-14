@@ -71,25 +71,18 @@
     (when fn
       (if mod (concat mod "::" fn) fn))))
 
-(defun test-cockpit--cargo--join-filter-switches (candidates allowed)
-  (mapconcat 'identity
-	     (delete 'exclude
-		     (mapcar (lambda (sw) (if (member sw candidates) sw 'exclude))
-			     allowed))
-	     " "))
-
 (defun test-cockpit--cargo--insert-test-switches (switches)
   (if switches
       (if (member "--doc" switches)
 	  "--doc"
-	(test-cockpit--cargo--join-filter-switches switches
+	(test-cockpit--join-filter-switches switches
 						  '("--tests" "--benches" "--examples")))
     ""))
 
 (defun test-cockpit--cargo--append-test-switches (switches)
   (if-let ((result-string
 	    (let ((might-be-empty
-		   (test-cockpit--cargo--join-filter-switches switches
+		   (test-cockpit--join-filter-switches switches
 							      '("--ignored"
 								"--include-ignored"
 								"--nocapture"))))
