@@ -105,6 +105,10 @@
     (should (equal (test-cockpit--join-filter-switches '("bar" "foo") allowed) "foo bar"))
     (should (equal (test-cockpit--join-filter-switches '("bar" "boing") allowed) "bar"))))
 
+(ert-deftest test-add-leading-space-to-switches ()
+  (should (equal (test-cockpit-add-leading-space-to-switches "") ""))
+  (should (equal (test-cockpit-add-leading-space-to-switches "--foo") " --foo")))
+
 
 
 ;;; test-cockpit.el-test.el ends here

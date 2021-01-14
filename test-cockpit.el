@@ -91,6 +91,11 @@
 			     allowed))
 	     " "))
 
+(defun test-cockpit-add-leading-space-to-switches (switches)
+  (if (string-empty-p switches)
+      ""
+    (concat " " switches)))
+
 (provide 'test-cockpit)
 
 ;;; test-cockpit.el ends here
