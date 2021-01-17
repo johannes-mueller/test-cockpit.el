@@ -1,5 +1,6 @@
 
 (require 'test-cockpit)
+(require 'test-cockpit-transient)
 
 (test-cockpit-register-project-type 'rust-cargo
 				    'test-cockpit--cargo--test-project-command
@@ -113,44 +114,11 @@
 
 (defvar test-cockpit--cargo--enabled-features nil)
 
-(defclass test-cockpit--cargo--features-variable (transient-variable)
-  ((scope :initarg :scope)))
-
-(cl-defmethod transient-init-value ((obj test-cockpit--cargo--features-variable))
-  (oset obj value test-cockpit--cargo--enabled-features))
-
-(cl-defmethod transient-format-value ((obj test-cockpit--cargo--features-variable))
-  (let
-      ((enabled-features (oref obj value)))
-    (concat
-     (propertize "[" 'face 'transient-inactive-value)
-     (mapconcat (lambda (feature)
-		  (if (member feature enabled-features)
-		      (propertize feature 'face 'transient-value)
-		    (propertize feature 'face 'transient-inactive-value)))
-		(test-cockpit--cargo--read-crate-features)
-		(propertize ", " 'face 'transient-inactive-value))
-     (propertize "]" 'face 'transient-inactive-value))))
-
-(cl-defmethod transient-infix-read ((obj test-cockpit--cargo--features-variable))
-  (completing-read "feature: " (test-cockpit--cargo--read-crate-features)))
-
-(cl-defmethod transient-infix-set ((obj test-cockpit--cargo--features-variable) feature)
-  (setq test-cockpit--cargo--enabled-features
-	(if (member feature test-cockpit--cargo--enabled-features)
-	    (delete feature test-cockpit--cargo--enabled-features)
-	  (append test-cockpit--cargo--enabled-features (list feature))))
-  (oset obj value test-cockpit--cargo--enabled-features))
-
-(cl-defmethod transient-init-scope ((obj test-cockpit--cargo--features-variable))
-  (oset obj scope
-        (cond (transient--prefix
-               (oref transient--prefix scope))
-              ((slot-boundp obj 'scope)
-               (funcall (oref obj scope) obj)))))
-
 (transient-define-infix test-cockpit--cargo--toggle-feature ()
-  :class 'test-cockpit--cargo--features-variable
+  :class 'test-cockpit--transient--selection
+  :variable 'test-cockpit--cargo--enabled-features
+  :prompt "feature: "
+  :choices 'test-cockpit--cargo--read-crate-features
   :description "features")
 
 (defun test-cockpit--cargo--infix ()
