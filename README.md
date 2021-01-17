@@ -21,21 +21,21 @@ indicated testing environments
 * python – pytest
 * rust – cargo
 
-## Planned languages
+### Planned languages
 
 * elixir – mix
 
 
 ## Installation
 
-So far there is no smoothly installable package on MELPA. So you have to put
+So far there is no smoothly install able package on MELPA. So you have to put
 the `*.el` files to your emacs' `loadpath`. Eventually there will be a MELPA
 package when the project gets more advanced.
 
 ### Dependencies
 
 * `projectile` as in MELPA to determine the project type
-* `transient` as in MELPA for the UI
+* `transient` as in MELPA for the OO
 
 Language specific
 
@@ -57,7 +57,7 @@ You can also use the following commands to run tests
 * `test-cockpit-test-project` to run the whole test suite.
 * `test-cockpit-test-module` runs only the tests of the current module.
 * `test-cockpit-test-function` runs only the test of the function at point.
-* `test-cockpit-repeat-test` repeats exactly the previous test run.
+* `test-cockpit-repeat-test` repeats exactly the *previous* test run.
 
 It is suggested to bind `test-cockpit-dispatch` and maybe
 `test-cockpit-repeat-test` to the keybinding of your liking.
@@ -73,9 +73,11 @@ It is suggested to bind `test-cockpit-dispatch` and maybe
 
 ### python – pytest
 
+* `-l` run only the tests that failed in the last test
+
 Planned
 
-= `-l` run only the tests that failed in the last test
+* Discover markers
 
 ### rust – cargo
 
@@ -83,11 +85,7 @@ Planned
 * `-t` runs only the usual tests (`--tests` option)
 * `-b` runs the benchmarks (`--bench` option)
 * `-x` checks i the example build succeeds (`--examples` option)
-* some others
-
-Planned:
 * `-f` toggles a feature defined in `Cargo.toml`
-
 
 The planned feature list is not complete. I will implement what turns out to be
 useful.
@@ -107,16 +105,26 @@ have the core module as dependency. This would have the advantage that one does
 not need to install the dependencies for a language module that one does not
 want to use.
 
+
 ### Interesting feature ideas
 
 * Test discovery
 * Parsing test results to determine failed tests
+* dap-mode integration – launch lastly failed test in dap-mode
+* Generalizing it to a more comprehensive build-cockpit also doing simple
+  builds and things like release uploads.
+
 
 ## Issues
 
 The rust module uses `emacs-toml` in order to parse `Cargo.toml`. There are two
 issues with `emacs-toml` for both of which I filed a pull request. As long as
 they are not merged you need to use my fork of `emacs-toml`.
+
+
+## Limitations
+
+Only projects with
 
 
 ## Contributing
