@@ -85,11 +85,10 @@
   )
 
 (defun test-cockpit--join-filter-switches (candidates allowed)
-  (mapconcat 'identity
-	     (delete 'exclude
-		     (mapcar (lambda (sw) (if (member sw candidates) sw 'exclude))
-			     allowed))
-	     " "))
+  (string-join (delete 'exclude
+		       (mapcar (lambda (sw) (if (member sw candidates) sw 'exclude))
+			       allowed))
+	       " "))
 
 (defun test-cockpit-add-leading-space-to-switches (switches)
   (if (string-empty-p switches)
