@@ -37,7 +37,7 @@ package when the project gets more advanced.
 * `projectile` as in MELPA to determine the project type
 * `transient` as in MELPA for the UI
 
-Language speciefic
+Language specific
 
 * rust
   - `emacs-toml` not from MELPA but from my fork branch

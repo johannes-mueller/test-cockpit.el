@@ -1,7 +1,20 @@
+;;; test-cockpit-transient.el --- Transient objects for test-cockpit
+
+;; Author: Johannes Mueller <github@johannes-mueller.org
+;; URL: https://github.com/johannes-mueller/test-cockpit.el
+;; License: GPLv2
+
+;;; Commentary:
+
+;; Transient objects needed by test-cockpit for the user interface.
+
+;;; Code
+
 (require 'transient)
 
 (defclass test-cockpit--transient--selection (transient-variable)
-  ((scope :initarg :scope)))
+  ((scope :initarg :scope))
+  "A transient-variable to select from a list of mutually non exclusive items.")
 
 (cl-defmethod transient-init-value ((obj test-cockpit--transient--selection))
   (let ((variable (oref obj variable)))
