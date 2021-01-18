@@ -10,8 +10,10 @@
 
 (defconst test-cockpit--python--allowed-switches
   '("--last-failed"
+    "--verbose"
     "--cov-report="
-    "--cov-report=term"))
+    "--cov-report=term"
+    "--disable-warnings"))
 
 (defun test-cockpit--python--test-project-command (args)
   (concat (test-cockpit--python--pytest-binary-path)
@@ -51,8 +53,11 @@
 
 (defun test-cockpit--python--infix ()
   [["Switches"
-    ("-l" "only lastly failed tests" "--last-failed")
-    ("-c" "print coverage report" "--cov-report=term")]])
+    ("-l" "only lastly failed tests" "--last-failed")]
+   ["Output"
+    ("-v" "show single tests" "--verbose")
+    ("-c" "print coverage report" "--cov-report=term")
+    ("-w" "don't output warnings" "--disable-warnings")]])
 
 (provide 'test-cockpit-python)
 
