@@ -16,29 +16,24 @@
     "--disable-warnings"))
 
 (defun test-cockpit--python--test-project-command (args)
+  (concat (test-cockpit--python--common-switches args)))
+
+(defun test-cockpit--python--test-module-command (args)
+  (concat (test-cockpit--python--common-switches args)
+	  " -k "
+	  (file-name-base (buffer-file-name))))
+
+(defun test-cockpit--python--test-function-command (args)
+  (concat (test-cockpit--python--common-switches args)
+	  " -k "
+	  (which-function)))
+
+(defun test-cockpit--python--common-switches (args)
   (concat (test-cockpit--python--pytest-binary-path)
 	  (test-cockpit-add-leading-space-to-switches
 	   (test-cockpit--join-filter-switches
 	    (test-cockpit--python--insert-no-coverage-to-switches args)
 	    test-cockpit--python--allowed-switches))))
-
-(defun test-cockpit--python--test-module-command (args)
-  (concat (test-cockpit--python--pytest-binary-path)
-	  (test-cockpit-add-leading-space-to-switches
-	   (test-cockpit--join-filter-switches
-	    (test-cockpit--python--insert-no-coverage-to-switches args)
-	    test-cockpit--python--allowed-switches))
-	  " -k "
-	  (file-name-base (buffer-file-name))))
-
-(defun test-cockpit--python--test-function-command (args)
-  (concat (test-cockpit--python--pytest-binary-path)
-	  (test-cockpit-add-leading-space-to-switches
-	   (test-cockpit--join-filter-switches
-	    (test-cockpit--python--insert-no-coverage-to-switches args)
-	    test-cockpit--python--allowed-switches))
-	  " -k "
-	  (which-function)))
 
 (defun test-cockpit--python--pytest-binary-path ()
   (if pyvenv-virtual-env
