@@ -13,6 +13,7 @@
     "--verbose"
     "--cov-report="
     "--cov-report=term"
+    "-rFP"
     "--disable-warnings"))
 
 (defun test-cockpit--python--test-project-command (args)
@@ -53,6 +54,7 @@
    ["Output"
     ("-v" "show single tests" "--verbose")
     ("-c" "print coverage report" "--cov-report=term")
+    ("-r" "report output of passed tests" "-rFP")
     ("-w" "don't output warnings" "--disable-warnings")]])
 
 (provide 'test-cockpit-python)
