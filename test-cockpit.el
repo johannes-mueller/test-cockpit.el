@@ -111,13 +111,13 @@ again as ALIAS."
 
 (defun test-cockpit--run-test (command)
   "Run the test command COMMAND and remembers for the case the test is repeated."
-  (setf (alist-get (projectile-project-root) test-cockpit-last-command-alist) command)
+  (setf (alist-get (projectile-project-root) test-cockpit-last-command-alist nil nil 'equal) command)
   (projectile-with-default-dir (projectile-acquire-root)
     (compile command)))
 
 (defun test-cockpit--command (func args)
   (let ((command (funcall func args)))
-    (setf (alist-get (projectile-project-root) test-cockpit--last-switches-alist) args)
+    (setf (alist-get (projectile-project-root) test-cockpit--last-switches-alist nil nil 'equal) args)
     command))
 
 (defun test-cockpit-test-project (&optional args)
@@ -155,7 +155,7 @@ settings."
     (test-cockpit-dispatch)))
 
 (defun test-cockpit--last-switches ()
-  '())
+  (alist-get (projectile-project-root) test-cockpit--last-switches-alist nil nil 'equal))
 
 (transient-define-prefix test-cockpit-prefix ()
   "Test the project"

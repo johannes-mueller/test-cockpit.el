@@ -127,7 +127,7 @@
   (should (equal (test-cockpit-add-leading-space-to-switches "--foo") " --foo")))
 
 (ert-deftest test-last-test-command-empty-list ()
-  (let ((test-cockpit-last-command-alist '()))
+  (let ((test-cockpit-last-command-alist nil))
     (mocker-let ((test-cockpit-dispatch () ((:min-occur 1))))
       (test-cockpit-repeat-test))))
 
@@ -138,5 +138,33 @@
       (test-cockpit-repeat-test)
       (should t))))
 
+(ert-deftest test-last-test-command-replace ()
+  (tc--register-foo-project)
+  (let ((test-cockpit-last-command-alist '(("foo-project" . "never to be called"))))
+    (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+		 (projectile-project-type () ((:output 'foo-project-type)))
+		 (compile (command) ((:input '("test project") :output 'success :occur 1))))
+      (test-cockpit-test-project)
+      (should (eq (length test-cockpit-last-command-alist) 1)))))
+
+(ert-deftest test-last-switches-empty-list ()
+  (let ((test-cockpit--last-switches-alist nil))
+    (should (eq (test-cockpit--last-switches) nil))))
+
+(ert-deftest test-last-test-switches-list-hit ()
+					;(tc--register-foo-project)
+  (let ((test-cockpit--last-switches-alist '(("foo-project" . ("foo" "bar")))))
+    (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
+					;(compile (command) ((:input '("test project") :output 'success)))))
+      (should (equal (test-cockpit--last-switches) '("foo" "bar"))))))
+
+(ert-deftest test-last-test-switches-replace ()
+  (tc--register-foo-project)
+  (let ((test-cockpit--last-switches-alist '(("foo-project" . ("never" "to" "be" "called")))))
+    (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+		 (projectile-project-type () ((:output 'foo-project-type)))
+		 (compile (command) ((:input '("test project") :output 'success :occur 1))))
+      (test-cockpit-test-project)
+      (should (eq (length test-cockpit--last-switches-alist) 1)))))
 
 ;;; test-cockpit.el-test.el ends here
