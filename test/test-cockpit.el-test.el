@@ -3,6 +3,13 @@
 (require 'mocker)
 (require 'test-cockpit)
 
+(defun tc--register-foo-project ()
+  (test-cockpit-register-project-type 'foo-project-type
+				      (lambda (args) "test project")
+				      (lambda (args) "test module")
+				      (lambda (args) "test function")
+				      'foo-infix))
+
 (ert-deftest test-register-project-type ()
   (test-cockpit-register-project-type 'foo-project-type
 				      'test-project-foo 'test-module-foo 'test-function-foo
@@ -17,24 +24,15 @@
   (should (eq (alist-get 'foo-project-type test-cockpit-project-types)
 	      (alist-get 'foo-project-type-alias test-cockpit-project-types))))
 
-
 (ert-deftest test-test-project ()
-  (test-cockpit-register-project-type 'foo-project-type
-				      (lambda (args) "test project")
-				      'test-module-foo
-				      'test-function-foo
-				      'foo-infix)
+  (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (compile (command) ((:input '("test project") :output 'success))))
     (test-cockpit-test-project)
     ))
 
 (ert-deftest test-test-project-with-args ()
-  (test-cockpit-register-project-type 'foo-project-type
-				      (lambda (args) "test project")
-				      'test-module-foo
-				      'test-function-foo
-				      'foo-infix)
+  (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
 	       (compile (command) ((:input '("test project") :output 'success))))
@@ -43,22 +41,14 @@
 		   '("foo" "bar")))))
 
 (ert-deftest test-test-module ()
-  (test-cockpit-register-project-type 'foo-project-type
-				      'test-project-foo
-				      (lambda (args) "test module")
-				      'test-function-foo
-				      'foo-infix)
+  (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (compile (command) ((:input '("test module") :output 'success))))
     (test-cockpit-test-module)
     ))
 
 (ert-deftest test-test-module-with-args ()
-  (test-cockpit-register-project-type 'foo-project-type
-				      'test-project-foo
-				      (lambda (args) "test module")
-				      'test-function-foo
-				      'foo-infix)
+  (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
 	       (compile (command) ((:input '("test module") :output 'success))))
@@ -67,22 +57,14 @@
 		   '("foo" "bar")))))
 
 (ert-deftest test-test-function ()
-  (test-cockpit-register-project-type 'foo-project-type
-				      'test-project-foo
-				      'test-module-foo
-				      (lambda (args) "test function")
-				      'foo-infix)
+  (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (compile (command) ((:input '("test function") :output 'success))))
-	       (test-cockpit-test-function)
-	      ))
+    (test-cockpit-test-function)
+    ))
 
 (ert-deftest test-test-function-with-args ()
-  (test-cockpit-register-project-type 'foo-project-type
-				      'test-project-foo
-				      'test-module-foo
-				      (lambda (args) "test function")
-				      'foo-infix)
+  (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
 	       (compile (command) ((:input '("test function") :output 'success))))
@@ -91,20 +73,16 @@
 		   '("foo" "bar")))))
 
 (ert-deftest test-repeat-test ()
-  (test-cockpit-register-project-type 'foo-project-type
-				      (lambda (args) "test project")
-				      (lambda (args) "test module")
-				      'test-function-foo
-				      'foo-infix)
+  (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (compile (command) ((:input '("test project") :output 'success :occur 2)
 				   (:input '("test module") :output 'success :occur 3))))
-	      (test-cockpit-test-project)
-	      (test-cockpit-repeat-test)
-	      (test-cockpit-test-module)
-	      (test-cockpit-repeat-test)
-	      (test-cockpit-repeat-test)
-	      (should t)))
+    (test-cockpit-test-project)
+    (test-cockpit-repeat-test)
+    (test-cockpit-test-module)
+    (test-cockpit-repeat-test)
+    (test-cockpit-repeat-test)
+    (should t)))
 
 (ert-deftest test-set-infix ()
   (test-cockpit-register-project-type 'foo-project-type nil nil nil
@@ -114,30 +92,30 @@
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type :max-occur 1)
 					    (:output 'bar-project-type)
 					    )))
-	      (test-cockpit--insert-infix)
-	      (should (equal
-		       (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
-		       '(:description "Foo")))
-	      (should (equal
-		       (aref (transient-get-suffix 'test-cockpit-prefix '(1)) 2)
-		       '(:description "Run test")))
+    (test-cockpit--insert-infix)
+    (should (equal
+	     (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
+	     '(:description "Foo")))
+    (should (equal
+	     (aref (transient-get-suffix 'test-cockpit-prefix '(1)) 2)
+	     '(:description "Run test")))
 
-	      (test-cockpit--insert-infix)
-	      (should (equal
-		       (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
-		       '(:description "Bar")))
-	      (should (equal
-		       (aref (transient-get-suffix 'test-cockpit-prefix '(1)) 2)
-		       '(:description "Run test")))))
+    (test-cockpit--insert-infix)
+    (should (equal
+	     (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
+	     '(:description "Bar")))
+    (should (equal
+	     (aref (transient-get-suffix 'test-cockpit-prefix '(1)) 2)
+	     '(:description "Run test")))))
 
 (ert-deftest test-set-nil-infix ()
   (test-cockpit-register-project-type 'noinfix-project-type nil nil nil nil)
   (mocker-let ((projectile-project-type () ((:output 'noinfix-project-type)))
 	       (transient-insert-suffix (prefix loc infix) ((:min-occur 0 :max-occur 0))))
-	      (test-cockpit--insert-infix)
-	      (should (equal
-		       (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
-		       '(:description "Run test")))))
+    (test-cockpit--insert-infix)
+    (should (equal
+	     (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
+	     '(:description "Run test")))))
 
 (ert-deftest test-join-filter-switches ()
   (let ((allowed '("foo" "bar")))
