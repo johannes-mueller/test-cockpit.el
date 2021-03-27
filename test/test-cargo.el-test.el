@@ -3,7 +3,7 @@
 (require 'test-cockpit-cargo)
 
 (ert-deftest test-project-cargo-type-available ()
-  (should (alist-get 'rust-cargo test-cockpit-project-types)))
+  (should (alist-get 'rust-cargo test-cockpit--project-types)))
 
 (ert-deftest test-cargo-command-with-switches ()
   (dolist (struct '((nil nil "cargo test")

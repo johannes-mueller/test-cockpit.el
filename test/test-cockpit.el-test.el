@@ -14,15 +14,15 @@
   (test-cockpit-register-project-type 'foo-project-type
 				      'test-project-foo 'test-module-foo 'test-function-foo
 				      'foo-infix)
-  (should (alist-get 'foo-project-type test-cockpit-project-types)))
+  (should (alist-get 'foo-project-type test-cockpit--project-types)))
 
 (ert-deftest test-register-project-type-alias ()
   (test-cockpit-register-project-type 'foo-project-type
 				      'test-project-foo 'test-module-foo 'test-function-foo
 				      'foo-infix)
   (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
-  (should (eq (alist-get 'foo-project-type test-cockpit-project-types)
-	      (alist-get 'foo-project-type-alias test-cockpit-project-types))))
+  (should (eq (alist-get 'foo-project-type test-cockpit--project-types)
+	      (alist-get 'foo-project-type-alias test-cockpit--project-types))))
 
 (ert-deftest test-test-project ()
   (tc--register-foo-project)
@@ -127,12 +127,12 @@
   (should (equal (test-cockpit-add-leading-space-to-switches "--foo") " --foo")))
 
 (ert-deftest test-last-test-command-empty-list ()
-  (let ((test-cockpit-last-command-alist nil))
+  (let ((test-cockpit--last-command-alist nil))
     (mocker-let ((test-cockpit-dispatch () ((:min-occur 1))))
       (test-cockpit-repeat-test))))
 
 (ert-deftest test-last-test-command-list-hit ()
-  (let ((test-cockpit-last-command-alist '(("foo-project" . "test foo project"))))
+  (let ((test-cockpit--last-command-alist '(("foo-project" . "test foo project"))))
     (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
 		 (compile (command) ((:input '("test foo project") :output 'success :occur 1))))
       (test-cockpit-repeat-test)
@@ -140,12 +140,12 @@
 
 (ert-deftest test-last-test-command-replace ()
   (tc--register-foo-project)
-  (let ((test-cockpit-last-command-alist '(("foo-project" . "never to be called"))))
+  (let ((test-cockpit--last-command-alist '(("foo-project" . "never to be called"))))
     (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
 		 (projectile-project-type () ((:output 'foo-project-type)))
 		 (compile (command) ((:input '("test project") :output 'success :occur 1))))
       (test-cockpit-test-project)
-      (should (eq (length test-cockpit-last-command-alist) 1)))))
+      (should (eq (length test-cockpit--last-command-alist) 1)))))
 
 (ert-deftest test-last-switches-empty-list ()
   (let ((test-cockpit--last-switches-alist nil))

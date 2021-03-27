@@ -38,10 +38,10 @@
 (require 'projectile)
 (require 'subr-x)
 
-(defvar test-cockpit-project-types nil
+(defvar test-cockpit--project-types nil
   "List of known project types.")
 
-(defvar test-cockpit-last-command-alist nil
+(defvar test-cockpit--last-command-alist nil
   "The last testing command issued.")
 
 (defvar test-cockpit--last-switches-alist nil
@@ -68,8 +68,8 @@ TRANSIENT-INFIX is an array that can be injected into a transient-prefix."
 			  :test-module-command test-module-command
 			  :test-function-command test-function-command
 			  :infix transient-infix)))
-    (setq test-cockpit-project-types
-	  (cons `(,project-type . ,type-plist) test-cockpit-project-types))))
+    (setq test-cockpit--project-types
+	  (cons `(,project-type . ,type-plist) test-cockpit--project-types))))
 
 (defun test-cockpit-register-project-type-alias (alias project-type)
   "Register an alias for a known project type.
@@ -77,12 +77,12 @@ Some project types are similar in a way that they can be tested
 by the same commands, yet they are different for projectile.  In
 those cases the already registered PROJECT-TYPE can be registered
 again as ALIAS."
-  (setq test-cockpit-project-types
-	(cons `(,alias . ,(alist-get project-type test-cockpit-project-types)) test-cockpit-project-types)))
+  (setq test-cockpit--project-types
+	(cons `(,alias . ,(alist-get project-type test-cockpit--project-types)) test-cockpit--project-types)))
 
 (defun test-cockpit--test-struct ()
   "Get the plist of test functions needed to test the current project."
-  (alist-get (projectile-project-type) test-cockpit-project-types)
+  (alist-get (projectile-project-type) test-cockpit--project-types)
   )
 
 (defun test-cockpit-test-project-command (args)
@@ -111,7 +111,7 @@ again as ALIAS."
 
 (defun test-cockpit--run-test (command)
   "Run the test command COMMAND and remembers for the case the test is repeated."
-  (setf (alist-get (projectile-project-root) test-cockpit-last-command-alist nil nil 'equal) command)
+  (setf (alist-get (projectile-project-root) test-cockpit--last-command-alist nil nil 'equal) command)
   (projectile-with-default-dir (projectile-acquire-root)
     (compile command)))
 
@@ -149,7 +149,7 @@ settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let (last-command (alist-get (projectile-project-root)
-				   test-cockpit-last-command-alist
+				   test-cockpit--last-command-alist
 				   nil nil 'equal))
       (test-cockpit--run-test last-command)
     (test-cockpit-dispatch)))

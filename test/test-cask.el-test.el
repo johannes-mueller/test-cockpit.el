@@ -2,7 +2,7 @@
 (require 'test-cockpit-cask)
 
 (ert-deftest test-project-cask-type-available ()
-  (should (alist-get 'emacs-cask test-cockpit-project-types))
+  (should (alist-get 'emacs-cask test-cockpit--project-types))
   )
 
 (ert-deftest test-get-cask-test-project-command ()

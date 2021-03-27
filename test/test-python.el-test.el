@@ -2,10 +2,10 @@
 (require 'test-cockpit-python)
 
 (ert-deftest test-project-python-pip-type-available ()
-  (should (alist-get 'python-pip test-cockpit-project-types)))
+  (should (alist-get 'python-pip test-cockpit--project-types)))
 
 (ert-deftest test-project-python-pkg-type-available ()
-  (should (alist-get 'python-pkg test-cockpit-project-types)))
+  (should (alist-get 'python-pkg test-cockpit--project-types)))
 
 (ert-deftest test-pytest-binary-path-venv ()
   (setq pyvenv-virtual-env "/foo/bar/.venv/")
