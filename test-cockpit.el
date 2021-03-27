@@ -41,7 +41,7 @@
 (defvar test-cockpit-project-types nil
   "List of known project types.")
 
-(defvar test-cockpit-last-command nil
+(defvar test-cockpit-last-command-alist nil
   "The last testing command issued.")
 
 (defun test-cockpit-register-project-type (project-type
@@ -108,7 +108,7 @@ again as ALIAS."
 
 (defun test-cockpit--run-test (command)
   "Run the test command COMMAND and remembers for the case the test is repeated."
-  (setq test-cockpit-last-command command)
+  (setf (alist-get (projectile-project-root) test-cockpit-last-command-alist) command)
   (projectile-with-default-dir (projectile-acquire-root)
     (compile command)))
 
@@ -140,8 +140,10 @@ settings."
   "Repeat the last test."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if test-cockpit-last-command
-      (test-cockpit--run-test test-cockpit-last-command)
+  (if-let (last-command (alist-get (projectile-project-root)
+				   test-cockpit-last-command-alist
+				   nil nil 'equal))
+      (test-cockpit--run-test last-command)
     (test-cockpit-dispatch)))
 
 (transient-define-prefix test-cockpit-prefix

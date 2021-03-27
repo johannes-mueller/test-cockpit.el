@@ -109,9 +109,15 @@
   (should (equal (test-cockpit-add-leading-space-to-switches "") ""))
   (should (equal (test-cockpit-add-leading-space-to-switches "--foo") " --foo")))
 
-
-(ert-deftest test-last-test-command ()
-  (let ((test-cockpit-last-command nil))
+(ert-deftest test-last-test-command-empty-list ()
+  (let ((test-cockpit-last-command-alist '()))
     (mocker-let ((test-cockpit-dispatch () ((:min-occur 1))))
-		(test-cockpit-repeat-test))))
+      (test-cockpit-repeat-test))))
+
+(ert-deftest test-last-test-command-list-hit ()
+  (let ((test-cockpit-last-command-alist '(("foo-project" . "test foo project"))))
+    (mocker-let ((projectile-project-root (&optional dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+		 (compile (command) ((:input '("test foo project") :output 'success :occur 1))))
+      (test-cockpit-repeat-test)
+      (should t))))
 ;;; test-cockpit.el-test.el ends here
