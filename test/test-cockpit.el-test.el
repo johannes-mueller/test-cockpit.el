@@ -26,8 +26,21 @@
 				      'foo-infix)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (compile (command) ((:input '("test project") :output 'success))))
-	       (test-cockpit-test-project)
-	      ))
+    (test-cockpit-test-project)
+    ))
+
+(ert-deftest test-test-project-with-args ()
+  (test-cockpit-register-project-type 'foo-project-type
+				      (lambda (args) "test project")
+				      'test-module-foo
+				      'test-function-foo
+				      'foo-infix)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (compile (command) ((:input '("test project") :output 'success))))
+    (test-cockpit-test-project '("foo" "bar"))
+    (should (equal (alist-get "foo-project" test-cockpit--last-switches-alist nil nil 'equal)
+		   '("foo" "bar")))))
 
 (ert-deftest test-test-module ()
   (test-cockpit-register-project-type 'foo-project-type
@@ -37,8 +50,21 @@
 				      'foo-infix)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (compile (command) ((:input '("test module") :output 'success))))
-	       (test-cockpit-test-module)
-	      ))
+    (test-cockpit-test-module)
+    ))
+
+(ert-deftest test-test-module-with-args ()
+  (test-cockpit-register-project-type 'foo-project-type
+				      'test-project-foo
+				      (lambda (args) "test module")
+				      'test-function-foo
+				      'foo-infix)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (compile (command) ((:input '("test module") :output 'success))))
+    (test-cockpit-test-module '("foo" "bar"))
+    (should (equal (alist-get "foo-project" test-cockpit--last-switches-alist nil nil 'equal)
+		   '("foo" "bar")))))
 
 (ert-deftest test-test-function ()
   (test-cockpit-register-project-type 'foo-project-type
@@ -50,6 +76,19 @@
 	       (compile (command) ((:input '("test function") :output 'success))))
 	       (test-cockpit-test-function)
 	      ))
+
+(ert-deftest test-test-function-with-args ()
+  (test-cockpit-register-project-type 'foo-project-type
+				      'test-project-foo
+				      'test-module-foo
+				      (lambda (args) "test function")
+				      'foo-infix)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (compile (command) ((:input '("test function") :output 'success))))
+    (test-cockpit-test-function '("foo" "bar"))
+    (should (equal (alist-get "foo-project" test-cockpit--last-switches-alist nil nil 'equal)
+		   '("foo" "bar")))))
 
 (ert-deftest test-repeat-test ()
   (test-cockpit-register-project-type 'foo-project-type
@@ -116,8 +155,10 @@
 
 (ert-deftest test-last-test-command-list-hit ()
   (let ((test-cockpit-last-command-alist '(("foo-project" . "test foo project"))))
-    (mocker-let ((projectile-project-root (&optional dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
 		 (compile (command) ((:input '("test foo project") :output 'success :occur 1))))
       (test-cockpit-repeat-test)
       (should t))))
+
+
 ;;; test-cockpit.el-test.el ends here

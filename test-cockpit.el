@@ -44,6 +44,9 @@
 (defvar test-cockpit-last-command-alist nil
   "The last testing command issued.")
 
+(defvar test-cockpit--last-switches-alist nil
+  "The last testing switches used.")
+
 (defun test-cockpit-register-project-type (project-type
 					   test-project-command
 					   test-module-command
@@ -112,12 +115,17 @@ again as ALIAS."
   (projectile-with-default-dir (projectile-acquire-root)
     (compile command)))
 
+(defun test-cockpit--command (func args)
+  (let ((command (funcall func args)))
+    (setf (alist-get (projectile-project-root) test-cockpit--last-switches-alist) args)
+    command))
+
 (defun test-cockpit-test-project (&optional args)
   "Test the whole project.
 ARGS is the UI state for language specific settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (test-cockpit--run-test (test-cockpit-test-project-command args)))
+  (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-project-command args)))
 
 (defun test-cockpit-test-module (&optional args)
   "Test the module of the current buffer.
@@ -125,7 +133,7 @@ The exact determination of the model is done by the language specific package.
 ARGS is the UI state for language specific settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (test-cockpit--run-test (test-cockpit-test-module-command args)))
+  (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-module-command args)))
 
 (defun test-cockpit-test-function (&optional args)
   "Run the test function at point.
@@ -134,7 +142,7 @@ specific package.  ARGS is the UI state for language specific
 settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (test-cockpit--run-test (test-cockpit-test-function-command args)))
+  (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-function-command args)))
 
 (defun test-cockpit-repeat-test (&optional _args)
   "Repeat the last test."
@@ -146,8 +154,12 @@ settings."
       (test-cockpit--run-test last-command)
     (test-cockpit-dispatch)))
 
-(transient-define-prefix test-cockpit-prefix
+(defun test-cockpit--last-switches ()
+  '())
+
+(transient-define-prefix test-cockpit-prefix ()
   "Test the project"
+  :value 'test-cockpit--last-switches
   ["Run test"
    ("p" "project" test-cockpit-test-project)
    ("m" "module" test-cockpit-test-module)
