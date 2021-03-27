@@ -110,5 +110,8 @@
   (should (equal (test-cockpit-add-leading-space-to-switches "--foo") " --foo")))
 
 
-
+(ert-deftest test-last-test-command ()
+  (let ((test-cockpit-last-command nil))
+    (mocker-let ((test-cockpit-dispatch () ((:min-occur 1))))
+		(test-cockpit-repeat-test))))
 ;;; test-cockpit.el-test.el ends here

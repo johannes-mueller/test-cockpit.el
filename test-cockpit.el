@@ -140,7 +140,9 @@ settings."
   "Repeat the last test."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (test-cockpit--run-test test-cockpit-last-command))
+  (if test-cockpit-last-command
+      (test-cockpit--run-test test-cockpit-last-command)
+    (test-cockpit-dispatch)))
 
 (transient-define-prefix test-cockpit-prefix
   "Test the project"
