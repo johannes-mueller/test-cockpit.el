@@ -24,13 +24,23 @@ indicated testing environments
 ### Planned languages
 
 * elixir – mix
-
+* any other ... as soon as I need it or as soon as you implement it
 
 ## Installation
 
-So far there is no smoothly install able package on MELPA. So you have to put
-the `*.el` files to your emacs' `loadpath`. Eventually there will be a MELPA
-package when the project gets more advanced.
+For now it's easiest to use
+[straight.el](https://github.com/raxod502/straight.el).
+
+``` elisp
+(straight-use-package
+ '(test-cockpit-<language> :type git :host github :repo "johannes-mueller/test-cockpit.el"))
+```
+where `<langauge>` is the programming language you need:
+* `python` for python - pytest
+* `cask` for elisp - cask / ert
+* `cargo` for rust - cargo
+
+Eventually there will be a MELPA package when the project gets more advanced.
 
 ### Dependencies
 
@@ -43,6 +53,13 @@ Language specific
   - `emacs-toml` not from MELPA but from my fork branch
     [johmue-merges](https://github.com/johannes-mueller/emacs-toml/tree/johmue-merges),
     see issues section.
+    Install it for example this way using [straight.el](https://github.com/raxod502/straight.el)
+``` elisp
+(straight-use-poackage '(toml :type git :host github :repo "gongo/emacs-toml"
+                              :fork (:host github
+                              :repo "johannes-mueller/emacs-toml"
+                              :branch "johmue-merges")))
+```
 
 
 ## Usage
@@ -50,7 +67,9 @@ Language specific
 The most convenient way of running a test is to invoke the user interface with
 the command `test-cockpit-dispatch`. Then a transient user interface (mostly
 known from `magit`) is showing up indicating the common and the language
-specific key bindings.
+specific key bindings. When you call `test-cockpit-dispatch` next time, all the
+settings that you made will be the same you have set before in the current
+project.
 
 You can also use the following commands to run tests
 
@@ -61,34 +80,6 @@ You can also use the following commands to run tests
 
 It is suggested to bind `test-cockpit-dispatch` and maybe
 `test-cockpit-repeat-test` to the keybinding of your liking.
-
-
-## Language specific settings
-
-### elisp – cask / ert
-
-* `-i` sets the `--install` option in ert, thus installs all the dependencies
-  defined in the `Cask` file
-
-
-### python – pytest
-
-* `-l` run only the tests that failed in the last test
-
-Planned
-
-* Discover markers
-
-### rust – cargo
-
-* `-d` runs only the doctests (`--doc` option)
-* `-t` runs only the usual tests (`--tests` option)
-* `-b` runs the benchmarks (`--bench` option)
-* `-x` checks i the example build succeeds (`--examples` option)
-* `-f` toggles a feature defined in `Cargo.toml`
-
-The planned feature list is not complete. I will implement what turns out to be
-useful.
 
 
 ## Status
@@ -124,7 +115,7 @@ they are not merged you need to use my fork of `emacs-toml`.
 
 ## Limitations
 
-Only projects with
+Lots. I implement stuff as soon as I need it and have some time.
 
 
 ## Contributing
