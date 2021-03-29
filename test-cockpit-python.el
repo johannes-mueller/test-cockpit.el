@@ -1,5 +1,8 @@
 (require 'test-cockpit)
 
+(defvar test-cockpit-python-build-ext-command "python setup.py build_ext --inplace"
+  "The command to build the python extensions")
+
 (test-cockpit-register-project-type 'python-pip
 				    'test-cockpit--python--test-project-command
 				    'test-cockpit--python--test-module-command
@@ -29,8 +32,14 @@
 	  " -k "
 	  (which-function)))
 
+(defun test-cockpit--python--build-ext-command (args)
+  (if (member "build_ext" args)
+      (concat test-cockpit-python-build-ext-command " && ")
+    ""))
+
 (defun test-cockpit--python--common-switches (args)
-  (concat (test-cockpit--python--pytest-binary-path)
+  (concat (test-cockpit--python--build-ext-command args)
+	  (test-cockpit--python--pytest-binary-path)
 	  " --color=yes"
 	  (test-cockpit-add-leading-space-to-switches
 	   (test-cockpit--join-filter-switches
@@ -50,7 +59,8 @@
 
 (defun test-cockpit--python--infix ()
   [["Switches"
-    ("-l" "only lastly failed tests" "--last-failed")]
+    ("-l" "only lastly failed tests" "--last-failed")
+    ("-b" "build extensions before testing" "build_ext")]
    ["Output"
     ("-v" "show single tests" "--verbose")
     ("-c" "print coverage report" "--cov-report=term")

@@ -84,6 +84,21 @@
 	  (which-function () ((:output "test_foo" :occur 1))))
        (should (equal (test-cockpit-test-function-command arglist) expected))))))
 
+(ert-deftest test-python-build-ext-switch ()
+  (mocker-let
+      ((projectile-project-type () ((:output 'python-pip :occur 1)))
+       (test-cockpit--python--pytest-binary-path () ((:output "/foo/bin/pytest" :occur 1))))
+    (should (equal (test-cockpit-test-project-command '("--last-failed" "build_ext"))
+		   "python setup.py build_ext --inplace && /foo/bin/pytest --color=yes --last-failed --cov-report="))))
+
+(ert-deftest test-python-build-ext-switch-changed-command ()
+  (let ((test-cockpit-python-build-ext-command "foo build-ext command"))
+    (mocker-let
+       ((projectile-project-type () ((:output 'python-pip :occur 1)))
+	(test-cockpit--python--pytest-binary-path () ((:output "/foo/bin/pytest" :occur 1))))
+     (should (equal (test-cockpit-test-project-command '("--last-failed" "build_ext"))
+		    "foo build-ext command && /foo/bin/pytest --color=yes --last-failed --cov-report=")))))
+
 (ert-deftest test-insert-no-coverage-to-switches ()
   (dolist (struct '((("--last-failed") ("--last-failed" "--cov-report="))
 		    (("--last-failed" "--cov-report=term") ("--last-failed" "--cov-report=term"))))
@@ -97,6 +112,7 @@
     (let ((infix (test-cockpit-infix)))
       (should (equal (aref (aref infix 0) 0) "Switches"))
       (should (equal (aref (aref infix 0) 1) '("-l" "only lastly failed tests" "--last-failed")))
+      (should (equal (aref (aref infix 0) 2) '("-b" "build extensions before testing" "build_ext")))
       (should (equal (aref (aref infix 1) 0) "Output"))
       (should (equal (aref (aref infix 1) 1) '("-v" "show single tests" "--verbose")))
       (should (equal (aref (aref infix 1) 2) '("-c" "print coverage report" "--cov-report=term")))
