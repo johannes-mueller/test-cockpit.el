@@ -46,7 +46,16 @@
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
     (test-cockpit--python--pytest-binary-path () ((:output "pytest")))
-    (buffer-file-name () ((:output "foo.py"))))
+    (projectile-project-root () ((:output "/home/user/project")))
+    (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py"))))
+   (should (equal (test-cockpit-test-module-command nil)
+		  "pytest --color=yes --cov-report= tests/path/to/test_foo.py"))))
+
+(ert-deftest test-get-python-test-fuzzy-module-command ()
+  (mocker-let
+   ((projectile-project-type () ((:output 'python-pip)))
+    (test-cockpit--python--pytest-binary-path () ((:output "pytest")))
+    (buffer-file-name () ((:output "/home/user/project/path/to/foo.py"))))
    (should (equal (test-cockpit-test-module-command nil)
 		  "pytest --color=yes --cov-report= -k foo"))))
 
@@ -60,7 +69,7 @@
       (mocker-let
 	 ((projectile-project-type () ((:output 'python-pip :occur 1)))
 	  (test-cockpit--python--pytest-binary-path () ((:output "/foo/bin/pytest" :occur 1)))
-	  (buffer-file-name () ((:output "foo.py" :occur 1))))
+	  (buffer-file-name () ((:output "/home/user/project/path/to/foo.py" :occur 1))))
        (should (equal (test-cockpit-test-module-command arglist) expected))))))
 
 (ert-deftest test-get-python-test-function-command ()

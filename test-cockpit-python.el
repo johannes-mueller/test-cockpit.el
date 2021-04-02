@@ -38,8 +38,16 @@
 
 (defun test-cockpit--python--test-module-command (args)
   (concat (test-cockpit--python--common-switches args)
-	  " -k "
-	  (file-name-base (buffer-file-name))))
+	  " "
+	  (test-cockpit--python--choose-module)
+))
+
+(defun test-cockpit--python--choose-module ()
+  (let ((file-name-path (buffer-file-name)))
+    (if (string-prefix-p "test_" (file-name-nondirectory file-name-path))
+	(string-remove-prefix (file-name-as-directory (projectile-project-root)) file-name-path)
+      (concat "-k " (file-name-base file-name-path))
+    )))
 
 (defun test-cockpit--python--test-function-command (args)
   (concat (test-cockpit--python--common-switches args)
