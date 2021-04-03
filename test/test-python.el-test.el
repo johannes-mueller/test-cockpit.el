@@ -23,7 +23,7 @@
    ((file-executable-p (file) ((:input '("/foo/bar/.venv/bin/pytest") :output nil))))
   (should (equal (test-cockpit--python--pytest-binary-path) "pytest"))))
 
-(ert-deftest test-get-python-test-project-command ()
+(ert-deftest test-get-python-test-project-command-no-switches ()
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
     (test-cockpit--python--pytest-binary-path () ((:output "/foo/bin/pytest"))))
@@ -42,7 +42,7 @@
 	  (test-cockpit--python--pytest-binary-path () ((:output "/foo/bin/pytest" :occur 1))))
        (should (equal (test-cockpit-test-project-command arglist) expected))))))
 
-(ert-deftest test-get-python-test-module-command ()
+(ert-deftest test-get-python-test-module-command-no-switches ()
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
     (test-cockpit--python--pytest-binary-path () ((:output "pytest")))
@@ -72,7 +72,7 @@
 	  (buffer-file-name () ((:output "/home/user/project/path/to/foo.py" :occur 1))))
        (should (equal (test-cockpit-test-module-command arglist) expected))))))
 
-(ert-deftest test-get-python-test-function-command ()
+(ert-deftest test-get-python-test-function-command-no-switches ()
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
     (test-cockpit--python--pytest-binary-path () ((:output "pytest")))

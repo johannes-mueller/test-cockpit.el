@@ -24,7 +24,7 @@
   (should (eq (alist-get 'foo-project-type test-cockpit--project-types)
 	      (alist-get 'foo-project-type-alias test-cockpit--project-types))))
 
-(ert-deftest test-test-project ()
+(ert-deftest test-test-project-no-args ()
   (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (compile (command) ((:input '("test project") :output 'success))))
@@ -40,7 +40,7 @@
     (should (equal (alist-get "foo-project" test-cockpit--last-switches-alist nil nil 'equal)
 		   '("foo" "bar")))))
 
-(ert-deftest test-test-module ()
+(ert-deftest test-test-module-no-args ()
   (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (compile (command) ((:input '("test module") :output 'success))))
@@ -56,7 +56,7 @@
     (should (equal (alist-get "foo-project" test-cockpit--last-switches-alist nil nil 'equal)
 		   '("foo" "bar")))))
 
-(ert-deftest test-test-function ()
+(ert-deftest test-test-function-no-args ()
   (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (compile (command) ((:input '("test function") :output 'success))))
