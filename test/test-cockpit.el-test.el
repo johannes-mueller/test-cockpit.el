@@ -3,23 +3,27 @@
 (require 'mocker)
 (require 'test-cockpit)
 
-(defun tc--register-foo-project ()
-  (test-cockpit-register-project-type 'foo-project-type
-				      (lambda (args) "test project")
-				      (lambda (args) "test module")
-				      (lambda (args) "test function")
-				      'foo-infix))
+(defclass test-cockpit--foo-engine (test-cockpit--engine) ())
 
-(ert-deftest test-register-project-type ()
-  (test-cockpit-register-project-type 'foo-project-type
-				      'test-project-foo 'test-module-foo 'test-function-foo
-				      'foo-infix)
+(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--foo-engine))
+  (lambda (args) (concat "test project" " " (string-join args " "))))
+(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--foo-engine))
+  (lambda (args) (concat "test module" " " (string-join args " "))))
+(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--foo-engine))
+  (lambda (args) (concat "test function" " " (string-join args " "))))
+(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--foo-engine))
+  (lambda () ["Foo" ("-f" "foo" "--foo")]))
+
+
+(defun tc--register-foo-project ()
+  (test-cockpit-register-project-type 'foo-project-type 'test-cockpit--foo-engine))
+
+(ert-deftest test-register-project-type-primary ()
+  (tc--register-foo-project)
   (should (alist-get 'foo-project-type test-cockpit--project-types)))
 
 (ert-deftest test-register-project-type-alias ()
-  (test-cockpit-register-project-type 'foo-project-type
-				      'test-project-foo 'test-module-foo 'test-function-foo
-				      'foo-infix)
+  (tc--register-foo-project)
   (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
   (should (eq (alist-get 'foo-project-type test-cockpit--project-types)
 	      (alist-get 'foo-project-type-alias test-cockpit--project-types))))
@@ -35,7 +39,7 @@
   (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-	       (compile (command) ((:input '("test project") :output 'success))))
+	       (compile (command) ((:input '("test project foo bar") :output 'success))))
     (test-cockpit-test-project '("foo" "bar"))
     (should (equal (alist-get "foo-project" test-cockpit--last-switches-alist nil nil 'equal)
 		   '("foo" "bar")))))
@@ -51,7 +55,7 @@
   (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-	       (compile (command) ((:input '("test module") :output 'success))))
+	       (compile (command) ((:input '("test module foo bar") :output 'success))))
     (test-cockpit-test-module '("foo" "bar"))
     (should (equal (alist-get "foo-project" test-cockpit--last-switches-alist nil nil 'equal)
 		   '("foo" "bar")))))
@@ -67,7 +71,7 @@
   (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-	       (compile (command) ((:input '("test function") :output 'success))))
+	       (compile (command) ((:input '("test function foo bar") :output 'success))))
     (test-cockpit-test-function '("foo" "bar"))
     (should (equal (alist-get "foo-project" test-cockpit--last-switches-alist nil nil 'equal)
 		   '("foo" "bar")))))
@@ -85,13 +89,8 @@
     (should t)))
 
 (ert-deftest test-set-infix ()
-  (test-cockpit-register-project-type 'foo-project-type nil nil nil
-				      (lambda () ["Foo" ("-f" "foo" "--foo")]))
-  (test-cockpit-register-project-type 'bar-project-type nil nil nil
-				      (lambda () ["Bar" ("-b" "bar" "--bar")]))
-  (mocker-let ((projectile-project-type () ((:output 'foo-project-type :max-occur 1)
-					    (:output 'bar-project-type)
-					    )))
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type))))
     (test-cockpit--insert-infix)
     (should (equal
 	     (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
@@ -99,17 +98,12 @@
     (should (equal
 	     (aref (transient-get-suffix 'test-cockpit-prefix '(1)) 2)
 	     '(:description "Run test")))
+))
 
-    (test-cockpit--insert-infix)
-    (should (equal
-	     (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
-	     '(:description "Bar")))
-    (should (equal
-	     (aref (transient-get-suffix 'test-cockpit-prefix '(1)) 2)
-	     '(:description "Run test")))))
+(defclass test-cockpit--no-infix-engine (test-cockpit--engine) ())
 
 (ert-deftest test-set-nil-infix ()
-  (test-cockpit-register-project-type 'noinfix-project-type nil nil nil nil)
+  (test-cockpit-register-project-type 'noinfix-project-type 'test-cockpit--no-infix-engine)
   (mocker-let ((projectile-project-type () ((:output 'noinfix-project-type)))
 	       (transient-insert-suffix (prefix loc infix) ((:min-occur 0 :max-occur 0))))
     (test-cockpit--insert-infix)

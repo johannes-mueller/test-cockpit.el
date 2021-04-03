@@ -17,12 +17,18 @@
 (defvar test-cockpit-python-build-ext-command "python setup.py build_ext --inplace"
   "The command to build the python extensions")
 
-(test-cockpit-register-project-type 'python-pip
-				    'test-cockpit--python--test-project-command
-				    'test-cockpit--python--test-module-command
-				    'test-cockpit--python--test-function-command
-				    'test-cockpit--python--infix)
+(defclass test-cockpit--python-engine (test-cockpit--engine) ())
 
+(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--python-engine))
+  'test-cockpit--python--test-project-command)
+(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--python-engine))
+  'test-cockpit--python--test-module-command )
+(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--python-engine))
+  'test-cockpit--python--test-function-command)
+(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--python-engine))
+  'test-cockpit--python--infix)
+
+(test-cockpit-register-project-type 'python-pip 'test-cockpit--python-engine)
 (test-cockpit-register-project-type-alias 'python-pkg 'python-pip)
 
 (defconst test-cockpit--python--allowed-switches

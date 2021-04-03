@@ -47,29 +47,19 @@
 (defvar test-cockpit--last-switches-alist nil
   "The last testing switches used.")
 
-(defun test-cockpit-register-project-type (project-type
-					   test-project-command
-					   test-module-command
-					   test-function-command
-					   transient-infix)
-  "Register a language testing package.
-A language can register a project type and the corresponding
-functions needed to launch the tests and to setup the UI.
+(defclass test-cockpit--engine () ())
 
-PROJECT-TYPE is a symbol representing the project type in the
-way (projectile-project-type) does.  TEST-PROJECT-COMMAND,
-TEST-MODULE-COMMAND and TEST-FUNCTION-COMMAND are symbols of
-functions that take the state of the UI as arguments and return
-the corresponding testing command which then will be issued
-by (compile).
+(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--engine)) nil)
+(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--engine)) nil)
+(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--engine)) nil)
+(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--engine)) (lambda () nil))
 
-TRANSIENT-INFIX is an array that can be injected into a transient-prefix."
-  (let ((type-plist (list :test-project-command test-project-command
-			  :test-module-command test-module-command
-			  :test-function-command test-function-command
-			  :infix transient-infix)))
-    (setq test-cockpit--project-types
-	  (cons `(,project-type . ,type-plist) test-cockpit--project-types))))
+
+(defun test-cockpit-register-project-type (project-type engine-class)
+    "Register a language testing package."
+  (setq test-cockpit--project-types
+	(cons `(,project-type . (lambda () (make-instance ,engine-class)))
+	      test-cockpit--project-types)))
 
 (defun test-cockpit-register-project-type-alias (alias project-type)
   "Register an alias for a known project type.
@@ -80,27 +70,27 @@ again as ALIAS."
   (setq test-cockpit--project-types
 	(cons `(,alias . ,(alist-get project-type test-cockpit--project-types)) test-cockpit--project-types)))
 
-(defun test-cockpit--test-struct ()
-  "Get the plist of test functions needed to test the current project."
-  (alist-get (projectile-project-type) test-cockpit--project-types)
-  )
+(defun test-cockpit--make-test-function (func args)
+  (string-trim (funcall
+		(funcall func
+			 (funcall (alist-get (projectile-project-type) test-cockpit--project-types)))
+		args)))
 
 (defun test-cockpit-test-project-command (args)
   "Call the test-project-command function with ARGS of the current project type."
-  (funcall (plist-get (test-cockpit--test-struct) :test-project-command) args))
+  (test-cockpit--make-test-function 'test-cockpit--test-project-command args))
 
 (defun test-cockpit-test-module-command (args)
   "Call the test-module-command function with ARGS of the current project type."
-  (funcall (plist-get (test-cockpit--test-struct) :test-module-command) args))
+  (test-cockpit--make-test-function 'test-cockpit--test-module-command args))
 
 (defun test-cockpit-test-function-command (args)
   "Call the test-function-command function with ARGS of the current project type."
-  (funcall (plist-get (test-cockpit--test-struct) :test-function-command) args))
+  (test-cockpit--make-test-function 'test-cockpit--test-function-command args))
 
 (defun test-cockpit-infix ()
   "Call the infix function of the current project type and return the infix array."
-  (if-let (infix-func (plist-get (test-cockpit--test-struct) :infix))
-      (funcall infix-func)))
+  (funcall (test-cockpit--transient-infix (funcall (alist-get (projectile-project-type) test-cockpit--project-types)))))
 
 (defun test-cockpit--insert-infix ()
   "Insert the infix array into the transient-prefix."

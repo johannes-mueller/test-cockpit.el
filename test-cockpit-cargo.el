@@ -24,11 +24,18 @@
 (require 'test-cockpit)
 (require 'test-cockpit-transient)
 
-(test-cockpit-register-project-type 'rust-cargo
-				    'test-cockpit--cargo--test-project-command
-				    'test-cockpit--cargo--test-module-command
-				    'test-cockpit--cargo--test-function-command
-				    'test-cockpit--cargo--infix)
+(defclass test-cockpit--cargo-engine (test-cockpit--engine) ())
+
+(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--cargo-engine))
+  'test-cockpit--cargo--test-project-command)
+(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--cargo-engine))
+  'test-cockpit--cargo--test-module-command )
+(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--cargo-engine))
+  'test-cockpit--cargo--test-function-command)
+(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--cargo-engine))
+  'test-cockpit--cargo--infix)
+
+(test-cockpit-register-project-type 'rust-cargo 'test-cockpit--cargo-engine)
 
 (defun test-cockpit--cargo--test-project-command (args)
   "Setup the command to test the project with ARGS."

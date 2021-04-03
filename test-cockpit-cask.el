@@ -1,11 +1,21 @@
 
 (require 'test-cockpit)
 
-(test-cockpit-register-project-type 'emacs-cask
-				    'test-cockpit--cask--test-project-command
-				    'test-cockpit--cask--test-module-command
-				    'test-cockpit--cask--test-function-command
-				    'test-cockpit--cask--infix)
+
+(defclass test-cockpit--cask-engine (test-cockpit--engine) ())
+
+(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--cask-engine))
+  'test-cockpit--cask--test-project-command)
+(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--cask-engine))
+  'test-cockpit--cask--test-module-command )
+(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--cask-engine))
+  'test-cockpit--cask--test-function-command)
+(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--cask-engine))
+  'test-cockpit--cask--infix)
+
+
+(test-cockpit-register-project-type 'emacs-cask 'test-cockpit--cask-engine)
+
 
 (defun test-cockpit--cask--insert-install-command (command install)
   (if (equal install '"install") (concat "cask install && " command) command))
