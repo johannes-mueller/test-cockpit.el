@@ -130,6 +130,9 @@ again as ALIAS."
 (defun test-cockpit--run-test (command)
   "Run the test command COMMAND and remembers for the case the test is repeated."
   (oset (test-cockpit--retrieve-engine) last-command command)
+  (test-cockpit--issue-compile-command command))
+
+(defun test-cockpit--issue-compile-command (command)
   (projectile-with-default-dir (projectile-acquire-root)
     (compile command)))
 
@@ -225,8 +228,10 @@ test command is shown."
   (test-cockpit--do-projectile-build (test-cockpit--last-build-command)))
 
 (defun test-cockpit--do-projectile-build (last-command)
-  (projectile-compile-project last-command)
-  (oset (test-cockpit--retrieve-engine) last-build-command compile-command))
+  (if last-command
+      (test-cockpit--issue-compile-command last-command)
+    (progn (projectile-compile-project last-command)
+	   (oset (test-cockpit--retrieve-engine) last-build-command compile-command))))
 
 (defun test-cockpit--projectile-test ()
   (test-cockpit--do-projectile-test nil))
@@ -235,8 +240,10 @@ test command is shown."
   (test-cockpit--do-projectile-test (test-cockpit--last-test-command)))
 
 (defun test-cockpit--do-projectile-test (last-command)
-  (projectile-test-project last-command)
-  (oset (test-cockpit--retrieve-engine) last-test-command compile-command))
+  (if last-command
+      (test-cockpit--issue-compile-command last-command)
+    (progn (projectile-test-project last-command)
+	   (oset (test-cockpit--retrieve-engine) last-test-command compile-command))))
 
 (defun test-cockpit--last-build-command ()
   (oref (test-cockpit--retrieve-engine) last-build-command))
