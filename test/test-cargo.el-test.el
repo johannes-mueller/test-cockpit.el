@@ -32,7 +32,8 @@
 
 (ert-deftest test-cargo-project-command ()
   (mocker-let
-      ((projectile-project-type () ((:output 'rust-cargo))))
+      ((projectile-project-type () ((:output 'rust-cargo)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
     (should (equal (test-cockpit-test-project-command nil)
 		   "cargo test"))))
 
@@ -45,6 +46,7 @@
 (ert-deftest test-cargo-module-command ()
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
        (test-cockpit--cargo--build-module-path () ((:output "bar"))))
     (should (equal (test-cockpit-test-module-command nil)
 		   "cargo test bar::"))))
@@ -59,6 +61,7 @@
 (ert-deftest test-cargo-function-command ()
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
        (test-cockpit--cargo--build-test-fn-path () ((:output "bar::foo_function"))))
     (should (equal (test-cockpit-test-function-command nil)
 		   "cargo test bar::foo_function"))))

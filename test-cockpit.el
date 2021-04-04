@@ -46,6 +46,7 @@
 
 (defvar test-cockpit--last-switches-alist nil
   "The last testing switches used.")
+(defvar test-cockpit--project-engines nil)
 
 (defclass test-cockpit--engine () ())
 
@@ -70,10 +71,16 @@ again as ALIAS."
   (setq test-cockpit--project-types
 	(cons `(,alias . ,(alist-get project-type test-cockpit--project-types)) test-cockpit--project-types)))
 
+(defun test-cockpit--retrieve-engine ()
+  (if-let ((engine (alist-get (projectile-project-root) test-cockpit--project-engines)))
+      engine
+    (let ((engine (funcall (alist-get (projectile-project-type) test-cockpit--project-types))))
+      (setf (alist-get (projectile-project-root) test-cockpit--project-engines) engine)
+      engine)))
+
 (defun test-cockpit--make-test-function (func args)
   (string-trim (funcall
-		(funcall func
-			 (funcall (alist-get (projectile-project-type) test-cockpit--project-types)))
+		(funcall func (test-cockpit--retrieve-engine))
 		args)))
 
 (defun test-cockpit-test-project-command (args)

@@ -7,7 +7,8 @@
 
 (ert-deftest test-get-cask-test-project-command ()
   (mocker-let
-   ((projectile-project-type () ((:output 'emacs-cask))))
+   ((projectile-project-type () ((:output 'emacs-cask)))
+    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
    (should (equal (test-cockpit-test-project-command nil)
 		  "cask exec ert-runner"))
    (should (equal (test-cockpit-test-project-command '("install"))
@@ -16,6 +17,7 @@
 (ert-deftest test-get-cask-test-module-command ()
   (mocker-let
    ((projectile-project-type () ((:output 'emacs-cask)))
+    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
     (buffer-file-name () ((:output "tests/test-foo.el-test.el"))))
    (should (equal (test-cockpit-test-module-command nil)
 		  "cask exec ert-runner tests/test-foo.el-test.el"))
@@ -25,6 +27,7 @@
 (ert-deftest test-get-cask-test-function-command ()
   (mocker-let
    ((projectile-project-type () ((:output 'emacs-cask)))
+    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
     (which-function () ((:output "func-to-test"))))
    (should (equal (test-cockpit-test-function-command nil)
 		  "cask exec ert-runner -p func-to-test"))
