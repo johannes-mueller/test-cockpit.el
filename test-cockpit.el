@@ -74,8 +74,9 @@ again as ALIAS."
 (defun test-cockpit--retrieve-engine ()
   (if-let ((engine (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal)))
       engine
-    (let ((engine (funcall (alist-get (projectile-project-type) test-cockpit--project-types))))
-      (setf (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal) engine)
+    (if-let* ((engine-factory (alist-get (projectile-project-type) test-cockpit--project-types))
+	      (engine (funcall engine-factory)))
+	(setf (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal) engine)
       engine)))
 
 (defun test-cockpit--make-test-function (func args)
@@ -148,6 +149,11 @@ settings."
   (if-let (last-command (oref (test-cockpit--retrieve-engine) last-command))
       (test-cockpit--run-test last-command)
     (test-cockpit-dispatch)))
+
+(defun test-cockpit-test-or-build ()
+  (if (test-cockpit--retrieve-engine)
+      (test-cockpit-repeat-test)
+    (projectile-compile-project)))
 
 (defun test-cockpit--last-switches ()
   (oref (test-cockpit--retrieve-engine) last-switches))
