@@ -182,7 +182,7 @@ run.  Otherwise the project build is launched by calling projectile-compile-proj
       (test-cockpit--projectile-build)
     (test-cockpit-dispatch)))
 
-(defun test-cockpit-repeat-test-or-build ()
+(defun test-cockpit-repeat-test-or-projectile-build ()
   "Repeat the last test or build action (native or projectile).
 If the project type is supported, test-cockpit-repeat test is
 invoked.  That means, the last test action is repeated or if the

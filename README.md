@@ -64,22 +64,56 @@ Language specific
 
 ## Usage
 
-The most convenient way of running a test is to invoke the user interface with
-the command `test-cockpit-dispatch`. Then a transient user interface (mostly
-known from `magit`) is showing up indicating the common and the language
-specific key bindings. When you call `test-cockpit-dispatch` next time, all the
-settings that you made will be the same you have set before in the current
-project.
+### Suggested keybindings
 
-You can also use the following commands to run tests
+It is suggested that you bind the following two commands to keybindings that
+suit you best.
+
+* `test-cockpit-repeat-test-or-projectile-test`
+  This should be bound to a quickly reachable keybinding, that you can find
+  easily and quickly. It tries to the last test that the current project
+  has been tested with. If in the current session the project has not been
+  tested yet, a dialog is opened for you to choose the way the testing should
+  be performed.
+
+  If the project type is not supported it falls back to
+  `projectile-test-project`.
+
+  In either way, the test command that you give is remembered. Next time you
+  hit your key binding, the exact same test command for the project is
+  repeated.
+
+* `test-cockpit-test-or-projectile-test`
+  This does open the test dialog for you to setup the test command. If the
+  project type is not supported, it falls back to `projectile-test-command`. So
+  use this if you don't want to repeat the last test, but run a different one.
+
+
+### Other commands
+
+* `test-cockpit-repeat-test-or-projectile-build`
+  Like `test-cockpit-repeat-test-or-projectile-test` but only builds the
+  project if the project type is not supported.
+
+* `test-cockpit-test-or-projectile-build`
+  Like `test-cockpit-test-or-projectile-test` but only builds the project if
+  the project type is not supported.
+
+* `test-cockpit-repeat-test`
+  Like `test-cockpit-repeat-test-or-projectile-test` but does not fallback to
+  projectile.
+
+* `test-cockpit-dispatch`
+  Like `test-cockpit-test-or-projectile-test` but does not fallback to
+  projectile.
+
+
+You can also use the following commands to run tests in a more manual way
 
 * `test-cockpit-test-project` to run the whole test suite.
 * `test-cockpit-test-module` runs only the tests of the current module.
 * `test-cockpit-test-function` runs only the test of the function at point.
 * `test-cockpit-repeat-test` repeats exactly the *previous* test run.
-
-It is suggested to bind `test-cockpit-dispatch` and maybe
-`test-cockpit-repeat-test` to the keybinding of your liking.
 
 
 ## Status
