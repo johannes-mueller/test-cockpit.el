@@ -41,14 +41,14 @@
 (defvar test-cockpit--project-types nil
   "List of known project types.")
 
-(defvar test-cockpit--last-command-alist nil
-  "The last testing command issued.")
 
-(defvar test-cockpit--last-switches-alist nil
-  "The last testing switches used.")
 (defvar test-cockpit--project-engines nil)
 
-(defclass test-cockpit--engine () ())
+(defclass test-cockpit--engine ()
+  ((last-command :initarg :last-command
+		 :initform nil)
+   (last-switches :initarg :last-switches
+		  :initform nil)))
 
 (cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--engine)) nil)
 (cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--engine)) nil)
@@ -108,13 +108,13 @@ again as ALIAS."
 
 (defun test-cockpit--run-test (command)
   "Run the test command COMMAND and remembers for the case the test is repeated."
-  (setf (alist-get (projectile-project-root) test-cockpit--last-command-alist nil nil 'equal) command)
+  (oset (test-cockpit--retrieve-engine) last-command command)
   (projectile-with-default-dir (projectile-acquire-root)
     (compile command)))
 
 (defun test-cockpit--command (func args)
   (let ((command (funcall func args)))
-    (setf (alist-get (projectile-project-root) test-cockpit--last-switches-alist nil nil 'equal) args)
+    (oset (test-cockpit--retrieve-engine) last-switches args)
     command))
 
 (defun test-cockpit-test-project (&optional args)
@@ -145,14 +145,12 @@ settings."
   "Repeat the last test."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if-let (last-command (alist-get (projectile-project-root)
-				   test-cockpit--last-command-alist
-				   nil nil 'equal))
+  (if-let (last-command (oref (test-cockpit--retrieve-engine) last-command))
       (test-cockpit--run-test last-command)
     (test-cockpit-dispatch)))
 
 (defun test-cockpit--last-switches ()
-  (alist-get (projectile-project-root) test-cockpit--last-switches-alist nil nil 'equal))
+  (oref (test-cockpit--retrieve-engine) last-switches))
 
 (transient-define-prefix test-cockpit-prefix ()
   "Test the project"
