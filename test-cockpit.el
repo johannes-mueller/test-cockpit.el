@@ -77,15 +77,21 @@ again as ALIAS."
   (setq test-cockpit--project-types
 	(cons `(,alias . ,(alist-get project-type test-cockpit--project-types)) test-cockpit--project-types)))
 
+(defun test-cockpit--make-dummy-engine ()
+  (make-instance 'test-cockpit--engine :is-dummy-engine t))
+
+(defun test-cockpit--make-engine ()
+  (if-let* ((engine-factory (alist-get (projectile-project-type) test-cockpit--project-types))
+	    (real-engine (funcall engine-factory)))
+      real-engine
+    (test-cockpit--make-dummy-engine)))
+
 (defun test-cockpit--retrieve-engine ()
-  (if-let ((engine (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal)))
-      engine
-    (let ((engine (if-let* ((engine-factory (alist-get (projectile-project-type) test-cockpit--project-types))
-			  (engine (funcall engine-factory)))
-		    engine
-		    (make-instance 'test-cockpit--engine :is-dummy-engine t))))
-      (setf (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal) engine)
-      engine)))
+  (if-let ((existing-engine (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal)))
+      existing-engine
+    (let ((new-engine (test-cockpit--make-engine)))
+      (setf (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal) new-engine)
+      new-engine)))
 
 (defun test-cockpit--make-test-function (func args)
   (string-trim (funcall
