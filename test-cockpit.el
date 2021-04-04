@@ -143,7 +143,9 @@ settings."
   (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-function-command args)))
 
 (defun test-cockpit-repeat-test (&optional _args)
-  "Repeat the last test."
+  "Repeat the last test if the current project had last test.
+If the for the project no test has been run during the current
+session, the dispatch dialog is invoked."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let (last-command (oref (test-cockpit--retrieve-engine) last-command))
@@ -151,6 +153,9 @@ settings."
     (test-cockpit-dispatch)))
 
 (defun test-cockpit-test-or-build ()
+  "Tests or builds the project depending on if the project type is known.
+If the project type is known, test-cockpit-repeat-test is
+run. Otherwise the project build is launched by calling projectile-compile-project."
   (if (test-cockpit--retrieve-engine)
       (test-cockpit-repeat-test)
     (projectile-compile-project)))
