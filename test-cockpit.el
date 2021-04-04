@@ -72,10 +72,10 @@ again as ALIAS."
 	(cons `(,alias . ,(alist-get project-type test-cockpit--project-types)) test-cockpit--project-types)))
 
 (defun test-cockpit--retrieve-engine ()
-  (if-let ((engine (alist-get (projectile-project-root) test-cockpit--project-engines)))
+  (if-let ((engine (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal)))
       engine
     (let ((engine (funcall (alist-get (projectile-project-type) test-cockpit--project-types))))
-      (setf (alist-get (projectile-project-root) test-cockpit--project-engines) engine)
+      (setf (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal) engine)
       engine)))
 
 (defun test-cockpit--make-test-function (func args)

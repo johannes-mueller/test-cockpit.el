@@ -31,6 +31,7 @@
   )
 
 (ert-deftest test-cargo-project-command ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
@@ -38,12 +39,14 @@
 		   "cargo test"))))
 
 (ert-deftest test-cargo-project-insert-append-command ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
       ((test-cockpit--cargo--command-with-inserted-switches (args) ((:input '(nil) :output "cmd")))
        (test-cockpit--cargo--append-test-switches (args) ((:input '(nil) :output " appended"))))
     (should (equal (test-cockpit--cargo--test-project-command nil) "cmd appended"))))
 
 (ert-deftest test-cargo-module-command ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))

@@ -16,6 +16,7 @@
 
 
 (defun tc--register-foo-project ()
+  (setq test-cockpit--project-engines nil)
   (test-cockpit-register-project-type 'foo-project-type 'test-cockpit--foo-engine))
 
 (ert-deftest test-register-project-type-primary ()
@@ -88,6 +89,7 @@
 (ert-deftest test-repeat-test ()
   (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
 	       (compile (command) ((:input '("test project") :output 'success :occur 2)
 				   (:input '("test module") :output 'success :occur 3))))
     (test-cockpit-test-project)
@@ -129,20 +131,30 @@
   (should (equal (test-cockpit-add-leading-space-to-switches "") ""))
   (should (equal (test-cockpit-add-leading-space-to-switches "--foo") " --foo")))
 
-(ert-deftest test-last-test-command-empty-list ()
+(ert-deftest test-last-test-no-engine-at-first ()
   (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
 	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
 	       (test-cockpit-dispatch () ((:min-occur 1))))
     (test-cockpit-repeat-test)))
 
-(ert-deftest test-last-test-switches-replace ()
+(ert-deftest test-last-test-command-no-engine-after-project-switch ()
   (tc--register-foo-project)
-  (let ((test-cockpit--last-switches-alist '(("foo-project" . ("never" "to" "be" "called")))))
-    (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-		 (projectile-project-type () ((:output 'foo-project-type)))
-		 (compile (command) ((:input '("test project") :output 'success :occur 1))))
-      (test-cockpit-test-project)
-      (should (eq (length test-cockpit--last-switches-alist) 1)))))
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (compile (command) ((:input '("test project foo bar") :output 'success))))
+    (test-cockpit-test-project '("foo" "bar"))
+    (should (equal (test-cockpit--last-switches) '("foo" "bar")))
+    (should (eq (length test-cockpit--project-engines) 1)))
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "bar-project")))
+	       (test-cockpit-dispatch () ((:min-occur 1))))
+    (should (eq (test-cockpit--last-switches) nil))
+    (test-cockpit-repeat-test)
+    (should (eq (length test-cockpit--project-engines) 2)))
+  (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
+    (should (equal (test-cockpit--last-switches) '("foo" "bar")))
+    (should (eq (length test-cockpit--project-engines) 2))))
+
 
 ;;; test-cockpit.el-test.el ends here

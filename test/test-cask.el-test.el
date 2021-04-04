@@ -6,6 +6,7 @@
   )
 
 (ert-deftest test-get-cask-test-project-command ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'emacs-cask)))
     (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
@@ -15,7 +16,8 @@
 		  "cask install && cask exec ert-runner"))))
 
 (ert-deftest test-get-cask-test-module-command ()
-  (mocker-let
+    (setq test-cockpit--project-engines nil)
+    (mocker-let
    ((projectile-project-type () ((:output 'emacs-cask)))
     (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
     (buffer-file-name () ((:output "tests/test-foo.el-test.el"))))
@@ -25,6 +27,7 @@
 		  "cask install && cask exec ert-runner tests/test-foo.el-test.el"))))
 
 (ert-deftest test-get-cask-test-function-command ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'emacs-cask)))
     (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
@@ -35,6 +38,7 @@
 		  "cask install && cask exec ert-runner -p func-to-test"))))
 
 (ert-deftest test-cask-infix ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'emacs-cask))))
    (let ((infix (test-cockpit-infix)))

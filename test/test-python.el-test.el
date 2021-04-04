@@ -24,6 +24,7 @@
   (should (equal (test-cockpit--python--pytest-binary-path) "pytest"))))
 
 (ert-deftest test-get-python-test-project-command-no-switches ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
     (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
@@ -32,6 +33,7 @@
 		  "/foo/bin/pytest --color=yes --cov-report="))))
 
 (ert-deftest test-get-python-test-project-command-switches ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project" :occur 3)))
@@ -45,6 +47,7 @@
 	(should (equal (test-cockpit-test-project-command arglist) expected))))))
 
 (ert-deftest test-get-python-test-module-command-no-switches ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
     (test-cockpit--python--pytest-binary-path () ((:output "pytest")))
@@ -54,6 +57,7 @@
 		  "pytest --color=yes --cov-report= tests/path/to/test_foo.py"))))
 
 (ert-deftest test-get-python-test-fuzzy-module-command ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
     (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
@@ -63,6 +67,7 @@
 		  "pytest --color=yes --cov-report= -k foo"))))
 
 (ert-deftest test-get-python-test-module-command-switches ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project" :occur 3)))
@@ -77,6 +82,7 @@
 	(should (equal (test-cockpit-test-module-command arglist) expected))))))
 
 (ert-deftest test-get-python-test-function-command-no-switches ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
     (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
@@ -86,6 +92,7 @@
 		  "pytest --color=yes --cov-report= test_foo"))))
 
 (ert-deftest test-get-python-test-function-command-switches ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip :occur 1)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project" :occur 3)))
@@ -100,6 +107,7 @@
 	(should (equal (test-cockpit-test-function-command arglist) expected))))))
 
 (ert-deftest test-python-build-ext-switch ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip :occur 1)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
@@ -108,6 +116,7 @@
 		   "python setup.py build_ext --inplace && /foo/bin/pytest --color=yes --last-failed --cov-report="))))
 
 (ert-deftest test-python-build-ext-switch-changed-command ()
+  (setq test-cockpit--project-engines nil)
   (let ((test-cockpit-python-build-ext-command "foo build-ext command"))
     (mocker-let
        ((projectile-project-type () ((:output 'python-pip :occur 1)))
