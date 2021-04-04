@@ -48,7 +48,13 @@
   ((last-command :initarg :last-command
 		 :initform nil)
    (last-switches :initarg :last-switches
-		  :initform nil)))
+		  :initform nil)
+   (last-build-command :initarg :last-build-command
+		       :initform nil)
+   (last-test-command :initarg :last-test-command
+		       :initform nil)
+   (is-dummy-engine :initarg :is-dummy-engine
+		    :initform nil)))
 
 (cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--engine)) nil)
 (cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--engine)) nil)
@@ -74,9 +80,11 @@ again as ALIAS."
 (defun test-cockpit--retrieve-engine ()
   (if-let ((engine (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal)))
       engine
-    (if-let* ((engine-factory (alist-get (projectile-project-type) test-cockpit--project-types))
-	      (engine (funcall engine-factory)))
-	(setf (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal) engine)
+    (let ((engine (if-let* ((engine-factory (alist-get (projectile-project-type) test-cockpit--project-types))
+			  (engine (funcall engine-factory)))
+		    engine
+		    (make-instance 'test-cockpit--engine :is-dummy-engine t))))
+      (setf (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal) engine)
       engine)))
 
 (defun test-cockpit--make-test-function (func args)
@@ -156,18 +164,72 @@ session, the dispatch dialog is invoked."
   "Test or build the project depending on if the project type is supported.
 If the project type is supported, test-cockpit-repeat-test is
 run.  Otherwise the project build is launched by calling projectile-compile-project."
-  (if (test-cockpit--retrieve-engine)
-      (test-cockpit-repeat-test)
-    (projectile-compile-project)))
+  (interactive)
+  (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
+      (test-cockpit--projectile-build)
+    (test-cockpit-dispatch)))
+
+(defun test-cockpit-repeat-test-or-build ()
+  "Repeat the last test or build action (native or projectile).
+If the project type is supported, test-cockpit-repeat test is
+invoked.  That means, the last test action is repeated or if the
+project has not seen a test action during the session, the test
+menu is shown.  If the project type is unknown the last build
+command is repeated by projectile-build-project a prompt to type a
+build command is shown."
+  (interactive)
+  (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
+      (test-cockpit--repeat-projectile-build)
+    (test-cockpit-repeat-test)))
 
 (defun test-cockpit-test-or-projectile-test ()
   "Test the project falling back projectile if project type is not supported.
 If the project type is supported, test-cockpit-repeat-test is
 run.  Otherwise the project tested calling
 projectile-test-project."
-  (if (test-cockpit--retrieve-engine)
-      (test-cockpit-repeat-test)
-    (projectile-test-project)))
+  (interactive)
+  (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
+      (test-cockpit--projectile-test)
+    (test-cockpit-dispatch)))
+
+(defun test-cockpit-repeat-test-or-projectile-test ()
+  "Repeat the last test action (native or projectile).
+If the project type is supported, test-cockpit-repeat test is
+invoked.  That means, the last test action is repeated or if the
+project has not seen a test action during the session, the test
+menu is shown.  If the project type is unknown the last test
+command is repeated by projectile-test-project a prompt to type a
+test command is shown."
+  (interactive)
+  (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
+      (test-cockpit--repeat-projectile-test)
+    (test-cockpit-repeat-test)))
+
+(defun test-cockpit--projectile-build ()
+  (test-cockpit--do-projectile-build nil))
+
+(defun test-cockpit--repeat-projectile-build ()
+  (test-cockpit--do-projectile-build (test-cockpit--last-build-command)))
+
+(defun test-cockpit--do-projectile-build (last-command)
+  (projectile-compile-project last-command)
+  (oset (test-cockpit--retrieve-engine) last-build-command compile-command))
+
+(defun test-cockpit--projectile-test ()
+  (test-cockpit--do-projectile-test nil))
+
+(defun test-cockpit--repeat-projectile-test ()
+  (test-cockpit--do-projectile-test (test-cockpit--last-test-command)))
+
+(defun test-cockpit--do-projectile-test (last-command)
+  (projectile-test-project last-command)
+  (oset (test-cockpit--retrieve-engine) last-test-command compile-command))
+
+(defun test-cockpit--last-build-command ()
+  (oref (test-cockpit--retrieve-engine) last-build-command))
+
+(defun test-cockpit--last-test-command ()
+  (oref (test-cockpit--retrieve-engine) last-test-command))
 
 (defun test-cockpit--last-switches ()
   (oref (test-cockpit--retrieve-engine) last-switches))
