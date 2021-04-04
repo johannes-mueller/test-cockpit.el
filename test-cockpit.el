@@ -153,12 +153,21 @@ session, the dispatch dialog is invoked."
     (test-cockpit-dispatch)))
 
 (defun test-cockpit-test-or-build ()
-  "Tests or builds the project depending on if the project type is known.
-If the project type is known, test-cockpit-repeat-test is
-run. Otherwise the project build is launched by calling projectile-compile-project."
+  "Test or build the project depending on if the project type is supported.
+If the project type is supported, test-cockpit-repeat-test is
+run.  Otherwise the project build is launched by calling projectile-compile-project."
   (if (test-cockpit--retrieve-engine)
       (test-cockpit-repeat-test)
     (projectile-compile-project)))
+
+(defun test-cockpit-test-or-projectile-test ()
+  "Test the project falling back projectile if project type is not supported.
+If the project type is supported, test-cockpit-repeat-test is
+run.  Otherwise the project tested calling
+projectile-test-project."
+  (if (test-cockpit--retrieve-engine)
+      (test-cockpit-repeat-test)
+    (projectile-test-project)))
 
 (defun test-cockpit--last-switches ()
   (oref (test-cockpit--retrieve-engine) last-switches))
