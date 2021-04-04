@@ -253,5 +253,16 @@
     (should (equal (test-cockpit--last-switches) '("foo" "bar")))
     (should (eq (length test-cockpit--project-engines) 2))))
 
+(ert-deftest test-repeat-test-dummy-engine ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'bar-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "bar-project"))))
+    (should-error (test-cockpit-repeat-test))))
+
+(ert-deftest test-dispatch-dummy-engine ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'bar-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "bar-project"))))
+    (should-error (test-cockpit-dispatch))))
 
 ;;; test-cockpit.el-test.el ends here

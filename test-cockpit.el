@@ -93,6 +93,12 @@ again as ALIAS."
       (setf (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal) new-engine)
       new-engine)))
 
+(defun test-cockpit--real-engine-or-error ()
+  (let ((engine (test-cockpit--retrieve-engine)))
+    (if (oref engine is-dummy-engine)
+	(signal "Project type %s not supported by test-cockpit or engine not installed" (projectile-project-type))
+      engine)))
+
 (defun test-cockpit--make-test-function (func args)
   (string-trim (funcall
 		(funcall func (test-cockpit--retrieve-engine))
@@ -162,11 +168,12 @@ If the for the project no test has been run during the current
 session, the dispatch dialog is invoked."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if-let (last-command (oref (test-cockpit--retrieve-engine) last-command))
-      (test-cockpit--run-test last-command)
-    (test-cockpit-dispatch)))
+  (let ((engine (test-cockpit--real-engine-or-error)))
+    (if-let (last-command (oref engine last-command))
+	(test-cockpit--run-test last-command)
+      (test-cockpit-dispatch))))
 
-(defun test-cockpit-test-or-build ()
+(defun test-cockpit-test-or-projectile-build ()
   "Test or build the project depending on if the project type is supported.
 If the project type is supported, test-cockpit-repeat-test is
 run.  Otherwise the project build is launched by calling projectile-compile-project."
@@ -252,6 +259,7 @@ test command is shown."
 (defun test-cockpit-dispatch ()
   "Invoke the user interface of to setup and run tests."
   (interactive)
+  (test-cockpit--real-engine-or-error)
   (test-cockpit--insert-infix)
   (test-cockpit-prefix)
   )
