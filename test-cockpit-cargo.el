@@ -150,7 +150,7 @@
   "Setup the prefix for the cargo test command."
   (string-trim-right
    (string-join (seq-filter (lambda (s) (string> s ""))
-			    `("cargo test"
+			    `("cargo test --color=always"
 			      ,(test-cockpit--cargo--insert-test-switches args)
 			      ,(test-cockpit--cargo--features-switch)))
 		" ")))

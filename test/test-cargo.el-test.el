@@ -6,12 +6,12 @@
   (should (alist-get 'rust-cargo test-cockpit--project-types)))
 
 (ert-deftest test-cargo-command-with-switches ()
-  (dolist (struct '((nil nil "cargo test")
-		    (("--doc") nil "cargo test --doc")
-		    (("--doc" "--ignored") nil "cargo test --doc")
-		    (("--tests") ("foo") "cargo test --tests --features foo")
-		    (("--ignored") ("bar") "cargo test --features bar")
-		    (("--tests") ("bar" "foo") "cargo test --tests --features bar foo")
+  (dolist (struct '((nil nil "cargo test --color=always")
+		    (("--doc") nil "cargo test --color=always --doc")
+		    (("--doc" "--ignored") nil "cargo test --color=always --doc")
+		    (("--tests") ("foo") "cargo test --color=always --tests --features foo")
+		    (("--ignored") ("bar") "cargo test --color=always --features bar")
+		    (("--tests") ("bar" "foo") "cargo test --color=always --tests --features bar foo")
 		    ))
     (let* ((switches (pop struct))
 	   (test-cockpit--cargo--enabled-features (pop struct))
@@ -36,7 +36,7 @@
       ((projectile-project-type () ((:output 'rust-cargo)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
     (should (equal (test-cockpit-test-project-command nil)
-		   "cargo test"))))
+		   "cargo test --color=always"))))
 
 (ert-deftest test-cargo-project-insert-append-command ()
   (setq test-cockpit--project-engines nil)
@@ -52,7 +52,7 @@
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
        (test-cockpit--cargo--build-module-path () ((:output "bar"))))
     (should (equal (test-cockpit-test-module-command nil)
-		   "cargo test bar::"))))
+		   "cargo test --color=always bar::"))))
 
 (ert-deftest test-cargo-module-insert-append-command ()
   (mocker-let
@@ -67,7 +67,7 @@
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
        (test-cockpit--cargo--build-test-fn-path () ((:output "bar::foo_function"))))
     (should (equal (test-cockpit-test-function-command nil)
-		   "cargo test bar::foo_function"))))
+		   "cargo test --color=always bar::foo_function"))))
 
 (ert-deftest test-cargo-function-insert-append-command ()
   (mocker-let
