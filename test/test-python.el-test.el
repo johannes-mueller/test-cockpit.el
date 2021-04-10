@@ -251,6 +251,20 @@ class TestClass(unittest.TestCase):
 	  (goto-char init-pos)
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
+(ert-deftest test-find-test-method-point-in-async-def ()
+  (let ((buffer-contents "
+async def test_first_outer():
+    pass
+")
+	(init-pos 3)
+	(expected-string "test_first_outer")
+	(buf (get-buffer-create "test-buffer")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert buffer-contents)
+      (goto-char init-pos)
+      (should (equal (test-cockpit--python--find-current-test) expected-string)))))
+
 (ert-deftest test-concat-file-path-test-method ()
   (mocker-let ((buffer-file-name () ((:output "/foo/bar/project/path/to/test_file.py")))
 	       (projectile-project-root () ((:output "/foo/bar/project")))
