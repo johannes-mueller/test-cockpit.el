@@ -101,19 +101,31 @@
     (if (search-backward-regexp "^\\([[:alpha:]].*\\)$" nil t)
 	(match-string 1))))
 
+(defun test-cockpit--python--test-function-in-line (line)
+  (if (string-match "def \\(test_[[:alpha:]][[:word:]_]*\\)" line)
+      (match-string 1 line)))
+
+(defun test-cockpit--python--class-in-line (line)
+  (if (string-match "^class \\([[:alpha:]][[:word:]_]*\\)(\\(unittest\.\\)?TestCase):" line)
+      (match-string 1 line)))
+
+(defun test-cockpit--python--maybe-test-method (line pos)
+  (save-excursion
+    (if (and (search-backward-regexp "def \\([[:alpha:]][[:word:]_]*\\)" nil t)
+	     (< pos (match-beginning 0))
+	     (string-prefix-p "test_" (match-string 1)))
+	(concat "::" (match-string 1)))))
+
+(defun test-cockpit--python--test-method-or-class (line pos)
+  (if-let ((test-class (test-cockpit--python--class-in-line line)))
+      (concat test-class
+	      (test-cockpit--python--maybe-test-method line pos))))
+
 (defun test-cockpit--python--find-current-test ()
   (if-let* ((unindented-line (test-cockpit--python--find-last-unindented-line))
 	    (unindented-pos (match-beginning 0)))
-      (if (string-match "def \\(test_[[:alpha:]][[:word:]_]*\\)" unindented-line)
-	  (match-string 1 unindented-line)
-	(if-let ((test-class (if (string-match "^class \\([[:alpha:]][[:word:]_]*\\)(\\(unittest\.\\)?TestCase):" unindented-line)
-				 (match-string 1 unindented-line))))
-	    (concat test-class
-		    (save-excursion
-		      (if (and (search-backward-regexp "def \\([[:alpha:]][[:word:]_]*\\)" nil t)
-			       (< unindented-pos (match-beginning 0))
-			       (string-prefix-p "test_" (match-string 1)))
-			  (concat "::" (match-string 1)))))))))
+      (or (test-cockpit--python--test-function-in-line unindented-line)
+	  (test-cockpit--python--test-method-or-class unindented-line unindented-pos))))
 
 (defun test-cockpit--python--test-function-path ()
   (concat (string-remove-prefix (file-name-as-directory (projectile-project-root)) (buffer-file-name))
