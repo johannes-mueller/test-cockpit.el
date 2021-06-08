@@ -179,7 +179,7 @@ mod bar {
 		    (("--benches") "--benches")
 		    (("--examples") "--examples")
 		    (("--doc") "--doc")
-		    (("--examples" "--tests") "--tests --examples")
+		    (("--examples" "--tests") "--examples --tests")
 		    (("--doc" "--tests") "--doc")
 		    (("--ignored") "")))
     (let ((switches (pop struct))

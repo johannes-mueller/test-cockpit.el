@@ -221,8 +221,13 @@
 
 (ert-deftest test-join-filter-switches ()
   (let ((allowed '("foo" "bar")))
-    (should (equal (test-cockpit--join-filter-switches '("bar" "foo") allowed) "foo bar"))
+    (should (equal (test-cockpit--join-filter-switches '( "foo" "bar") allowed) "foo bar"))
     (should (equal (test-cockpit--join-filter-switches '("bar" "boing") allowed) "bar"))))
+
+(ert-deftest test-join-filter-options ()
+  (let ((allowed '("-f" "--bar=")))
+    (should (equal (test-cockpit--join-filter-switches '("-foo" "--bar=bar" "--baz=baz") allowed)
+		   "-foo --bar=bar"))))
 
 (ert-deftest test-add-leading-space-to-switches ()
   (should (equal (test-cockpit-add-leading-space-to-switches "") ""))

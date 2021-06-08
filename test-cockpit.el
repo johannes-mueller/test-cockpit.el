@@ -275,10 +275,15 @@ test command is shown."
   "Join the list of strings CANDIDATES together.
 Candidates not in ALLOWED are excluded.  The items are separated
 with a space."
-  (string-join (delete 'exclude
-		       (mapcar (lambda (sw) (if (member sw candidates) sw 'exclude))
-			       allowed))
-	       " "))
+  (string-join
+   (delete 'exclude
+	   (mapcar (lambda (candidate)
+		     (if (cl-find-if
+			  (lambda (allowed-prefix) (string-prefix-p allowed-prefix candidate)) allowed)
+			 candidate
+		       'exclude))
+		   candidates))
+   " "))
 
 (defun test-cockpit-add-leading-space-to-switches (switches)
   (if (string-empty-p switches)
