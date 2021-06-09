@@ -217,6 +217,7 @@ mod bar {
 		   (equal (aref (aref infix 0) 2) '("-b" "with benchmarks" "--benches"))
 		   (equal (aref (aref infix 0) 3) '("-x" "with examples" "--examples"))
 		   (equal (aref (aref infix 0) 4) '("-d" "only doctests" "--doc"))
+		   (equal (car (aref (aref infix 0) 5)) "-f")
 		   (equal (aref (aref infix 1) 0) "Switches")
 		   (equal (aref (aref infix 1) 1) '("-I" "only ignored tests" "--ignored"))
 		   (equal (aref (aref infix 1) 2) '("-i" "include ignored tests" "--include-ignored"))

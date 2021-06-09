@@ -37,7 +37,8 @@
     "--cov-report="
     "--cov-report=term"
     "-rFP"
-    "--disable-warnings"))
+    "--disable-warnings"
+    "-k"))
 
 (defun test-cockpit--python--test-project-command (args)
   (concat (test-cockpit--python--common-switches args)))
@@ -85,8 +86,15 @@
       (append switches '("--cov-report="))
     switches))
 
+(transient-define-argument test-cockpit--python--restrict-substring ()
+  :description "Restrict to tests matching string"
+  :class 'transient-option
+  :key "-k"
+  :argument "-k")
+
 (defun test-cockpit--python--infix ()
   [["Switches"
+    ("-k" test-cockpit--python--restrict-substring)
     ("-l" "only lastly failed tests" "--last-failed")
     ("-b" "build extensions before testing" "build_ext")]
    ["Output"
