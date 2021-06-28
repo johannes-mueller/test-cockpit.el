@@ -114,7 +114,7 @@
       (match-string 1 line)))
 
 (defun test-cockpit--python--class-in-line (line)
-  (if (string-match "^class \\([[:alpha:]][[:word:]_]*\\)(\\(unittest\.\\)?TestCase):" line)
+  (if (string-match "^class \\([[:alpha:]][[:word:]_]*\\)\\((.*)\\)?:" line)
       (match-string 1 line)))
 
 (defun test-cockpit--python--maybe-test-method (line pos)
