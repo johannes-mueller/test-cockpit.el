@@ -206,7 +206,7 @@ def test_first_outer():
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
 
-(ert-deftest test-find-test-method-in-testcase-class ()
+(ert-deftest test-find-test-method-in-test-class ()
   (let ((buffer-contents "
 class TestClass(TestCase):
 
@@ -226,7 +226,28 @@ class TestClass(TestCase):
 	  (goto-char init-pos)
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
-(ert-deftest test-find-test-method-in-non-testcase-class ()
+
+(ert-deftest test-find-test-method-in-no-test-class ()
+  (let ((buffer-contents "
+class NoTestClass(TestCase):
+
+    def test_in_no_test_class(self):
+        pass
+
+    pass
+"))
+    (dolist (struct '((80 nil)
+		      (25 nil)))
+      (let ((init-pos (pop struct))
+	    (expected-string (pop struct))
+	    (buf (get-buffer-create "test-buffer")))
+	(with-current-buffer buf
+	  (erase-buffer)
+	  (insert buffer-contents)
+	  (goto-char init-pos)
+	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
+
+(ert-deftest test-find-test-method-in-non-testcase-test-class ()
   (let ((buffer-contents "
 class TestClass:
 
