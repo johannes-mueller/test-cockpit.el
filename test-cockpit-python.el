@@ -30,6 +30,7 @@
 
 (test-cockpit-register-project-type 'python-pip 'test-cockpit--python-engine)
 (test-cockpit-register-project-type-alias 'python-pkg 'python-pip)
+(test-cockpit-register-project-type-alias 'python-tox 'python-pip)
 
 (defconst test-cockpit--python--allowed-switches
   '("--last-failed"
