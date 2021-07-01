@@ -267,7 +267,27 @@ class TestClass:
 	  (goto-char init-pos)
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
-(ert-deftest test-find-test-method-in-testcase-class-after-teardown ()
+(ert-deftest test-find-test-method-test-class-with-spaces ()
+  (let ((buffer-contents "
+class 	 TestClass:
+
+    def 	 test_in_class(self):
+        pass
+
+    pass
+"))
+    (dolist (struct '((70 "TestClass::test_in_class" )
+		      (15 "TestClass")))
+      (let ((init-pos (pop struct))
+	    (expected-string (pop struct))
+	    (buf (get-buffer-create "test-buffer")))
+	(with-current-buffer buf
+	  (erase-buffer)
+	  (insert buffer-contents)
+	  (goto-char init-pos)
+	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
+
+(ert-deftest test-find-test-method-in-test-class-after-teardown ()
   (let ((buffer-contents "
 class TestClass(unittest.TestCase):
 

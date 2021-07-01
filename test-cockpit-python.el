@@ -111,16 +111,16 @@
 	(match-string 1))))
 
 (defun test-cockpit--python--test-function-in-line (line)
-  (if (string-match "def \\(test_[[:alpha:]][[:word:]_]*\\)" line)
+  (if (string-match "def[[:space:]]+\\(test_[[:alpha:]][[:word:]_]*\\)" line)
       (match-string 1 line)))
 
 (defun test-cockpit--python--class-in-line (line)
-  (if (string-match "^class \\(Test[[:alpha:]][[:word:]_]*\\)\\((.*)\\)?:" line)
+  (if (string-match "^class[[:space:]]+\\(Test[[:alpha:]][[:word:]_]*\\)\\((.*)\\)?:" line)
       (match-string 1 line)))
 
 (defun test-cockpit--python--maybe-test-method (line pos)
   (save-excursion
-    (if (and (search-backward-regexp "def \\([[:alpha:]][[:word:]_]*\\)" nil t)
+    (if (and (search-backward-regexp "def[[:space:]]+\\([[:alpha:]][[:word:]_]*\\)" nil t)
 	     (< pos (match-beginning 0))
 	     (string-prefix-p "test_" (match-string 1)))
 	(concat "::" (match-string 1)))))
