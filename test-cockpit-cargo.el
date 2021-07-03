@@ -34,27 +34,31 @@
   'test-cockpit--cargo--test-function-command)
 (cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--cargo-engine))
   'test-cockpit--cargo--infix)
+(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--cargo-engine))
+  (test-cockpit--cargo-built-module-path-or-file-path-fallback))
+(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--cargo-engine))
+  (test-cockpit--cargo--build-test-fn-path))
+
 
 (test-cockpit-register-project-type 'rust-cargo 'test-cockpit--cargo-engine)
 
-(defun test-cockpit--cargo--test-project-command (args)
+(defun test-cockpit--cargo--test-project-command (_ args)
   "Setup the command to test the project with ARGS."
   (concat (test-cockpit--cargo--command-with-inserted-switches args)
 	  (test-cockpit--cargo--append-test-switches args)))
 
-(defun test-cockpit--cargo--test-module-command (args)
+(defun test-cockpit--cargo--test-module-command (module-string args)
   "Setup the command to test the module at point with ARGS."
   (concat (test-cockpit--cargo--command-with-inserted-switches args)
 	  " "
-	  (concat (or (test-cockpit--cargo--build-module-path)
-		      (file-name-base (buffer-file-name))) "::")
+	  module-string
 	  (test-cockpit--cargo--append-test-switches args)))
 
-(defun test-cockpit--cargo--test-function-command (args)
+(defun test-cockpit--cargo--test-function-command (function-string args)
   "Setup the command to test the function at point with ARGS."
   (concat (test-cockpit--cargo--command-with-inserted-switches args)
 	  " "
-	  (test-cockpit--cargo--build-test-fn-path)
+	  function-string
 	  (test-cockpit--cargo--append-test-switches args)))
 
 (defconst test-cockpit---cargo---mod-regexp
@@ -91,6 +95,10 @@
 		"^\\(src\\)?::" ""
 		(concat relative-path (test-cockpit--cargo--track-module-path (point))))))
       (unless (eq mod "") mod))))
+
+(defun test-cockpit--cargo-built-module-path-or-file-path-fallback ()
+  (concat (or (test-cockpit--cargo--build-module-path)
+	      (file-name-base (buffer-file-name))) "::"))
 
 (defconst test-cockpit--cargo--test-fn-regexp
   "#\\[test\\][[:space:]\n]\\([[:space:]\n]*#\\[[^[]*\\][[:space:]\n]\\)*[[:space:]\n]*\\(async\s*\\)?\s*fn \\([[:alpha:]][[:word:]_]*\\)")

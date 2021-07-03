@@ -53,6 +53,12 @@
 		       :initform nil)
    (last-test-command :initarg :last-test-command
 		       :initform nil)
+   (last-module-string :initarg :last-module-string
+		       :initform nil)
+   (last-function-string :initarg :last-function-string
+			 :initform nil)
+   (last-args :initarg :last-args
+	      :initform nil)
    (is-dummy-engine :initarg :is-dummy-engine
 		    :initform nil)))
 
@@ -60,7 +66,8 @@
 (cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--engine)) nil)
 (cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--engine)) nil)
 (cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--engine)) (lambda () nil))
-
+(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--engine) nil))
+(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--engine) nil))
 
 (defun test-cockpit-register-project-type (project-type engine-class)
     "Register a language testing package."
@@ -99,22 +106,31 @@ again as ALIAS."
 	(signal "Project type %s not supported by test-cockpit or engine not installed" (projectile-project-type))
       engine)))
 
-(defun test-cockpit--make-test-function (func args)
+(defun test-cockpit--make-test-function (func string args)
   (string-trim (funcall
 		(funcall func (test-cockpit--retrieve-engine))
-		args)))
+		string args)))
 
-(defun test-cockpit-test-project-command (args)
+(defun test-cockpit--update-last-commands (args)
+  (let ((engine (test-cockpit--retrieve-engine)))
+    (oset engine last-module-string (test-cockpit--current-module-string))
+    (oset engine last-function-string (test-cockpit--current-function-string))
+    (oset engine last-args args)))
+
+(defun test-cockpit-test-project-command (project-string args)
   "Call the test-project-command function with ARGS of the current project type."
-  (test-cockpit--make-test-function 'test-cockpit--test-project-command args))
+  (test-cockpit--update-last-commands args)
+  (test-cockpit--make-test-function 'test-cockpit--test-project-command project-string args))
 
-(defun test-cockpit-test-module-command (args)
+(defun test-cockpit-test-module-command (module-string args)
   "Call the test-module-command function with ARGS of the current project type."
-  (test-cockpit--make-test-function 'test-cockpit--test-module-command args))
+  (test-cockpit--update-last-commands args)
+  (test-cockpit--make-test-function 'test-cockpit--test-module-command module-string args))
 
-(defun test-cockpit-test-function-command (args)
+(defun test-cockpit-test-function-command (func-string args)
   "Call the test-function-command function with ARGS of the current project type."
-  (test-cockpit--make-test-function 'test-cockpit--test-function-command args))
+  (test-cockpit--update-last-commands args)
+  (test-cockpit--make-test-function 'test-cockpit--test-function-command func-string args))
 
 (defun test-cockpit-infix ()
   "Call the infix function of the current project type and return the infix array."
@@ -136,8 +152,8 @@ again as ALIAS."
   (projectile-with-default-dir (projectile-acquire-root)
     (compile command)))
 
-(defun test-cockpit--command (func args)
-  (let ((command (funcall func args)))
+(defun test-cockpit--command (func string args)
+  (let ((command (funcall func string args)))
     (oset (test-cockpit--retrieve-engine) last-switches args)
     command))
 
@@ -146,7 +162,7 @@ again as ALIAS."
 ARGS is the UI state for language specific settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-project-command args)))
+  (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-project-command nil args)))
 
 (defun test-cockpit-test-module (&optional args)
   "Test the module of the current buffer.
@@ -154,7 +170,7 @@ The exact determination of the model is done by the language specific package.
 ARGS is the UI state for language specific settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-module-command args)))
+  (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-module-command (test-cockpit--current-module-string) args)))
 
 (defun test-cockpit-test-function (&optional args)
   "Run the test function at point.
@@ -163,7 +179,28 @@ specific package.  ARGS is the UI state for language specific
 settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-function-command args)))
+  (test-cockpit--run-test (test-cockpit--command
+			   'test-cockpit-test-function-command
+			   (test-cockpit--current-function-string)
+			   args)))
+
+(defun test-cockpit-repeat-module (&optional args)
+  (interactive
+   (list (transient-args 'test-cockpit-prefix)))
+  (if-let ((last-module (test-cockpit--last-module-string)))
+      (test-cockpit--run-test (test-cockpit--command
+			       'test-cockpit-test-module-command
+			       (test-cockpit--last-module-string)
+			       (or args (oref (test-cockpit--retrieve-engine) last-args))))))
+
+(defun test-cockpit-repeat-function (&optional args)
+  (interactive
+   (list (transient-args 'test-cockpit-prefix)))
+  (if-let ((last-function (test-cockpit--last-function-string)))
+      (test-cockpit--run-test (test-cockpit--command
+			       'test-cockpit-test-function-command
+			       (test-cockpit--last-function-string)
+			       (or args (oref (test-cockpit--retrieve-engine) last-args))))))
 
 (defun test-cockpit-repeat-test (&optional _args)
   "Repeat the last test if the current project had last test.
@@ -245,6 +282,18 @@ test command is shown."
     (progn (projectile-test-project last-command)
 	   (oset (test-cockpit--retrieve-engine) last-test-command compile-command))))
 
+(defun test-cockpit--current-module-string ()
+  (test-cockpit--engine-current-module-string (test-cockpit--retrieve-engine)))
+
+(defun test-cockpit--last-module-string ()
+  (oref (test-cockpit--retrieve-engine) last-module-string))
+
+(defun test-cockpit--current-function-string ()
+  (test-cockpit--engine-current-function-string (test-cockpit--retrieve-engine)))
+
+(defun test-cockpit--last-function-string ()
+  (oref (test-cockpit--retrieve-engine) last-function-string))
+
 (defun test-cockpit--last-build-command ()
   (oref (test-cockpit--retrieve-engine) last-build-command))
 
@@ -263,13 +312,28 @@ test command is shown."
    ("f" "function" test-cockpit-test-function)
    ("r" "repeat" test-cockpit-repeat-test)])
 
+(defun test-cockpit--transient-suffix-for-repeat ()
+  (let* ((engine (test-cockpit--retrieve-engine))
+	 (module-string (oref engine last-module-string))
+	 (function-string (oref engine last-function-string)))
+    (if (or module-string function-string)
+	(vconcat (remove nil (append `("Repeat tests"
+				       ,(if module-string `("M" ,(format "last module: %s" module-string) test-cockpit-repeat-module))
+				       ,(if function-string `("F" ,(format "last function: %s" function-string) test-cockpit-repeat-function)))))))))
+
+(defun test-cockpit--append-repeat-suffix ()
+  (if-let ((repeat-suffix (test-cockpit--transient-suffix-for-repeat)))
+      (transient-append-suffix 'test-cockpit-prefix '(-1) repeat-suffix)
+    nil))
+
 (defun test-cockpit-dispatch ()
   "Invoke the user interface of to setup and run tests."
   (interactive)
   (test-cockpit--real-engine-or-error)
   (test-cockpit--insert-infix)
-  (test-cockpit-prefix)
-  )
+  (let ((is-remove-needed (test-cockpit--append-repeat-suffix)))
+    (test-cockpit-prefix)
+    (if is-remove-needed (transient-remove-suffix 'test-cockpit-prefix '(-1)))))
 
 (defun test-cockpit--join-filter-switches (candidates allowed)
   "Join the list of strings CANDIDATES together.

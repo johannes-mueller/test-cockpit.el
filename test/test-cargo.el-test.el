@@ -34,47 +34,61 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
-       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
-    (should (equal (test-cockpit-test-project-command nil)
-		   "cargo test --color=always"))))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (test-cockpit--cargo--build-module-path () ((:output "bar")))
+       (compile (command) ((:input '("cargo test --color=always") :output 'success :occur 1))))
+    (test-cockpit-test-project)))
 
 (ert-deftest test-cargo-project-insert-append-command ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
-      ((test-cockpit--cargo--command-with-inserted-switches (args) ((:input '(nil) :output "cmd")))
-       (test-cockpit--cargo--append-test-switches (args) ((:input '(nil) :output " appended"))))
-    (should (equal (test-cockpit--cargo--test-project-command nil) "cmd appended"))))
+      ((projectile-project-type () ((:output 'rust-cargo)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (test-cockpit--cargo--append-test-switches (args) ((:input '(nil) :output " appended")))
+       (test-cockpit--cargo--build-module-path () ((:output "bar")))
+       (test-cockpit--cargo--build-test-fn-path () ((:output "bar::foo_function")))
+       (compile (command) ((:input '("cargo test --color=always appended") :output 'success :occur 1))))
+    (test-cockpit-test-project)))
 
 (ert-deftest test-cargo-module-command ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-       (test-cockpit--cargo--build-module-path () ((:output "bar"))))
-    (should (equal (test-cockpit-test-module-command nil)
-		   "cargo test --color=always bar::"))))
+       (test-cockpit--cargo--build-module-path () ((:output "bar")))
+       (compile (command) ((:input '("cargo test --color=always bar::") :output 'success :occur 1))))
+    (test-cockpit-test-module)))
 
 (ert-deftest test-cargo-module-insert-append-command ()
-  (mocker-let
-      ((test-cockpit--cargo--command-with-inserted-switches (args) ((:input '(nil) :output "cmd")))
-       (test-cockpit--cargo--append-test-switches (args) ((:input '(nil) :output " appended")))
-       (test-cockpit--cargo--build-module-path () ((:output "bar"))))
-    (should (equal (test-cockpit--cargo--test-module-command nil) "cmd bar:: appended"))))
-
-(ert-deftest test-cargo-function-command ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-       (test-cockpit--cargo--build-test-fn-path () ((:output "bar::foo_function"))))
-    (should (equal (test-cockpit-test-function-command nil)
-		   "cargo test --color=always bar::foo_function"))))
+       (test-cockpit--cargo--append-test-switches (args) ((:input '(nil) :output " appended")))
+       (test-cockpit--cargo--build-module-path () ((:output "bar")))
+       (compile (command) ((:input '("cargo test --color=always bar:: appended") :output 'success :occur 1))))
+    (test-cockpit-test-module)))
+
+(ert-deftest test-cargo-function-command ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+      ((projectile-project-type () ((:output 'rust-cargo)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (test-cockpit--cargo--build-test-fn-path () ((:output "bar::foo_function")))
+       (test-cockpit--cargo--build-module-path () ((:output "bar")))
+       (compile (command) ((:input '("cargo test --color=always bar::foo_function") :output 'success :occur 1))))
+    (test-cockpit-test-function)))
 
 (ert-deftest test-cargo-function-insert-append-command ()
+  (setq test-cockpit--project-engines nil)
   (mocker-let
-      ((test-cockpit--cargo--command-with-inserted-switches (args) ((:input '(nil) :output "cmd")))
+      ((projectile-project-type () ((:output 'rust-cargo)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
        (test-cockpit--cargo--append-test-switches (args) ((:input '(nil) :output " appended")))
-       (test-cockpit--cargo--build-test-fn-path () ((:output "bar::foo_function"))))
-    (should (equal (test-cockpit--cargo--test-function-command nil) "cmd bar::foo_function appended"))))
+       (test-cockpit--cargo--build-test-fn-path () ((:output "bar::foo_function")))
+       (test-cockpit--cargo--build-module-path () ((:output "bar")))
+       (compile (command) ((:input '("cargo test --color=always bar::foo_function appended") :output 'success :occur 1))))
+  (test-cockpit-test-function)))
 
 (ert-deftest test-track-module-path ()
   (let ((buffer-contents "

@@ -22,11 +22,15 @@
 (cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--python-engine))
   'test-cockpit--python--test-project-command)
 (cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--python-engine))
-  'test-cockpit--python--test-module-command )
+  'test-cockpit--python--test-module-command)
 (cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--python-engine))
   'test-cockpit--python--test-function-command)
 (cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--python-engine))
   'test-cockpit--python--infix)
+(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--python-engine))
+  (test-cockpit--python--choose-module))
+(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--python-engine))
+  (test-cockpit--python--test-function-path))
 
 (test-cockpit-register-project-type 'python-pip 'test-cockpit--python-engine)
 (test-cockpit-register-project-type-alias 'python-pkg 'python-pip)
@@ -41,14 +45,11 @@
     "--disable-warnings"
     "-k"))
 
-(defun test-cockpit--python--test-project-command (args)
+(defun test-cockpit--python--test-project-command (_ args)
   (concat (test-cockpit--python--common-switches args)))
 
-(defun test-cockpit--python--test-module-command (args)
-  (concat (test-cockpit--python--common-switches args)
-	  " "
-	  (test-cockpit--python--choose-module)
-))
+(defun test-cockpit--python--test-module-command (string args)
+  (concat (test-cockpit--python--common-switches args) " " string))
 
 (defun test-cockpit--python--choose-module ()
   (let ((file-name-path (buffer-file-name)))
@@ -57,10 +58,8 @@
       (concat "-k " (file-name-base file-name-path))
     )))
 
-(defun test-cockpit--python--test-function-command (args)
-  (concat (test-cockpit--python--common-switches args)
-	  " "
-	  (test-cockpit--python--test-function-path)))
+(defun test-cockpit--python--test-function-command (string args)
+  (concat (test-cockpit--python--common-switches args) " " string))
 
 (defun test-cockpit--python--build-ext-command (args)
   (if (member "build_ext" args)
