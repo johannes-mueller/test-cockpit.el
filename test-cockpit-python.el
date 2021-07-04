@@ -54,7 +54,7 @@
 (defun test-cockpit--python--choose-module ()
   (let ((file-name-path (buffer-file-name)))
     (if (string-prefix-p "test_" (file-name-nondirectory file-name-path))
-	(string-remove-prefix (file-name-as-directory (projectile-project-root)) file-name-path)
+	(test-cockpit--strip-project-root file-name-path)
       (concat "-k " (file-name-base file-name-path))
     )))
 
@@ -136,7 +136,7 @@
 	  (test-cockpit--python--test-method-or-class unindented-line unindented-pos))))
 
 (defun test-cockpit--python--test-function-path ()
-  (concat (string-remove-prefix (file-name-as-directory (projectile-project-root)) (buffer-file-name))
+  (concat (test-cockpit--strip-project-root (buffer-file-name))
 	  (if-let ((test-function (test-cockpit--python--find-current-test)))
 	      (concat "::" test-function))))
 
