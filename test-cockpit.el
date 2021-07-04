@@ -320,14 +320,23 @@ test command is shown."
    ("f" "function" test-cockpit-test-function)
    ("r" "repeat" test-cockpit-repeat-test)])
 
+(defun test-cockpit--strip-project-root (string)
+  (string-remove-prefix (file-name-as-directory (projectile-project-root)) string))
+
 (defun test-cockpit--transient-suffix-for-repeat ()
   (let* ((engine (test-cockpit--retrieve-engine))
 	 (module-string (oref engine last-module-string))
 	 (function-string (oref engine last-function-string)))
     (if (or module-string function-string)
 	(vconcat (remove nil (append `("Repeat tests"
-				       ,(if module-string `("M" ,(format "last module: %s" module-string) test-cockpit-repeat-module))
-				       ,(if function-string `("F" ,(format "last function: %s" function-string) test-cockpit-repeat-function)))))))))
+				       ,(if module-string
+					    `("M"
+					      ,(format "last module: %s" (test-cockpit--strip-project-root module-string))
+					      test-cockpit-repeat-module))
+				       ,(if function-string
+					    `("F"
+					      ,(format "last function: %s" (test-cockpit--strip-project-root function-string))
+					      test-cockpit-repeat-function)))))))))
 
 (defun test-cockpit--append-repeat-suffix ()
   (if-let ((repeat-suffix (test-cockpit--transient-suffix-for-repeat)))
