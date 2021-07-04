@@ -51,6 +51,13 @@
 (ert-deftest test-last-module-string-default-nil ()
   (should (eq (test-cockpit--last-module-string) nil)))
 
+(ert-deftest test-repeat-module-no-last-module ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (test-cockpit-dispatch () ((:occur 1))))
+    (test-cockpit-repeat-module)))
+
 (ert-deftest test-test-last-strings-module-called ()
   (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
@@ -88,6 +95,13 @@
 
 (ert-deftest test-last-function-string-default-nil ()
   (should (eq (test-cockpit--last-function-string) nil)))
+
+(ert-deftest test-repeat-function-no-last-function ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (test-cockpit-dispatch () ((:occur 1))))
+    (test-cockpit-repeat-function)))
 
 (ert-deftest test-test-last-strings-function-called ()
   (tc--register-foo-project)

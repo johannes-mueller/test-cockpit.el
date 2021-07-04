@@ -195,7 +195,8 @@ settings."
 				 (test-cockpit--last-module-string)
 				 (or args (oref engine last-args))))
 	(oset engine last-module-string last-module)
-	(oset engine last-function-string last-function))))
+	(oset engine last-function-string last-function))
+    (test-cockpit-dispatch)))
 
 (defun test-cockpit-repeat-function (&optional args)
   (interactive
@@ -208,7 +209,8 @@ settings."
 				 (test-cockpit--last-function-string)
 				 (or args (oref engine last-args))))
 	(oset engine last-module-string last-module)
-	(oset engine last-function-string last-function))))
+	(oset engine last-function-string last-function))
+    (test-cockpit-dispatch)))
 
 (defun test-cockpit-repeat-test (&optional _args)
   "Repeat the last test if the current project had last test.
