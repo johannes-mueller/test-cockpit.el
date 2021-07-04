@@ -42,7 +42,12 @@
   "List of known project types.")
 
 
-(defvar test-cockpit--project-engines nil)
+(defvar test-cockpit--project-engines nil
+  "List of already started engines.
+Usually there is one such engine per project that has been
+visited during the current session.  An engine is an instance of
+a derived class of `test-cockpit--engine'."
+  )
 
 (defclass test-cockpit--engine ()
   ((last-command :initarg :last-command
@@ -60,17 +65,49 @@
    (last-args :initarg :last-args
 	      :initform nil)
    (is-dummy-engine :initarg :is-dummy-engine
-		    :initform nil)))
+		    :initform nil))
+  "The base class for a test-cockpit engine.
+For every project type supported by test-cockpit.el a derived
+class is needed which implements the methods of the base class.")
 
-(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--engine)) nil)
-(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--engine)) nil)
-(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--engine)) nil)
-(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--engine)) (lambda () nil))
-(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--engine) nil))
-(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--engine) nil))
+(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--engine))
+  "Supply the function to be called when the whole project is to be tested.
+The function has to have the signature (defun fun (_ ARGS)) where
+ARGS is the argument list passed to the test frame work."
+  nil)
+
+(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--engine))
+  "Supply the function to be called when a module is to be tested.
+The function has to have the signature (defun fun (STRING ARGS))
+where STRING is identifies the module, like returned by the
+method `test-cockpit--engine-current-module-string' and ARGS is
+the argument list passed to the test frame work."
+  nil)
+
+(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--engine))
+  "Supply the function to be called when a function is to be tested.
+The function has to have the signature (defun fun (STRING ARGS))
+where STRING is identifies the function, like returned by the
+method `test-cockpit--engine-current-function-string' and ARGS is
+the argument list passed to the test frame work."
+  nil)
+
+(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--engine))
+  "Supply the transient infix for the project type specific switches."
+  nil)
+
+(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--engine))
+  "Supply the string identifying the current module at point."
+  nil)
+
+(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--engine))
+  "Supply the string identifying the current function at point."
+  nil)
 
 (defun test-cockpit-register-project-type (project-type engine-class)
-    "Register a language testing package."
+  "Register a language testing package.
+PROJECT-TYPE is the type given by `pojectile-project-type' and
+ENGINE-CLASS is a derived class of `test-cockpit-engine'."
   (setq test-cockpit--project-types
 	(cons `(,project-type . (lambda () (make-instance ,engine-class)))
 	      test-cockpit--project-types)))
@@ -82,18 +119,26 @@ by the same commands, yet they are different for projectile.  In
 those cases the already registered PROJECT-TYPE can be registered
 again as ALIAS."
   (setq test-cockpit--project-types
-	(cons `(,alias . ,(alist-get project-type test-cockpit--project-types)) test-cockpit--project-types)))
+	(cons `(,alias . ,(alist-get project-type test-cockpit--project-types))
+	      test-cockpit--project-types)))
 
 (defun test-cockpit--make-dummy-engine ()
+  "Make a dummy for the case that the project type is not supported.
+In those cases we fall back to `porjectile-test-project'."
   (make-instance 'test-cockpit--engine :is-dummy-engine t))
 
 (defun test-cockpit--make-engine ()
+  "Make a new engine for the current project type.
+If the current project type is not supported a dummy engine is
+returned."
   (if-let* ((engine-factory (alist-get (projectile-project-type) test-cockpit--project-types))
 	    (real-engine (funcall engine-factory)))
       real-engine
     (test-cockpit--make-dummy-engine)))
 
 (defun test-cockpit--retrieve-engine ()
+  "Retrieve the engine valid for the current project.
+If no engine is yet started for the project, it will be started."
   (if-let ((existing-engine (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal)))
       existing-engine
     (let ((new-engine (test-cockpit--make-engine)))
@@ -101,6 +146,7 @@ again as ALIAS."
       new-engine)))
 
 (defun test-cockpit--real-engine-or-error ()
+  "Retrieve the engine for the project and error when the project type is unsupported."
   (let ((engine (test-cockpit--retrieve-engine)))
     (if (oref engine is-dummy-engine)
 	(signal "Project type %s not supported by test-cockpit or engine not installed" (projectile-project-type))
@@ -134,7 +180,7 @@ again as ALIAS."
 
 (defun test-cockpit-infix ()
   "Call the infix function of the current project type and return the infix array."
-  (funcall (test-cockpit--transient-infix (funcall (alist-get (projectile-project-type) test-cockpit--project-types)))))
+  (test-cockpit--transient-infix (funcall (alist-get (projectile-project-type) test-cockpit--project-types))))
 
 (defun test-cockpit--insert-infix ()
   "Insert the infix array into the transient-prefix."
@@ -157,6 +203,7 @@ again as ALIAS."
     (oset (test-cockpit--retrieve-engine) last-switches args)
     command))
 
+;;;###autoload
 (defun test-cockpit-test-project (&optional args)
   "Test the whole project.
 ARGS is the UI state for language specific settings."
@@ -164,6 +211,7 @@ ARGS is the UI state for language specific settings."
    (list (transient-args 'test-cockpit-prefix)))
   (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-project-command nil args)))
 
+;;;###autoload
 (defun test-cockpit-test-module (&optional args)
   "Test the module of the current buffer.
 The exact determination of the model is done by the language specific package.
@@ -172,6 +220,7 @@ ARGS is the UI state for language specific settings."
    (list (transient-args 'test-cockpit-prefix)))
   (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-module-command (test-cockpit--current-module-string) args)))
 
+;;;###autoload
 (defun test-cockpit-test-function (&optional args)
   "Run the test function at point.
 The exact determination of the function is done by the language
@@ -184,7 +233,15 @@ settings."
 			   (test-cockpit--current-function-string)
 			   args)))
 
+;;;###autoload
 (defun test-cockpit-repeat-module (&optional args)
+  "Repeat the module at point when the last test run has been called.
+This is useful when you test a certain function, jump out of the
+test to fix the issue and then want to run the whole module.
+Using this function you can do that without jumping back to the
+test code.  If there is no last test module to call, the main
+dispatch dialog is invoked.  ARGS is the UI state for language
+specific settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((last-module (test-cockpit--last-module-string)))
@@ -199,6 +256,10 @@ settings."
     (test-cockpit-dispatch)))
 
 (defun test-cockpit-repeat-function (&optional args)
+  "Repeat the function at point when the last test run has been called.
+If there is no last test function to call, the main dispatch dialog
+is invoked.  ARGS is the UI state for language specific
+settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((last-function (test-cockpit--last-function-string)))
@@ -215,7 +276,7 @@ settings."
 (defun test-cockpit-repeat-test (&optional _args)
   "Repeat the last test if the current project had last test.
 If the for the project no test has been run during the current
-session, the dispatch dialog is invoked."
+session, the main dispatch dialog is invoked."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (let ((engine (test-cockpit--real-engine-or-error)))

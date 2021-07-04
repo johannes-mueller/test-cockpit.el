@@ -26,7 +26,7 @@
 (cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--python-engine))
   'test-cockpit--python--test-function-command)
 (cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--python-engine))
-  'test-cockpit--python--infix)
+  (test-cockpit--python--infix))
 (cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--python-engine))
   (test-cockpit--python--choose-module))
 (cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--python-engine))

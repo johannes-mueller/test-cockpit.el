@@ -16,7 +16,7 @@
 (cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--foo-engine))
   (lambda (func args) (concat "test function" " " func " " (string-join args " "))))
 (cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--foo-engine))
-  (lambda () ["Foo" ("-f" "foo" "--foo")]))
+  ["Foo" ("-f" "foo" "--foo")])
 (cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--foo-engine))
   (oref obj current-module-string))
 (cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--foo-engine))

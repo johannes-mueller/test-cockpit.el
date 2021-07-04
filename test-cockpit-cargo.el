@@ -33,7 +33,7 @@
 (cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--cargo-engine))
   'test-cockpit--cargo--test-function-command)
 (cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--cargo-engine))
-  'test-cockpit--cargo--infix)
+  (test-cockpit--cargo--infix))
 (cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--cargo-engine))
   (test-cockpit--cargo-built-module-path-or-file-path-fallback))
 (cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--cargo-engine))

@@ -11,7 +11,7 @@
 (cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--cask-engine))
   'test-cockpit--cask--test-function-command)
 (cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--cask-engine))
-  'test-cockpit--cask--infix)
+  (test-cockpit--cask--infix))
 (cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--cask-engine))
   (buffer-file-name))
 (cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--cask-engine))
