@@ -3,7 +3,11 @@
 (require 'mocker)
 (require 'test-cockpit)
 
-(defclass test-cockpit--foo-engine (test-cockpit--engine) ())
+(defclass test-cockpit--foo-engine (test-cockpit--engine)
+  ((current-module-string :initarg :current-module-string
+			 :initform "foo-module-string")
+   (current-function-string :initarg :current-function-string
+			    :initform "foo-function-string")))
 
 (cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--foo-engine))
   (lambda (_ args) (concat "test project" " " (string-join args " "))))
@@ -14,9 +18,9 @@
 (cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--foo-engine))
   (lambda () ["Foo" ("-f" "foo" "--foo")]))
 (cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--foo-engine))
-  "foo-module-string")
+  (oref obj current-module-string))
 (cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--foo-engine))
-  "foo-function-string")
+  (oref obj current-function-string))
 
 (defun tc--register-foo-project ()
   (setq test-cockpit--project-engines nil)
@@ -56,8 +60,19 @@
     (should (equal (test-cockpit--last-function-string) nil))
     (test-cockpit-test-module)
     (should (equal (test-cockpit--last-module-string) "foo-module-string"))
+    (should (equal (test-cockpit--last-function-string) "foo-function-string"))))
+
+(ert-deftest test-test-last-strings-module-repeat-called ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (compile (command) ((:input '("test module foo-module-string") :output 'success))))
+    (test-cockpit-test-module)
+    (oset (test-cockpit--retrieve-engine) current-function-string nil)
+    (oset (test-cockpit--retrieve-engine) current-module-string nil)
+    (test-cockpit-repeat-module)
     (should (equal (test-cockpit--last-function-string) "foo-function-string"))
-    ))
+    (should (equal (test-cockpit--last-module-string) "foo-module-string"))))
 
 (ert-deftest test-current-function-string-dummy ()
   (setq test-cockpit--project-engines nil)
@@ -82,6 +97,18 @@
     (should (equal (test-cockpit--last-module-string) nil))
     (should (equal (test-cockpit--last-function-string) nil))
     (test-cockpit-test-function)
+    (should (equal (test-cockpit--last-module-string) "foo-module-string"))
+    (should (equal (test-cockpit--last-function-string) "foo-function-string"))))
+
+(ert-deftest test-test-last-strings-function-repeat-called ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (compile (command) ((:input '("test function foo-function-string") :output 'success))))
+    (test-cockpit-test-function)
+    (oset (test-cockpit--retrieve-engine) current-module-string nil)
+    (oset (test-cockpit--retrieve-engine) current-function-string nil)
+    (test-cockpit-repeat-function)
     (should (equal (test-cockpit--last-module-string) "foo-module-string"))
     (should (equal (test-cockpit--last-function-string) "foo-function-string"))))
 

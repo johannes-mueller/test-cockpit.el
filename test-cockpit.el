@@ -188,19 +188,27 @@ settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((last-module (test-cockpit--last-module-string)))
-      (test-cockpit--run-test (test-cockpit--command
-			       'test-cockpit-test-module-command
-			       (test-cockpit--last-module-string)
-			       (or args (oref (test-cockpit--retrieve-engine) last-args))))))
+      (let ((last-function (test-cockpit--last-function-string))
+	    (engine (test-cockpit--retrieve-engine)))
+	(test-cockpit--run-test (test-cockpit--command
+				 'test-cockpit-test-module-command
+				 (test-cockpit--last-module-string)
+				 (or args (oref engine last-args))))
+	(oset engine last-module-string last-module)
+	(oset engine last-function-string last-function))))
 
 (defun test-cockpit-repeat-function (&optional args)
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((last-function (test-cockpit--last-function-string)))
-      (test-cockpit--run-test (test-cockpit--command
-			       'test-cockpit-test-function-command
-			       (test-cockpit--last-function-string)
-			       (or args (oref (test-cockpit--retrieve-engine) last-args))))))
+      (let ((last-module (test-cockpit--last-module-string))
+	    (engine (test-cockpit--retrieve-engine)))
+	(test-cockpit--run-test (test-cockpit--command
+				 'test-cockpit-test-function-command
+				 (test-cockpit--last-function-string)
+				 (or args (oref engine last-args))))
+	(oset engine last-module-string last-module)
+	(oset engine last-function-string last-function))))
 
 (defun test-cockpit-repeat-test (&optional _args)
   "Repeat the last test if the current project had last test.
