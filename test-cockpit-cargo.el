@@ -86,16 +86,15 @@
 (defun test-cockpit--cargo--build-module-path ()
   "Determine the qualified module module path at point."
   (if-let ((file-name (buffer-file-name)))
-      (let ((relative-path
-	     (replace-regexp-in-string
-	      "\\(::mod\\|^src::lib\\|^src::main\\)?\\.rs$" ""
-	      (replace-regexp-in-string
-	       "/" "::"
-	       (substring file-name (length (projectile-project-root)) nil)))))
-	(let ((mod (replace-regexp-in-string
-		    "^\\(src\\)?::" ""
-		    (concat relative-path (test-cockpit--cargo--track-module-path (point))))))
-	  (unless (eq mod "") mod)))))
+      (let* ((relative-path (replace-regexp-in-string
+			     "\\(::mod\\|^src::lib\\|^src::main\\)?\\.rs$" ""
+			     (replace-regexp-in-string
+			      "/" "::"
+			      (substring file-name (length (projectile-project-root)) nil))))
+	     (mod (replace-regexp-in-string
+		   "^\\(src\\)?::" ""
+		   (concat relative-path (test-cockpit--cargo--track-module-path (point))))))
+	     (unless (eq mod "") mod))))
 
 (defun test-cockpit--cargo-built-module-path-or-file-path-fallback ()
   (if-let ((file-name (buffer-file-name)))
