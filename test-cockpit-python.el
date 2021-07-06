@@ -52,7 +52,7 @@
   (concat (test-cockpit--python--common-switches args) " " string))
 
 (defun test-cockpit--python--choose-module ()
-  (let ((file-name-path (buffer-file-name)))
+  (if-let ((file-name-path (buffer-file-name)))
     (if (string-prefix-p "test_" (file-name-nondirectory file-name-path))
 	(test-cockpit--strip-project-root file-name-path)
       (concat "-k " (file-name-base file-name-path))
@@ -136,9 +136,10 @@
 	  (test-cockpit--python--test-method-or-class unindented-line unindented-pos))))
 
 (defun test-cockpit--python--test-function-path ()
-  (concat (test-cockpit--strip-project-root (buffer-file-name))
-	  (if-let ((test-function (test-cockpit--python--find-current-test)))
-	      (concat "::" test-function))))
+  (if-let ((file-name (buffer-file-name)))
+      (concat (test-cockpit--strip-project-root file-name)
+	   (if-let ((test-function (test-cockpit--python--find-current-test)))
+	       (concat "::" test-function)))))
 
 (provide 'test-cockpit-python)
 

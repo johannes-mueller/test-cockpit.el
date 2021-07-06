@@ -23,6 +23,16 @@
    ((file-executable-p (file) ((:input '("/foo/bar/.venv/bin/pytest") :output nil))))
   (should (equal (test-cockpit--python--pytest-binary-path) "pytest"))))
 
+(ert-deftest test-current-module-string-no-file-buffer-is-nil ()
+  (mocker-let ((buffer-file-name () ((:output nil))))
+    (let ((engine (make-instance test-cockpit--python-engine)))
+      (should (eq (test-cockpit--engine-current-module-string engine) nil)))))
+
+(ert-deftest test-current-function-string-no-file-buffer-is-nil ()
+  (mocker-let ((buffer-file-name () ((:output nil))))
+    (let ((engine (make-instance test-cockpit--python-engine)))
+      (should (eq (test-cockpit--engine-current-function-string engine) nil)))))
+
 (ert-deftest test-get-python-test-project-command-no-switches ()
   (setq test-cockpit--project-engines nil)
   (mocker-let

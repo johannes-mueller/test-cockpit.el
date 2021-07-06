@@ -85,20 +85,22 @@
 
 (defun test-cockpit--cargo--build-module-path ()
   "Determine the qualified module module path at point."
-  (let ((relative-path
-	 (replace-regexp-in-string
-	  "\\(::mod\\|^src::lib\\|^src::main\\)?\\.rs$" ""
-	  (replace-regexp-in-string
-	   "/" "::"
-	   (substring (buffer-file-name) (length (projectile-project-root)) nil)))))
-    (let ((mod (replace-regexp-in-string
-		"^\\(src\\)?::" ""
-		(concat relative-path (test-cockpit--cargo--track-module-path (point))))))
-      (unless (eq mod "") mod))))
+  (if-let ((file-name (buffer-file-name)))
+      (let ((relative-path
+	     (replace-regexp-in-string
+	      "\\(::mod\\|^src::lib\\|^src::main\\)?\\.rs$" ""
+	      (replace-regexp-in-string
+	       "/" "::"
+	       (substring file-name (length (projectile-project-root)) nil)))))
+	(let ((mod (replace-regexp-in-string
+		    "^\\(src\\)?::" ""
+		    (concat relative-path (test-cockpit--cargo--track-module-path (point))))))
+	  (unless (eq mod "") mod)))))
 
 (defun test-cockpit--cargo-built-module-path-or-file-path-fallback ()
-  (concat (or (test-cockpit--cargo--build-module-path)
-	      (file-name-base (buffer-file-name))) "::"))
+  (if-let ((file-name (buffer-file-name)))
+      (concat (or (test-cockpit--cargo--build-module-path)
+	       (file-name-base (buffer-file-name))) "::")))
 
 (defconst test-cockpit--cargo--test-fn-regexp
   "#\\[test\\][[:space:]\n]\\([[:space:]\n]*#\\[[^[]*\\][[:space:]\n]\\)*[[:space:]\n]*\\(async\s*\\)?\s*fn \\([[:alpha:]][[:word:]_]*\\)")

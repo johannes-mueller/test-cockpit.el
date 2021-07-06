@@ -5,6 +5,17 @@
   (should (alist-get 'emacs-cask test-cockpit--project-types))
   )
 
+(ert-deftest test-current-module-string-no-file-buffer-is-nil ()
+  (mocker-let ((buffer-file-name () ((:output nil))))
+    (let ((engine (make-instance test-cockpit--cask-engine)))
+      (should (eq (test-cockpit--engine-current-module-string engine) nil)))))
+
+(ert-deftest test-current-function-string-no-file-buffer-is-nil ()
+  (mocker-let ((buffer-file-name () ((:output nil :min-occur 0)))
+	       (which-function () ((:output nil))))
+    (let ((engine (make-instance test-cockpit--cask-engine)))
+      (should (eq (test-cockpit--engine-current-function-string engine) nil)))))
+
 (ert-deftest test-get-cask-test-project ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
