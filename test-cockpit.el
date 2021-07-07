@@ -234,14 +234,17 @@ settings."
 			   args)))
 
 ;;;###autoload
-(defun test-cockpit-repeat-module (&optional args)
+(defun test-cockpit-repeat-module ()
   "Repeat the module at point when the last test run has been called.
 This is useful when you test a certain function, jump out of the
 test to fix the issue and then want to run the whole module.
 Using this function you can do that without jumping back to the
 test code.  If there is no last test module to call, the main
-dispatch dialog is invoked.  ARGS is the UI state for language
-specific settings."
+dispatch dialog is invoked."
+  (interactive)
+  (test-cockpit--do-repeat-module (oref (test-cockpit--retrieve-engine) last-args)))
+
+(defun test-cockpit--do-repeat-module (args)
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((last-module (test-cockpit--last-module-string)))
@@ -250,16 +253,20 @@ specific settings."
 	(test-cockpit--run-test (test-cockpit--command
 				 'test-cockpit-test-module-command
 				 (test-cockpit--last-module-string)
-				 (or args (oref engine last-args))))
+				 args))
 	(oset engine last-module-string last-module)
 	(oset engine last-function-string last-function))
     (test-cockpit-dispatch)))
 
-(defun test-cockpit-repeat-function (&optional args)
+;;;###autoload
+(defun test-cockpit-repeat-function ()
   "Repeat the function at point when the last test run has been called.
-If there is no last test function to call, the main dispatch dialog
-is invoked.  ARGS is the UI state for language specific
-settings."
+If there is no last test function to call, the main dispatch
+dialog is invoked."
+  (interactive)
+  (test-cockpit--do-repeat-function (oref (test-cockpit--retrieve-engine) last-args)))
+
+(defun test-cockpit--do-repeat-function (args)
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((last-function (test-cockpit--last-function-string)))
@@ -268,7 +275,7 @@ settings."
 	(test-cockpit--run-test (test-cockpit--command
 				 'test-cockpit-test-function-command
 				 (test-cockpit--last-function-string)
-				 (or args (oref engine last-args))))
+				 args))
 	(oset engine last-module-string last-module)
 	(oset engine last-function-string last-function))
     (test-cockpit-dispatch)))
@@ -395,11 +402,11 @@ test command is shown."
 				       ,(if module-string
 					    `("M"
 					      ,(format "last module: %s" (test-cockpit--strip-project-root module-string))
-					      test-cockpit-repeat-module))
+					      test-cockpit--do-repeat-module))
 				       ,(if function-string
 					    `("F"
 					      ,(format "last function: %s" (test-cockpit--strip-project-root function-string))
-					      test-cockpit-repeat-function)))))))))
+					      test-cockpit--do-repeat-function)))))))))
 
 (defun test-cockpit--append-repeat-suffix ()
   (if-let ((repeat-suffix (test-cockpit--transient-suffix-for-repeat)))

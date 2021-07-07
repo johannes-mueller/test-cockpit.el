@@ -221,7 +221,7 @@
 	       (compile (command) ((:input '("test project") :output 'success :occur 1)
 				   (:input '("test module foo-module-string foo bar") :output 'success :occur 1))))
     (test-cockpit-test-project)
-    (test-cockpit-repeat-module '("foo" "bar"))))
+    (test-cockpit--do-repeat-module '("foo" "bar"))))
 
 (ert-deftest test-repeat-module-with-last-with-args ()
   (tc--register-foo-project)
@@ -240,6 +240,15 @@
 				   (:input '("test module foo-module-string foo bar") :output 'success :occur 1))))
     (test-cockpit-test-function '("foo bar"))
     (test-cockpit-repeat-module)))
+
+(ert-deftest test-do-repeat-module-with-last-with-no-args ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (compile (command) ((:input '("test function foo-function-string foo bar") :output 'success :occur 1)
+				   (:input '("test module foo-module-string") :output 'success :occur 1))))
+    (test-cockpit-test-function '("foo bar"))
+    (test-cockpit--do-repeat-module nil)))
 
 (ert-deftest test-repeat-function-no-last ()
   (tc--register-foo-project)
@@ -263,7 +272,7 @@
 	       (compile (command) ((:input '("test module foo-module-string") :output 'success :occur 1)
 				   (:input '("test function foo-function-string bar foo") :output 'success :occur 1))))
     (test-cockpit-test-module)
-    (test-cockpit-repeat-function '("bar" "foo"))))
+    (test-cockpit--do-repeat-function '("bar" "foo"))))
 
 (ert-deftest test-repeat-function-with-last-with-last-args ()
   (tc--register-foo-project)
@@ -273,6 +282,15 @@
 				   (:input '("test function foo-function-string bar foo") :output 'success :occur 1))))
     (test-cockpit-test-module '("bar" "foo"))
     (test-cockpit-repeat-function)))
+
+(ert-deftest test-do-repeat-function-with-last-with-no-args ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (compile (command) ((:input '("test module foo-module-string bar foo") :output 'success :occur 1)
+				   (:input '("test function foo-function-string") :output 'success :occur 1))))
+    (test-cockpit-test-module '("bar" "foo"))
+    (test-cockpit--do-repeat-function nil)))
 
 (ert-deftest test-repeat-transient-suffix-nil ()
   (should (eq (test-cockpit--transient-suffix-for-repeat) nil)))
@@ -288,17 +306,17 @@
     (test-cockpit-test-project)
     (should (equal (test-cockpit--transient-suffix-for-repeat)
 		["Repeat tests"
-		 ("M" "last module: foo-module" test-cockpit-repeat-module)
-		 ("F" "last function: foo-module::foo-function" test-cockpit-repeat-function)]))
+		 ("M" "last module: foo-module" test-cockpit--do-repeat-module)
+		 ("F" "last function: foo-module::foo-function" test-cockpit--do-repeat-function)]))
     (oset (test-cockpit--retrieve-engine) last-module-string nil)
     (should (equal (test-cockpit--transient-suffix-for-repeat)
 		["Repeat tests"
-		 ("F" "last function: foo-module::foo-function" test-cockpit-repeat-function)]))
+		 ("F" "last function: foo-module::foo-function" test-cockpit--do-repeat-function)]))
     (test-cockpit-test-project)
     (oset (test-cockpit--retrieve-engine) last-function-string nil)
     (should (equal (test-cockpit--transient-suffix-for-repeat)
 		["Repeat tests"
-		 ("M" "last module: foo-module" test-cockpit-repeat-module)]))))
+		 ("M" "last module: foo-module" test-cockpit--do-repeat-module)]))))
 
 (ert-deftest test-test-or-projectile-build-known-project-type ()
   (tc--register-foo-project)
