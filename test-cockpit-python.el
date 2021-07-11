@@ -75,11 +75,7 @@
 	    (test-cockpit--python--insert-no-coverage-to-switches args)
 	    test-cockpit--python--allowed-switches))))
 
-(defun test-cockpit--python--pytest-binary-path ()
-  (if pyvenv-virtual-env
-      (let ((candidate (concat (file-name-as-directory pyvenv-virtual-env) "bin/pytest")))
-  	(if (file-executable-p candidate) candidate "pytest"))
-    "pytest"))
+(defun test-cockpit--python--pytest-binary-path () "pytest")
 
 (defun test-cockpit--python--insert-no-coverage-to-switches (switches)
   (if (not (seq-find (lambda (sw) (string-prefix-p "--cov-report=" sw)) switches))

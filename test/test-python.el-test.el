@@ -7,21 +7,8 @@
 (ert-deftest test-project-python-pkg-type-available ()
   (should (alist-get 'python-pkg test-cockpit--project-types)))
 
-(ert-deftest test-pytest-binary-path-venv ()
-  (setq pyvenv-virtual-env "/foo/bar/.venv/")
-  (mocker-let
-   ((file-executable-p (file) ((:input '("/foo/bar/.venv/bin/pytest") :output t))))
-    (should (equal (test-cockpit--python--pytest-binary-path) "/foo/bar/.venv/bin/pytest"))))
-
 (ert-deftest test-pytest-binary-path-no-venv ()
-  (setq pyvenv-virtual-env nil)
   (should (equal (test-cockpit--python--pytest-binary-path) "pytest")))
-
-(ert-deftest test-pytest-binary-path-no-pytest-in-venv ()
-  (setq pyvenv-virtual-env "/foo/bar/.venv/")
-  (mocker-let
-   ((file-executable-p (file) ((:input '("/foo/bar/.venv/bin/pytest") :output nil))))
-  (should (equal (test-cockpit--python--pytest-binary-path) "pytest"))))
 
 (ert-deftest test-current-module-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
