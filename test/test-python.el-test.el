@@ -165,11 +165,25 @@ def no_test_outer():
 
 (ert-deftest test-find-test-method-point-in-def ()
   (let ((buffer-contents "
-def test_first_outer():
+def test_first_2342_outer():
     pass
 ")
 	(init-pos 3)
-	(expected-string "test_first_outer")
+	(expected-string "test_first_2342_outer")
+	(buf (get-buffer-create "test-buffer")))
+    (with-current-buffer buf
+      (erase-buffer)
+      (insert buffer-contents)
+      (goto-char init-pos)
+      (should (equal (test-cockpit--python--find-current-test) expected-string)))))
+
+(ert-deftest test-find-test-method-point-in-def-numeric-start ()
+  (let ((buffer-contents "
+def test_2342_first_outer():
+    pass
+")
+	(init-pos 3)
+	(expected-string "test_2342_first_outer")
 	(buf (get-buffer-create "test-buffer")))
     (with-current-buffer buf
       (erase-buffer)
@@ -228,6 +242,27 @@ class TestClass(TestCase):
 "))
     (dolist (struct '((70 "TestClass::test_in_class" )
 		      (15 "TestClass")))
+      (let ((init-pos (pop struct))
+	    (expected-string (pop struct))
+	    (buf (get-buffer-create "test-buffer")))
+	(with-current-buffer buf
+	  (erase-buffer)
+	  (insert buffer-contents)
+	  (goto-char init-pos)
+	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
+
+
+(ert-deftest test-find-test-method-in-test-class-numeric-start ()
+  (let ((buffer-contents "
+class Test2342Class(TestCase):
+
+    def test_in_class(self):
+        pass
+
+    pass
+"))
+    (dolist (struct '((70 "Test2342Class::test_in_class" )
+		      (15 "Test2342Class")))
       (let ((init-pos (pop struct))
 	    (expected-string (pop struct))
 	    (buf (get-buffer-create "test-buffer")))
