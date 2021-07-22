@@ -1,4 +1,4 @@
-![Tests](https://github.com/johannes-mueller/test-cockpit.el/workflows/Tests/badge.svg)
+[![Test](https://github.com/johannes-mueller/test-cockpit.el/workflows/Tests/badge.svg)](https://github.com/johannes-mueller/test-cockpit.el/actions/workflows/test.yml)
 
 # test-cockpit.el
 
