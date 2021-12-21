@@ -20,10 +20,10 @@ indicated testing environments
 * elisp – cask / ert
 * python – pytest
 * rust – cargo
+* elixir – mix
 
 ### Planned languages
 
-* elixir – mix
 * any other ... as soon as I need it or as soon as you implement it
 
 ## Installation
@@ -39,6 +39,7 @@ where `<langauge>` is the programming language you need:
 * `python` for python - pytest
 * `cask` for elisp - cask / ert
 * `cargo` for rust - cargo
+* `elixir` for elixir - mix
 
 Eventually there will be a MELPA package when the project gets more advanced.
 
