@@ -23,6 +23,7 @@
 
 (defun test-cockpit--mix--apply-switch (command switch)
   (cond ((equal switch "reset") (concat "MIX_ENV=test mix ecto.reset && " command))
+	((equal switch "debuglog") (concat "MIX_TEST_LOGLEVEL=debug " command))
 	(t (concat command " " switch))))
 
 (defun test-cockpit--mix--apply-switches(command switches)
@@ -43,7 +44,8 @@
 (defun test-cockpit--mix--infix ()
   ["Mix specific switches"
    ("-r" "Reset Ecto before test" "reset")
-   ("-l" "Only lastly failed tests" "--failed")])
+   ("-l" "Only lastly failed tests" "--failed")
+   ("-d" "Set loglevel to \"debug\"" "debuglog")])
 
 (provide 'test-cockpit-mix)
 
