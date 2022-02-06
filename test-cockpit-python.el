@@ -43,7 +43,8 @@
     "--cov-report=term"
     "-rFP"
     "--disable-warnings"
-    "-k"))
+    "-k"
+    "-m"))
 
 (defun test-cockpit--python--test-project-command (_ args)
   (concat (test-cockpit--python--common-switches args)))
@@ -88,11 +89,18 @@
   :key "-k"
   :argument "-k")
 
+(transient-define-argument test-cockpit--python--marker-switch ()
+  :description "Add marker switch "
+  :class 'transient-option
+  :key "-m"
+  :argument "-m")
+
 (defun test-cockpit--python--infix ()
   [["Switches"
     ("-k" test-cockpit--python--restrict-substring)
     ("-l" "only lastly failed tests" "--last-failed")
-    ("-b" "build extensions before testing" "build_ext")]
+    ("-b" "build extensions before testing" "build_ext")
+    ("-m" test-cockpit--python--marker-switch)]
    ["Output"
     ("-v" "show single tests" "--verbose")
     ("-c" "print coverage report" "--cov-report=term")
