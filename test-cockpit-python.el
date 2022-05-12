@@ -43,6 +43,7 @@
     "--cov-report=term"
     "-rFP"
     "--disable-warnings"
+    "--capture=no"
     "-k"
     "-m"))
 
@@ -105,7 +106,8 @@
     ("-v" "show single tests" "--verbose")
     ("-c" "print coverage report" "--cov-report=term")
     ("-r" "report output of passed tests" "-rFP")
-    ("-w" "don't output warnings" "--disable-warnings")]])
+    ("-w" "don't output warnings" "--disable-warnings")
+    ("-n" "don't capture output" "--capture=no")]])
 
 (defun test-cockpit--python--find-last-unindented-line ()
   (save-excursion

@@ -396,4 +396,5 @@ async def test_first_outer():
       (should (equal (aref (aref infix 1) 1) '("-v" "show single tests" "--verbose")))
       (should (equal (aref (aref infix 1) 2) '("-c" "print coverage report" "--cov-report=term")))
       (should (equal (aref (aref infix 1) 3) '("-r" "report output of passed tests" "-rFP")))
-      (should (equal (aref (aref infix 1) 4) '("-w" "don't output warnings" "--disable-warnings"))))))
+      (should (equal (aref (aref infix 1) 4) '("-w" "don't output warnings" "--disable-warnings")))
+      (should (equal (aref (aref infix 1) 5) '("-n" "don't capture output" "--capture=no"))))))
