@@ -119,9 +119,9 @@ You can also use the following commands to run tests in a more manual way
 
 ## Status
 
-The project just started. I will now start using it in my daily work and
-develop it further. Major API changes can still happen any time
-
+The development started more than a year ago in early 2021.  Since then I have
+used it for my daily work and added new features every now and then.  It turns
+out to work smoothly and to be quite useful.
 
 ## Future
 
