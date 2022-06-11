@@ -415,6 +415,13 @@
       (test-cockpit-test-or-projectile-test)
       (test-cockpit-repeat-test-or-projectile-test))))
 
+(ert-deftest test-custom-test-command ()
+  (mocker-let ((call-interactively (func) ((:input `(compile) :output 'success :occur 1)))
+	       (compile (command)
+			((:input '("some custom command") :output 'success :occur 1))))
+    (let ((compile-command "some custom command"))
+      (test-cockpit-custom-test-command)
+      (test-cockpit-repeat-test))))
 
 (ert-deftest test-set-infix ()
   (tc--register-foo-project)

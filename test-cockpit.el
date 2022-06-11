@@ -266,6 +266,16 @@ dialog is invoked."
   (interactive)
   (test-cockpit--do-repeat-function (oref (test-cockpit--retrieve-engine) last-args)))
 
+;;;###autoload
+(defun test-cockpit-custom-test-command ()
+  "Run `compile' command interactively to allow a custom test command.
+The command run is then stored in as last command of the project
+and thus can be repeated using `test-cockpit-repeat-test'.
+"
+  (interactive)
+  (call-interactively 'compile)
+  (oset (test-cockpit--retrieve-engine) last-command compile-command))
+
 (defun test-cockpit--do-repeat-function (args)
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
@@ -388,6 +398,7 @@ test command is shown."
    ("p" "project" test-cockpit-test-project)
    ("m" "module" test-cockpit-test-module)
    ("f" "function" test-cockpit-test-function)
+   ("c" "custom" test-cockpit-custom-test-command)
    ("r" "repeat" test-cockpit-repeat-test)])
 
 (defun test-cockpit--strip-project-root (string)
