@@ -72,7 +72,7 @@
   (concat (test-cockpit--python--build-ext-command args)
 	  (test-cockpit--python--pytest-binary-path)
 	  " --color=yes"
-	  (test-cockpit-add-leading-space-to-switches
+	  (test-cockpit--add-leading-space-to-switches
 	   (test-cockpit--join-filter-switches
 	    (test-cockpit--python--insert-no-coverage-to-switches args)
 	    test-cockpit--python--allowed-switches))))

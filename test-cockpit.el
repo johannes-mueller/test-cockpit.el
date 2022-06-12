@@ -39,15 +39,15 @@
 (require 'subr-x)
 
 (defvar test-cockpit--project-types nil
-  "List of known project types.")
-
+  "List of known project types.
+Project types can be added to the list using
+`test-cockpit-register-project-type'.")
 
 (defvar test-cockpit--project-engines nil
   "List of already started engines.
 Usually there is one such engine per project that has been
 visited during the current session.  An engine is an instance of
-a derived class of `test-cockpit--engine'."
-  )
+a derived class of `test-cockpit--engine'.")
 
 (defclass test-cockpit--engine ()
   ((last-command :initarg :last-command
@@ -67,7 +67,7 @@ a derived class of `test-cockpit--engine'."
    (is-dummy-engine :initarg :is-dummy-engine
 		    :initform nil))
   "The base class for a test-cockpit engine.
-For every project type supported by test-cockpit.el a derived
+For every project type supported by `test-cockpit.el' a derived
 class is needed which implements the methods of the base class.")
 
 (cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--engine))
@@ -136,47 +136,61 @@ returned."
       real-engine
     (test-cockpit--make-dummy-engine)))
 
+(defmacro test-cockpit--engine-for-current-project ()
+  "Provide the engine for the current project."
+  `(alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal))
+
 (defun test-cockpit--retrieve-engine ()
   "Retrieve the engine valid for the current project.
 If no engine is yet started for the project, it will be started."
-  (if-let ((existing-engine (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal)))
+  (if-let ((existing-engine (test-cockpit--engine-for-current-project)))
       existing-engine
     (let ((new-engine (test-cockpit--make-engine)))
-      (setf (alist-get (projectile-project-root) test-cockpit--project-engines nil nil 'equal) new-engine)
+      (setf (test-cockpit--engine-for-current-project) new-engine)
       new-engine)))
 
 (defun test-cockpit--real-engine-or-error ()
-  "Retrieve the engine for the project and error when the project type is unsupported."
+  "Retrieve the engine for the project; error if the project type is unsupported."
   (let ((engine (test-cockpit--retrieve-engine)))
     (if (oref engine is-dummy-engine)
 	(signal "Project type %s not supported by test-cockpit or engine not installed" (projectile-project-type))
       engine)))
 
-(defun test-cockpit--make-test-function (func string args)
+(defun test-cockpit--make-test-command (method thing args)
+  "Setup the test command to be issued.
+The supplied METHOD for the current engine is called to get the
+actual function to setup the call.  To this function the THING to
+be tested as well as additional ARGS are passed.  The resulting
+trimmed string is then returned."
   (string-trim (funcall
-		(funcall func (test-cockpit--retrieve-engine))
-		string args)))
+		(funcall method (test-cockpit--retrieve-engine))
+		thing args)))
 
 (defun test-cockpit--update-last-commands (args)
+  "Update the attributes for the engine's last test command.
+The current module and function are determined automatically.
+The additional arguments are shipped as ARGS."
   (let ((engine (test-cockpit--retrieve-engine)))
     (oset engine last-module-string (test-cockpit--current-module-string))
     (oset engine last-function-string (test-cockpit--current-function-string))
     (oset engine last-args args)))
 
-(defun test-cockpit-test-project-command (project-string args)
-  "Call the test-project-command function with ARGS of the current project type."
-  (test-cockpit--update-last-commands args)
-  (test-cockpit--make-test-function 'test-cockpit--test-project-command project-string args))
+(defun test-cockpit--make-test-project-command (project-string args)
+  "Call the test-project-command function with ARGS of the current project type.
+PROJECT-STRING is usually nil.  The argument is here to make the function
+signature compatible with `test-cockpit--make-test-module-command' and
+`test-cockpit--make-test-function-command'."
+  (test-cockpit--make-test-command 'test-cockpit--test-project-command project-string args))
 
-(defun test-cockpit-test-module-command (module-string args)
-  "Call the test-module-command function with ARGS of the current project type."
-  (test-cockpit--update-last-commands args)
-  (test-cockpit--make-test-function 'test-cockpit--test-module-command module-string args))
+(defun test-cockpit--make-test-module-command (module-string args)
+  "Call the test-module-command function with ARGS of the current project type.
+MODULE-STRING is the string determining the module to test."
+  (test-cockpit--make-test-command 'test-cockpit--test-module-command module-string args))
 
-(defun test-cockpit-test-function-command (func-string args)
-  "Call the test-function-command function with ARGS of the current project type."
-  (test-cockpit--update-last-commands args)
-  (test-cockpit--make-test-function 'test-cockpit--test-function-command func-string args))
+(defun test-cockpit--make-test-function-command (func-string args)
+  "Call the test-function-command function with ARGS of the current project type.
+FUNC-STRING is the string determining the function to test."
+  (test-cockpit--make-test-command 'test-cockpit--test-function-command func-string args))
 
 (defun test-cockpit-infix ()
   "Call the infix function of the current project type and return the infix array."
@@ -195,11 +209,16 @@ If no engine is yet started for the project, it will be started."
   (test-cockpit--issue-compile-command command))
 
 (defun test-cockpit--issue-compile-command (command)
+  "Issue the compile COMMAND with current project root dir as working dir."
   (projectile-with-default-dir (projectile-acquire-root)
     (compile command)))
 
-(defun test-cockpit--command (func string args)
-  (let ((command (funcall func string args)))
+(defun test-cockpit--command (func thing args)
+  "Setup the compile command to be issued with `compile'.
+FUNC is the engine function responsible to setup the
+command.  THING is the thing to be tested.  ARGS the additional
+arguments."
+  (let ((command (funcall func thing args)))
     (oset (test-cockpit--retrieve-engine) last-switches args)
     command))
 
@@ -209,7 +228,9 @@ If no engine is yet started for the project, it will be started."
 ARGS is the UI state for language specific settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-project-command nil args)))
+  (test-cockpit--run-test
+   (test-cockpit--command 'test-cockpit--make-test-project-command nil args))
+  (test-cockpit--update-last-commands args))
 
 ;;;###autoload
 (defun test-cockpit-test-module (&optional args)
@@ -218,7 +239,11 @@ The exact determination of the model is done by the language specific package.
 ARGS is the UI state for language specific settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (test-cockpit--run-test (test-cockpit--command 'test-cockpit-test-module-command (test-cockpit--current-module-string) args)))
+  (test-cockpit--run-test
+   (test-cockpit--command 'test-cockpit--make-test-module-command
+			  (test-cockpit--current-module-string)
+			  args))
+  (test-cockpit--update-last-commands args))
 
 ;;;###autoload
 (defun test-cockpit-test-function (&optional args)
@@ -229,9 +254,10 @@ settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (test-cockpit--run-test (test-cockpit--command
-			   'test-cockpit-test-function-command
+			   'test-cockpit--make-test-function-command
 			   (test-cockpit--current-function-string)
-			   args)))
+			   args))
+  (test-cockpit--update-last-commands args))
 
 ;;;###autoload
 (defun test-cockpit-repeat-module ()
@@ -245,18 +271,19 @@ dispatch dialog is invoked."
   (test-cockpit--do-repeat-module (oref (test-cockpit--retrieve-engine) last-args)))
 
 (defun test-cockpit--do-repeat-module (args)
+  "Internal version of `test-cockpit-repeat-module'.
+This is called from the transient dialog and accepts ARGS from
+there rather than than from the `last-args' attributes of the
+engine as when called by `test-cockpit-repeat-module'.  That way
+the user can repeat the last module test with different ARGS."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if-let ((last-module (test-cockpit--last-module-string)))
-      (let ((last-function (test-cockpit--last-function-string))
-	    (engine (test-cockpit--retrieve-engine)))
-	(test-cockpit--run-test (test-cockpit--command
-				 'test-cockpit-test-module-command
-				 (test-cockpit--last-module-string)
-				 args))
-	(oset engine last-module-string last-module)
-	(oset engine last-function-string last-function))
-    (test-cockpit-dispatch)))
+  (if (test-cockpit--last-module-string)
+      (test-cockpit--run-test (test-cockpit--command
+			       'test-cockpit--make-test-module-command
+			       (test-cockpit--last-module-string)
+			       args)))
+  (test-cockpit-dispatch))
 
 ;;;###autoload
 (defun test-cockpit-repeat-function ()
@@ -270,25 +297,25 @@ dialog is invoked."
 (defun test-cockpit-custom-test-command ()
   "Run `compile' command interactively to allow a custom test command.
 The command run is then stored in as last command of the project
-and thus can be repeated using `test-cockpit-repeat-test'.
-"
+and thus can be repeated using `test-cockpit-repeat-test'."
   (interactive)
   (call-interactively 'compile)
   (oset (test-cockpit--retrieve-engine) last-command compile-command))
 
 (defun test-cockpit--do-repeat-function (args)
+  "Internal version of `test-cockpit-repeat-function'.
+This is called from the transient dialog and accepts ARGS from
+there rather than than from the `last-args' attributes of the
+engine as when called by `test-cockpit-repeat-function'.  That way
+the user can repeat the last function test with different ARGS."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if-let ((last-function (test-cockpit--last-function-string)))
-      (let ((last-module (test-cockpit--last-module-string))
-	    (engine (test-cockpit--retrieve-engine)))
-	(test-cockpit--run-test (test-cockpit--command
-				 'test-cockpit-test-function-command
-				 (test-cockpit--last-function-string)
-				 args))
-	(oset engine last-module-string last-module)
-	(oset engine last-function-string last-function))
-    (test-cockpit-dispatch)))
+  (if (test-cockpit--last-function-string)
+      (test-cockpit--run-test (test-cockpit--command
+			       'test-cockpit--make-test-function-command
+			       (test-cockpit--last-function-string)
+			       args)))
+  (test-cockpit-dispatch))
 
 (defun test-cockpit-repeat-test (&optional _args)
   "Repeat the last test if the current project had last test.
@@ -296,10 +323,9 @@ If the for the project no test has been run during the current
 session, the main dispatch dialog is invoked."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (let ((engine (test-cockpit--real-engine-or-error)))
-    (if-let (last-command (oref engine last-command))
-	(test-cockpit--run-test last-command)
-      (test-cockpit-dispatch))))
+  (if-let (last-command (oref (test-cockpit--real-engine-or-error) last-command))
+      (test-cockpit--run-test last-command)
+    (test-cockpit-dispatch)))
 
 (defun test-cockpit-test-or-projectile-build ()
   "Test or build the project depending on if the project type is supported.
@@ -346,49 +372,62 @@ test command is shown."
       (test-cockpit--repeat-projectile-test)
     (test-cockpit-repeat-test)))
 
-(defun test-cockpit--projectile-build ()
-  (test-cockpit--do-projectile-build nil))
+(defun test-cockpit--projectile-build (&optional last-command)
+  "Launch a projectile driven build process.
+If last executed command LAST-COMMAND is given the command is
+repeated as is.  Otherwise `projectile-compile-project' is called
+interactively and the actual compile command is stored for
+repetition."
+  (if last-command
+      (test-cockpit--issue-compile-command last-command)
+    (projectile-compile-project nil)
+    (oset (test-cockpit--retrieve-engine) last-build-command compile-command)))
 
 (defun test-cockpit--repeat-projectile-build ()
-  (test-cockpit--do-projectile-build (test-cockpit--last-build-command)))
+  "Repeat the last projectile driven build process."
+  (test-cockpit--projectile-build (test-cockpit--last-build-command)))
 
-(defun test-cockpit--do-projectile-build (last-command)
+(defun test-cockpit--projectile-test (&optional last-command)
+  "Launch a projectile driven test process.
+If last executed command LAST-COMMAND is given the command is
+repeated as is.  Otherwise `projectile-test-project' is called
+interactively and the actual test command is stored for
+repetition."
   (if last-command
       (test-cockpit--issue-compile-command last-command)
-    (progn (projectile-compile-project last-command)
-	   (oset (test-cockpit--retrieve-engine) last-build-command compile-command))))
-
-(defun test-cockpit--projectile-test ()
-  (test-cockpit--do-projectile-test nil))
+    (projectile-test-project nil)
+    (oset (test-cockpit--retrieve-engine) last-test-command compile-command)))
 
 (defun test-cockpit--repeat-projectile-test ()
-  (test-cockpit--do-projectile-test (test-cockpit--last-test-command)))
-
-(defun test-cockpit--do-projectile-test (last-command)
-  (if last-command
-      (test-cockpit--issue-compile-command last-command)
-    (progn (projectile-test-project last-command)
-	   (oset (test-cockpit--retrieve-engine) last-test-command compile-command))))
+  "Repeat the last projectile driven test process."
+  (test-cockpit--projectile-test (test-cockpit--last-test-command)))
 
 (defun test-cockpit--current-module-string ()
+  "Ask the current engine for the current module string."
   (test-cockpit--engine-current-module-string (test-cockpit--retrieve-engine)))
 
 (defun test-cockpit--last-module-string ()
+  "Get the last module string stored in the current engine."
   (oref (test-cockpit--retrieve-engine) last-module-string))
 
 (defun test-cockpit--current-function-string ()
+  "Ask the current engine for the current function string."
   (test-cockpit--engine-current-function-string (test-cockpit--retrieve-engine)))
 
 (defun test-cockpit--last-function-string ()
+  "Get the last function string stored in the current engine."
   (oref (test-cockpit--retrieve-engine) last-function-string))
 
 (defun test-cockpit--last-build-command ()
+  "Get the last build command stored in the current engine."
   (oref (test-cockpit--retrieve-engine) last-build-command))
 
 (defun test-cockpit--last-test-command ()
+  "Get the last test command stored in the current engine."
   (oref (test-cockpit--retrieve-engine) last-test-command))
 
 (defun test-cockpit--last-switches ()
+  "Get the last switches stored in the current engine."
   (oref (test-cockpit--retrieve-engine) last-switches))
 
 (transient-define-prefix test-cockpit-prefix ()
@@ -401,13 +440,14 @@ test command is shown."
    ("c" "custom" test-cockpit-custom-test-command)
    ("r" "repeat" test-cockpit-repeat-test)])
 
-(defun test-cockpit--strip-project-root (string)
-  (string-remove-prefix (file-name-as-directory (projectile-project-root)) string))
+(defun test-cockpit--strip-project-root (path)
+  "Strip the project root path from a given PATH."
+  (string-remove-prefix (file-name-as-directory (projectile-project-root)) path))
 
 (defun test-cockpit--transient-suffix-for-repeat ()
-  (let* ((engine (test-cockpit--retrieve-engine))
-	 (module-string (oref engine last-module-string))
-	 (function-string (oref engine last-function-string)))
+  "Setup transient suffix for repeat commands if possible."
+  (let ((module-string (test-cockpit--last-module-string))
+	(function-string (test-cockpit--last-function-string)))
     (if (or module-string function-string)
 	(vconcat (remove nil (append `("Repeat tests"
 				       ,(if module-string
@@ -420,18 +460,24 @@ test command is shown."
 					      test-cockpit--do-repeat-function)))))))))
 
 (defun test-cockpit--append-repeat-suffix ()
+  "Append the repeat suffix to the transient prefix if possible.
+If possible the suffix is returned if not nil."
   (if-let ((repeat-suffix (test-cockpit--transient-suffix-for-repeat)))
       (transient-append-suffix 'test-cockpit-prefix '(-1) repeat-suffix)
     nil))
 
 (defun test-cockpit-dispatch ()
-  "Invoke the user interface of to setup and run tests."
+  "Invoke the user interface of to setup and run tests.
+If the repeat suffix has been appended it is removed afterwards
+as will be no longer valid and we don't want the suffixes to
+accumulate."
   (interactive)
   (test-cockpit--real-engine-or-error)
   (test-cockpit--insert-infix)
-  (let ((is-remove-needed (test-cockpit--append-repeat-suffix)))
+  (let ((appended-suffix-must-be-removed (test-cockpit--append-repeat-suffix)))
     (test-cockpit-prefix)
-    (if is-remove-needed (transient-remove-suffix 'test-cockpit-prefix '(-1)))))
+    (if appended-suffix-must-be-removed
+	(transient-remove-suffix 'test-cockpit-prefix '(-1)))))
 
 (defun test-cockpit--join-filter-switches (candidates allowed)
   "Join the list of strings CANDIDATES together.
@@ -447,7 +493,8 @@ with a space."
 		   candidates))
    " "))
 
-(defun test-cockpit-add-leading-space-to-switches (switches)
+(defun test-cockpit--add-leading-space-to-switches (switches)
+  "Concat the SWITCHES and add a leading space to the resulting string."
   (if (string-empty-p switches)
       ""
     (concat " " switches)))
