@@ -45,7 +45,8 @@
   ["Mix specific switches"
    ("-r" "Reset Ecto before test" "reset")
    ("-l" "Only lastly failed tests" "--failed")
-   ("-d" "Set loglevel to \"debug\"" "debuglog")])
+   ("-d" "Set loglevel to \"debug\"" "debuglog")
+   ("-t" "Output trace" "--trace")])
 
 (provide 'test-cockpit-mix)
 

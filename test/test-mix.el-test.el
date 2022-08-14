@@ -80,6 +80,13 @@
 	       (compile (command) ((:input '("mix test  --failed") :output 'success))))
     (test-cockpit-test-function '("--failed"))))
 
+(ert-deftest test-get-elixir-test-function-command-failed-switch ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let ((projectile-project-type () ((:output 'elixir :min-occur 0)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (compile (command) ((:input '("mix test  --trace") :output 'success))))
+    (test-cockpit-test-function '("--trace"))))
+
 (ert-deftest test-get-elixir-test-project-command-debug-log ()
   (setq test-cockpit--project-engines nil)
   (mocker-let ((projectile-project-type () ((:output 'elixir :min-occur 0)))
@@ -99,7 +106,8 @@
       (and (equal (aref infix 0) "Mix specific switches")
 	   (equal (aref infix 1) '("-r" "Reset Ecto before test" "reset"))
 	   (equal (aref infix 2) '("-l" "Only lastly failed tests" "--failed"))
-	   (equal (aref infix 3) '("-d" "Set loglevel to \"debug\"" "debuglog")))))))
+	   (equal (aref infix 3) '("-d" "Set loglevel to \"debug\"" "debuglog"))
+	   (equal (aref infix 4) '("-t" "Output trace" "--trace")))))))
 
 
 ;;; test-mix.el-test.el ends here
