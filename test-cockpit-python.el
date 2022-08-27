@@ -99,7 +99,7 @@
 (defun test-cockpit--python--infix ()
   [["Switches"
     ("-k" test-cockpit--python--restrict-substring)
-    ("-l" "only lastly failed tests" "--last-failed")
+    ("-f" "only lastly failed tests" "--last-failed")
     ("-b" "build extensions before testing" "build_ext")
     ("-m" test-cockpit--python--marker-switch)]
    ["Output"

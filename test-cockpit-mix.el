@@ -44,7 +44,7 @@
 (defun test-cockpit--mix--infix ()
   ["Mix specific switches"
    ("-r" "Reset Ecto before test" "reset")
-   ("-l" "Only lastly failed tests" "--failed")
+   ("-f" "Only lastly failed tests" "--failed")
    ("-d" "Set loglevel to \"debug\"" "debuglog")
    ("-t" "Output trace" "--trace")])
 

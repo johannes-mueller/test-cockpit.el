@@ -389,7 +389,7 @@ async def test_first_outer():
     (let ((infix (test-cockpit-infix)))
       (should (equal (aref (aref infix 0) 0) "Switches"))
       (should (equal (car (aref (aref infix 0) 1)) "-k"))
-      (should (equal (aref (aref infix 0) 2) '("-l" "only lastly failed tests" "--last-failed")))
+      (should (equal (aref (aref infix 0) 2) '("-f" "only lastly failed tests" "--last-failed")))
       (should (equal (aref (aref infix 0) 3) '("-b" "build extensions before testing" "build_ext")))
       (should (equal (car (aref (aref infix 0) 4)) "-m"))
       (should (equal (aref (aref infix 1) 0) "Output"))

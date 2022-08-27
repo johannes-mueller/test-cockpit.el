@@ -105,7 +105,7 @@
      (should
       (and (equal (aref infix 0) "Mix specific switches")
 	   (equal (aref infix 1) '("-r" "Reset Ecto before test" "reset"))
-	   (equal (aref infix 2) '("-l" "Only lastly failed tests" "--failed"))
+	   (equal (aref infix 2) '("-f" "Only lastly failed tests" "--failed"))
 	   (equal (aref infix 3) '("-d" "Set loglevel to \"debug\"" "debuglog"))
 	   (equal (aref infix 4) '("-t" "Output trace" "--trace")))))))
 
