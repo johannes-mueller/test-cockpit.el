@@ -21,6 +21,7 @@ indicated testing environments
 * python – pytest
 * rust – cargo
 * elixir – mix
+* JavaScript / TypeScript – jest
 
 ### Planned languages
 
@@ -40,7 +41,7 @@ where `<langauge>` is the programming language you need:
 * `cask` for elisp - cask / ert
 * `cargo` for rust - cargo
 * `elixir` for elixir - mix
-* `mix-jest` for JavaScript / TypeScript – jest
+* `npm-jest` for JavaScript / TypeScript – jest
 
 Eventually there will be a MELPA package when the project gets more advanced.
 
