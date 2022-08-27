@@ -1,26 +1,26 @@
 (require 'mocker)
 (require 'test-cockpit-python)
 
-(ert-deftest test-project-python-pip-type-available ()
+(ert-deftest test-python-project-python-pip-type-available ()
   (should (alist-get 'python-pip test-cockpit--project-types)))
 
-(ert-deftest test-project-python-pkg-type-available ()
+(ert-deftest test-python-project-python-pkg-type-available ()
   (should (alist-get 'python-pkg test-cockpit--project-types)))
 
-(ert-deftest test-pytest-binary-path-no-venv ()
+(ert-deftest test-python-pytest-binary-path-no-venv ()
   (should (equal (test-cockpit--python--pytest-binary-path) "pytest")))
 
-(ert-deftest test-current-module-string-no-file-buffer-is-nil ()
+(ert-deftest test-python-current-module-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
     (let ((engine (make-instance test-cockpit--python-engine)))
       (should (eq (test-cockpit--engine-current-module-string engine) nil)))))
 
-(ert-deftest test-current-function-string-no-file-buffer-is-nil ()
+(ert-deftest test-python-current-function-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
     (let ((engine (make-instance test-cockpit--python-engine)))
       (should (eq (test-cockpit--engine-current-function-string engine) nil)))))
 
-(ert-deftest test-get-python-test-project-command-no-switches ()
+(ert-deftest test-python-get-python-test-project-command-no-switches ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip :min-occur 0)))
@@ -30,7 +30,7 @@
     (compile (command) ((:input '("/foo/bin/pytest --color=yes --cov-report=") :output 'success :occur 1))))
    (test-cockpit-test-project)))
 
-(ert-deftest test-get-python-test-project-command-switches ()
+(ert-deftest test-python-get-python-test-project-command-switches ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip)))
@@ -47,7 +47,7 @@
 	    ((compile (command) ((:input `(,expected) :output 'success :occur 1))))
 	  (test-cockpit-test-project arglist))))))
 
-(ert-deftest test-get-python-test-module-command-no-switches ()
+(ert-deftest test-python-get-python-test-module-command-no-switches ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
@@ -57,7 +57,7 @@
     (compile (command) ((:input '("pytest --color=yes --cov-report= tests/path/to/test_foo.py") :output 'success :occur 1))))
    (test-cockpit-test-module)))
 
-(ert-deftest test-get-python-test-fuzzy-module-command ()
+(ert-deftest test-python-get-python-test-fuzzy-module-command ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip :min-occur 0)))
@@ -67,7 +67,7 @@
     (compile (command) ((:input '("pytest --color=yes --cov-report= -k foo") :output 'success :occur 1))))
 	     (test-cockpit-test-module)))
 
-(ert-deftest test-get-python-test-module-command-switches ()
+(ert-deftest test-python-get-python-test-module-command-switches ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip)))
@@ -84,7 +84,7 @@
 	    ((compile (command) ((:input `(,expected) :output 'success :occur 1))))
 	  (test-cockpit-test-module arglist))))))
 
-(ert-deftest test-get-python-test-function-command-no-switches ()
+(ert-deftest test-python-get-python-test-function-command-no-switches ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
@@ -95,7 +95,7 @@
     (compile (command) ((:input '("pytest --color=yes --cov-report= test_foo") :output 'success :occur 1))))
    (test-cockpit-test-function)))
 
-(ert-deftest test-get-python-test-function-command-switches ()
+(ert-deftest test-python-get-python-test-function-command-switches ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip :occur 1)))
@@ -113,7 +113,7 @@
 	    ((compile (command) ((:input `(,expected) :output 'success :occur 1))))
 	  (test-cockpit-test-function arglist))))))
 
-(ert-deftest test-python-build-ext-switch-default-command ()
+(ert-deftest test-python-python-build-ext-switch-default-command ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip :occur 1)))
@@ -124,7 +124,7 @@
 				   :output 'success :occur 1))))
     (test-cockpit-test-project '("--last-failed" "build_ext"))))
 
-(ert-deftest test-python-build-ext-switch-changed-command ()
+(ert-deftest test-python-python-build-ext-switch-changed-command ()
   (setq test-cockpit--project-engines nil)
   (let ((test-cockpit-python-build-ext-command "foo build-ext command"))
     (mocker-let
@@ -136,14 +136,14 @@
 				    :output 'success :occur 1))))
      (test-cockpit-test-project '("--last-failed" "build_ext")))))
 
-(ert-deftest test-insert-no-coverage-to-switches ()
+(ert-deftest test-python-insert-no-coverage-to-switches ()
   (dolist (struct '((("--last-failed") ("--last-failed" "--cov-report="))
 		    (("--last-failed" "--cov-report=term") ("--last-failed" "--cov-report=term"))))
     (let ((arglist (pop struct))
 	  (expected (pop struct)))
       (should (equal (test-cockpit--python--insert-no-coverage-to-switches arglist) expected)))))
 
-(ert-deftest test-find-test-method-simple ()
+(ert-deftest test-python-find-test-method-simple ()
   (let ((buffer-contents "
 def test_first_outer():
     pass
@@ -163,7 +163,7 @@ def no_test_outer():
 	  (goto-char init-pos)
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
-(ert-deftest test-find-test-method-point-in-def ()
+(ert-deftest test-python-find-test-method-point-in-def ()
   (let ((buffer-contents "
 def test_first_2342_outer():
     pass
@@ -177,7 +177,7 @@ def test_first_2342_outer():
       (goto-char init-pos)
       (should (equal (test-cockpit--python--find-current-test) expected-string)))))
 
-(ert-deftest test-find-test-method-point-in-def-numeric-start ()
+(ert-deftest test-python-find-test-method-point-in-def-numeric-start ()
   (let ((buffer-contents "
 def test_2342_first_outer():
     pass
@@ -192,7 +192,7 @@ def test_2342_first_outer():
       (should (equal (test-cockpit--python--find-current-test) expected-string)))))
 
 
-(ert-deftest test-find-test-method-constant-pos ()
+(ert-deftest test-python-find-test-method-constant-pos ()
   (let ((buffer-contents "
 def test_first_outer():
     pass
@@ -209,7 +209,7 @@ def no_test_outer():
       (should (eq (point) init-pos)))))
 
 
-(ert-deftest test-find-test-method-nested ()
+(ert-deftest test-python-find-test-method-nested ()
   (let ((buffer-contents "
 def test_first_outer():
 
@@ -231,7 +231,7 @@ def test_first_outer():
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
 
-(ert-deftest test-find-test-method-in-test-class ()
+(ert-deftest test-python-find-test-method-in-test-class ()
   (let ((buffer-contents "
 class TestClass(TestCase):
 
@@ -252,7 +252,7 @@ class TestClass(TestCase):
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
 
-(ert-deftest test-find-test-method-in-test-class-numeric-start ()
+(ert-deftest test-python-find-test-method-in-test-class-numeric-start ()
   (let ((buffer-contents "
 class Test2342Class(TestCase):
 
@@ -273,7 +273,7 @@ class Test2342Class(TestCase):
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
 
-(ert-deftest test-find-test-method-in-no-test-class ()
+(ert-deftest test-python-find-test-method-in-no-test-class ()
   (let ((buffer-contents "
 class NoTestClass(TestCase):
 
@@ -293,7 +293,7 @@ class NoTestClass(TestCase):
 	  (goto-char init-pos)
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
-(ert-deftest test-find-test-method-in-non-testcase-test-class ()
+(ert-deftest test-python-find-test-method-in-non-testcase-test-class ()
   (let ((buffer-contents "
 class TestClass:
 
@@ -313,7 +313,7 @@ class TestClass:
 	  (goto-char init-pos)
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
-(ert-deftest test-find-test-method-test-class-with-spaces ()
+(ert-deftest test-python-find-test-method-test-class-with-spaces ()
   (let ((buffer-contents "
 class 	 TestClass:
 
@@ -333,7 +333,7 @@ class 	 TestClass:
 	  (goto-char init-pos)
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
-(ert-deftest test-find-test-method-in-test-class-after-teardown ()
+(ert-deftest test-python-find-test-method-in-test-class-after-teardown ()
   (let ((buffer-contents "
 class TestClass(unittest.TestCase):
 
@@ -358,7 +358,7 @@ class TestClass(unittest.TestCase):
 	  (goto-char init-pos)
 	  (should (equal (test-cockpit--python--find-current-test) expected-string)))))))
 
-(ert-deftest test-find-test-method-point-in-async-def ()
+(ert-deftest test-python-find-test-method-point-in-async-def ()
   (let ((buffer-contents "
 async def test_first_outer():
     pass
@@ -372,19 +372,19 @@ async def test_first_outer():
       (goto-char init-pos)
       (should (equal (test-cockpit--python--find-current-test) expected-string)))))
 
-(ert-deftest test-concat-file-path-test-method ()
+(ert-deftest test-python-concat-file-path-test-method ()
   (mocker-let ((buffer-file-name () ((:output "/foo/bar/project/path/to/test_file.py")))
 	       (projectile-project-root () ((:output "/foo/bar/project")))
 	       (test-cockpit--python--find-current-test () ((:output "test_foo"))))
     (should (equal (test-cockpit--python--test-function-path) "path/to/test_file.py::test_foo"))))
 
-(ert-deftest test-concat-file-path-no-test-method ()
+(ert-deftest test-python-concat-file-path-no-test-method ()
   (mocker-let ((buffer-file-name () ((:output "/foo/bar/project/path/to/test_file.py")))
 	       (projectile-project-root () ((:output "/foo/bar/project")))
 	       (test-cockpit--python--find-current-test () ((:output nil))))
     (should (equal (test-cockpit--python--test-function-path) "path/to/test_file.py"))))
 
-(ert-deftest test-python-infix ()
+(ert-deftest test-python-python-infix ()
   (mocker-let ((projectile-project-type () ((:output 'python-pip))))
     (let ((infix (test-cockpit-infix)))
       (should (equal (aref (aref infix 0) 0) "Switches"))
