@@ -1,0 +1,197 @@
+(require 'mocker)
+(require 'test-cockpit-npm-jest)
+
+
+(ert-deftest test-cockpit-npm-jest-type-available ()
+  (should (alist-get 'npm test-cockpit--project-types)))
+
+
+(ert-deftest test-get-npm-test-test-project-command-no-switches ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+   ((projectile-project-type () ((:output 'npm :min-occur 0)))
+    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (compile (command) ((:input '("npm test -- --color") :output 'success))))
+   (test-cockpit-test-project)))
+
+(ert-deftest test-get-npm-test-test-project-command-only-changed-switch ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+   ((projectile-project-type () ((:output 'npm :min-occur 0)))
+    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (compile (command) ((:input '("npm test -- --color --onlyChanged") :output 'success))))
+   (test-cockpit-test-project '("--onlyChanged"))))
+
+
+(ert-deftest test-get-npm-test-test-module-command-no-switches ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+   ((projectile-project-type () ((:output 'npm :min-occur 0)))
+    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (buffer-file-name () ((:output "/path/to/file.test.js")))
+    (compile (command) ((:input '("npm test -- --color --testPathPattern '/path/to/file\\.test\\.js'") :output 'success))))
+   (test-cockpit-test-module)))
+
+(ert-deftest test-get-npm-test-test-module-command-only-failures-switch ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+   ((projectile-project-type () ((:output 'npm :min-occur 0)))
+    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (buffer-file-name () ((:output "/path/to/otherfile.test.js")))
+    (compile (command) ((:input '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --onlyFailures") :output 'success))))
+   (test-cockpit-test-module '("--onlyFailures"))))
+
+
+(ert-deftest test-npm-jest-test-function-command-no-switches ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+   ((projectile-project-type () ((:output 'npm :min-occur 0)))
+    (test-cockpit--npm-jest--find-current-test () ((:output "desc it")))
+    (buffer-file-name () ((:output "/path/to/file.test.js")))
+    (compile (command) ((:input '("npm test -- --color --testPathPattern '/path/to/file\\.test\\.js' --testNamePattern 'desc it'") :output 'success))))
+   (test-cockpit-test-function)))
+
+(ert-deftest test-npm-jest-test-function-command-coverage-switch ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+   ((projectile-project-type () ((:output 'npm :min-occur 0)))
+    (test-cockpit--npm-jest--find-current-test () ((:output "desc it")))
+    (buffer-file-name () ((:output "/path/to/otherfile.test.js")))
+    (compile (command) ((:input '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --testNamePattern 'desc it' --coverage") :output 'success))))
+   (test-cockpit-test-function '("--coverage"))))
+
+(ert-deftest test-npm-current-module-string-no-file-buffer-is-nil ()
+  (mocker-let ((buffer-file-name () ((:output nil))))
+    (let ((engine (make-instance test-cockpit--npm-jest--engine)))
+      (should (eq (test-cockpit--engine-current-module-string engine) nil)))))
+
+
+(ert-deftest test-npm-current-module-string-test-file-buffer-is-filename ()
+  (mocker-let ((buffer-file-name () ((:output "/some/path/file.test.js"))))
+    (let ((engine (make-instance test-cockpit--npm-jest--engine)))
+      (should (equal (test-cockpit--engine-current-module-string engine) "/some/path/file.test.js")))))
+
+
+(ert-deftest test-npm-current-module-string-no-test-file-buffer-is-nil ()
+  (mocker-let ((buffer-file-name () ((:output "/some/path/file.js"))))
+    (let ((engine (make-instance test-cockpit--npm-jest--engine)))
+      (should (equal (test-cockpit--engine-current-module-string engine) nil)))))
+
+
+(ert-deftest test-npm-find-current-test-simple-test-single-quote ()
+  (let ((buffer-contents "
+test('this should work', () => {
+    expect(something).toBe(expected);
+})
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 50)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "this should work")))))
+
+
+(ert-deftest test-npm-find-current-test-simple-test-no-test ()
+  (let ((buffer-contents "
+
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 1)
+      (should (eq (test-cockpit--npm-jest--find-current-test) nil)))))
+
+
+(ert-deftest test-npm-find-current-test-simple-it-single-quote ()
+  (let ((buffer-contents "
+it('should work', () => {
+    expect(something).toBe(expected);
+})
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 50)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "should work")))))
+
+
+(ert-deftest test-npm-find-current-test-simple-it-backtick ()
+  (let ((buffer-contents "
+it(`should still work`, () => {
+    expect(something).toBe(expected);
+})
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 50)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "should still work")))))
+
+
+(ert-deftest test-npm-find-current-test-simple-test-double-quote ()
+  (let ((buffer-contents "
+test(\"should still work\", () => {
+    expect(something).toBe(expected);
+})
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 50)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "should still work")))))
+
+
+(ert-deftest test-npm-find-current-test-simple-describe-it-single-quote ()
+  (let ((buffer-contents "
+describe('this thing', () => {
+  it(`should work`, () => {
+      expect(something).toBe(expected);
+  });
+});
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 70)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "this thing should work")))))
+
+
+(ert-deftest test-npm-find-current-test-simple-describe-only-outside-it-backtick ()
+  (let ((buffer-contents "
+test('not this', () => {
+    expect(something).toBe(expected);
+});
+
+describe(`that thing`, () => {
+
+  it(`should work`, () => {
+      expect(something).toBe(expected);
+  });
+});
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 96)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "that thing ")))))
+
+
+(ert-deftest test-npm-find-current-test-simple-describe-no-it-double-quote ()
+  (let ((buffer-contents "
+describe(\"this very thing\", () => {
+
+  it(`should work`, () => {
+      expect(something).toBe(expected);
+  });
+});
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 31)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing ")))))
+
+
+(ert-deftest test-npm-find-current-test-not-change-point ()
+  (let ((buffer-contents "
+test(\"should still work\", () => {
+    expect(something).toBe(expected);
+})
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 50)
+      (test-cockpit--npm-jest--find-current-test)
+      (should (eq (point) 50)))))
