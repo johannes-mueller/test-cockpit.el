@@ -69,6 +69,34 @@
     (should (equal (test-cockpit--last-module-string) "foo-module-string"))
     (should (equal (test-cockpit--last-function-string) "foo-function-string"))))
 
+
+(ert-deftest test-module-no-current-module-no-last-module ()
+  (mocker-let ((test-cockpit--current-module-string () ((:output nil)))
+	       (message (msg) ((:input '("Not in a unit test module file") :output 'success))))
+    (test-cockpit-test-module)))
+
+(ert-deftest test-module-no-current-module-but-last-module ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (test-cockpit--current-module-string () ((:output nil)))
+	       (test-cockpit--last-module-string () ((:output "foo-module-string")))
+	       (compile (command) ((:input '("test module foo-module-string") :output 'success))))
+    (test-cockpit-test-module)))
+
+(ert-deftest test-function-no-current-function-no-last-function ()
+  (mocker-let ((test-cockpit--current-function-string () ((:output nil)))
+	       (message (msg) ((:input '("Not in a unit test module file") :output 'success))))
+    (test-cockpit-test-function)))
+
+(ert-deftest test-function-no-current-function-but-last-function ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (test-cockpit--current-function-string () ((:output nil)))
+	       (test-cockpit--last-function-string () ((:output "foo-function-string")))
+	       (compile (command) ((:input '("test function foo-function-string") :output 'success))))
+    (test-cockpit-test-function)))
+
+
 (ert-deftest test-test-last-strings-module-repeat-called ()
   (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
@@ -292,8 +320,79 @@
     (test-cockpit-test-module '("bar" "foo"))
     (test-cockpit--do-repeat-function nil)))
 
+
+(ert-deftest test-main-suffix--all-nil ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (test-cockpit--current-module-string () ((:output nil)))
+	       (test-cockpit--current-function-string () ((:output nil)))
+	       (test-cockpit--last-module-string () ((:output nil)))
+	       (test-cockpit--last-function-string () ((:output nil))))
+    (should (equal (test-cockpit--main-suffix)
+		   ["Run tests"
+		    ("p" "project" test-cockpit-test-project)
+		    ("c" "custom" test-cockpit-custom-test-command)]))))
+
+
+(ert-deftest test-main-suffix--current-module ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (test-cockpit--current-module-string () ((:output "foo-project/some-module")))
+	       (test-cockpit--current-function-string () ((:output nil))))
+    (should (equal (test-cockpit--main-suffix)
+		   ["Run tests"
+		    ("p" "project" test-cockpit-test-project)
+		    ("m" "module: some-module" test-cockpit-test-module)
+		    ("c" "custom" test-cockpit-custom-test-command)]))))
+
+
+(ert-deftest test-main-suffix--current-function ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (test-cockpit--current-module-string () ((:output nil)))
+	       (test-cockpit--current-function-string () ((:output "foo-project/some-function"))))
+    (should (equal (test-cockpit--main-suffix)
+		   ["Run tests"
+		    ("p" "project" test-cockpit-test-project)
+		    ("f" "function: some-function" test-cockpit-test-function)
+		    ("c" "custom" test-cockpit-custom-test-command)]))))
+
+
+(ert-deftest test-main-suffix--last-module ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (test-cockpit--current-module-string () ((:output nil)))
+	       (test-cockpit--current-function-string () ((:output nil)))
+	       (test-cockpit--last-module-string () ((:output "foo-project/some-last-module")))
+	       (test-cockpit--last-function-string () ((:output nil))))
+    (should (equal (test-cockpit--main-suffix)
+		   ["Run tests"
+		    ("p" "project" test-cockpit-test-project)
+		    ("m" "module: some-last-module" test-cockpit-test-module)
+		    ("c" "custom" test-cockpit-custom-test-command)]))))
+
+
+(ert-deftest test-main-suffix--last-function ()
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+	       (test-cockpit--current-module-string () ((:output nil)))
+	       (test-cockpit--current-function-string () ((:output nil)))
+	       (test-cockpit--last-module-string () ((:output nil)))
+	       (test-cockpit--last-function-string () ((:output "foo-project/some-last-function"))))
+    (should (equal (test-cockpit--main-suffix)
+		   ["Run tests"
+		    ("p" "project" test-cockpit-test-project)
+		    ("f" "function: some-last-function" test-cockpit-test-function)
+		    ("c" "custom" test-cockpit-custom-test-command)]))))
+
+
 (ert-deftest test-repeat-transient-suffix-nil ()
   (should (eq (test-cockpit--transient-suffix-for-repeat) nil)))
+
 
 (ert-deftest test-repeat-transient-suffix-non-nil ()
   (tc--register-foo-project)
@@ -416,7 +515,9 @@
       (test-cockpit-repeat-test-or-projectile-test))))
 
 (ert-deftest test-custom-test-command ()
-  (mocker-let ((call-interactively (func) ((:input `(compile) :output 'success :occur 1)))
+  (tc--register-foo-project)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+	       (call-interactively (func) ((:input `(compile) :output 'success :occur 1)))
 	       (compile (command)
 			((:input '("some custom command") :output 'success :occur 1))))
     (let ((compile-command "some custom command"))
@@ -426,13 +527,14 @@
 (ert-deftest test-set-infix ()
   (tc--register-foo-project)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type))))
+    (transient-append-suffix 'test-cockpit-prefix '(-1) (test-cockpit--main-suffix))
     (test-cockpit--insert-infix)
     (should (equal
 	     (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
 	     '(:description "Foo")))
     (should (equal
 	     (aref (transient-get-suffix 'test-cockpit-prefix '(1)) 2)
-	     '(:description "Run test")))))
+	     '(:description "Run tests")))))
 
 (defclass test-cockpit--no-infix-engine (test-cockpit--engine) ())
 
@@ -440,10 +542,11 @@
   (test-cockpit-register-project-type 'noinfix-project-type 'test-cockpit--no-infix-engine)
   (mocker-let ((projectile-project-type () ((:output 'noinfix-project-type)))
 	       (transient-insert-suffix (prefix loc infix) ((:min-occur 0 :max-occur 0))))
+    (transient-append-suffix 'test-cockpit-prefix '(-1) (test-cockpit--main-suffix))
     (test-cockpit--insert-infix)
     (should (equal
 	     (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
-	     '(:description "Run test")))))
+	     '(:description "Run tests")))))
 
 (ert-deftest test-join-filter-switches ()
   (let ((allowed '("foo" "bar")))

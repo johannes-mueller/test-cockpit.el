@@ -57,15 +57,21 @@
     (compile (command) ((:input '("pytest --color=yes --cov-report= tests/path/to/test_foo.py") :output 'success :occur 1))))
    (test-cockpit-test-module)))
 
-(ert-deftest test-python-get-python-test-fuzzy-module-command ()
+(ert-deftest test-python-get-python-module-no-pytest-file ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
-   ((projectile-project-type () ((:output 'python-pip :min-occur 0)))
-    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-    (test-cockpit--python--pytest-binary-path () ((:output "pytest")))
-    (buffer-file-name () ((:output "/home/user/project/path/to/foo.py")))
-    (compile (command) ((:input '("pytest --color=yes --cov-report= -k foo") :output 'success :occur 1))))
-	     (test-cockpit-test-module)))
+      ((projectile-project-type () ((:output 'python-pip :min-occur 0)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (buffer-file-name () ((:output "/home/user/project/path/to/foo.py"))))
+    (should (eq (test-cockpit--current-module-string) nil))))
+
+(ert-deftest test-python-get-python-function-no-pytest-file ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+      ((projectile-project-type () ((:output 'python-pip :min-occur 0)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (buffer-file-name () ((:output "/home/user/project/path/to/foo.py"))))
+    (should (eq (test-cockpit--current-function-string) nil))))
 
 (ert-deftest test-python-get-python-test-module-command-switches ()
   (setq test-cockpit--project-engines nil)
@@ -73,11 +79,11 @@
       ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
        (test-cockpit--python--pytest-binary-path () ((:output "/foo/bin/pytest")))
-       (buffer-file-name () ((:output "/home/user/project/path/to/foo.py"))))
+       (buffer-file-name () ((:output "/home/user/project/path/to/test_foo.py"))))
     (dolist (struct '((("--last-failed" "--baba foo")
-		       "/foo/bin/pytest --color=yes --last-failed --cov-report= -k foo")
+		       "/foo/bin/pytest --color=yes --last-failed --cov-report= /home/user/project/path/to/test_foo.py")
 		      (("--cov-report=term" "--bubu foo")
-		       "/foo/bin/pytest --color=yes --cov-report=term -k foo")))
+		       "/foo/bin/pytest --color=yes --cov-report=term /home/user/project/path/to/test_foo.py")))
       (let ((arglist (pop struct))
 	    (expected (pop struct)))
 	(mocker-let

@@ -12,11 +12,12 @@
 (cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--mix-engine))
   (test-cockpit--mix--infix))
 (cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--mix-engine))
-  (buffer-file-name))
+  (when-let ((fn (buffer-file-name))) (when (string-suffix-p "_test.exs" fn) fn)))
+
 (cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--mix-engine))
-  (let ((current-file (buffer-file-name)))
-    (when current-file
-      (concat current-file ":" (number-to-string (line-number-at-pos))))))
+  (when-let ((fn (buffer-file-name)))
+    (when (string-suffix-p "_test.exs" fn)
+      (concat fn ":" (number-to-string (line-number-at-pos))))))
 
 
 (test-cockpit-register-project-type 'elixir 'test-cockpit--mix-engine)

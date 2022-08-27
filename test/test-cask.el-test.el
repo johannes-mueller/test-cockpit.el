@@ -11,8 +11,7 @@
       (should (eq (test-cockpit--engine-current-module-string engine) nil)))))
 
 (ert-deftest test-current-function-string-no-file-buffer-is-nil ()
-  (mocker-let ((buffer-file-name () ((:output nil :min-occur 0)))
-	       (which-function () ((:output nil))))
+  (mocker-let ((buffer-file-name () ((:output nil :min-occur 0))))
     (let ((engine (make-instance test-cockpit--cask-engine)))
       (should (eq (test-cockpit--engine-current-function-string engine) nil)))))
 
@@ -39,6 +38,21 @@
      (test-cockpit-test-module))
    (mocker-let ((compile (command) ((:input '("cask install && cask exec ert-runner tests/test-foo.el-test.el") :output 'success :occur 1))))
      (test-cockpit-test-module '("install")))))
+
+(ert-deftest test-get-cask-test-module-no-el-test-file ()
+    (setq test-cockpit--project-engines nil)
+    (mocker-let ((projectile-project-type () ((:output 'emacs-cask)))
+		 (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+		 (buffer-file-name () ((:output "tests/foo.el"))))
+      (should (eq (test-cockpit--current-module-string) nil))))
+
+(ert-deftest test-get-cask-test-function-no-el-test-file ()
+    (setq test-cockpit--project-engines nil)
+    (mocker-let ((projectile-project-type () ((:output 'emacs-cask)))
+		 (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+		 (buffer-file-name () ((:output "tests/foo.el"))))
+      (should (eq (test-cockpit--current-function-string) nil))))
+
 
 (ert-deftest test-get-cask-test-function ()
   (setq test-cockpit--project-engines nil)

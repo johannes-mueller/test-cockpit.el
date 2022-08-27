@@ -6,16 +6,23 @@
 
 (cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--cask-engine))
   'test-cockpit--cask--test-project-command)
+
 (cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--cask-engine))
   'test-cockpit--cask--test-module-command )
+
 (cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--cask-engine))
   'test-cockpit--cask--test-function-command)
+
 (cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--cask-engine))
   (test-cockpit--cask--infix))
+
 (cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--cask-engine))
-  (buffer-file-name))
+  (when-let ((fn (buffer-file-name))) (when (string-suffix-p ".el-test.el" fn) fn)))
+
 (cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--cask-engine))
-  (which-function))
+  (when-let ((fn (buffer-file-name)))
+    (when (string-suffix-p ".el-test.el" fn)
+      (which-function))))
 
 
 (test-cockpit-register-project-type 'emacs-cask 'test-cockpit--cask-engine)

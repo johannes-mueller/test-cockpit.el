@@ -239,11 +239,15 @@ The exact determination of the model is done by the language specific package.
 ARGS is the UI state for language specific settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (test-cockpit--run-test
-   (test-cockpit--command 'test-cockpit--make-test-module-command
-			  (test-cockpit--current-module-string)
-			  args))
-  (test-cockpit--update-last-commands args))
+
+  (if-let ((module-string (or (test-cockpit--current-module-string)
+			      (test-cockpit--last-module-string))))
+      (progn (test-cockpit--run-test
+	      (test-cockpit--command 'test-cockpit--make-test-module-command
+				     module-string
+				     args))
+	     (test-cockpit--update-last-commands args))
+    (message "Not in a unit test module file")))
 
 ;;;###autoload
 (defun test-cockpit-test-function (&optional args)
@@ -253,11 +257,14 @@ specific package.  ARGS is the UI state for language specific
 settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (test-cockpit--run-test (test-cockpit--command
+  (if-let ((function-string (or (test-cockpit--current-function-string)
+			      (test-cockpit--last-function-string))))
+      (progn (test-cockpit--run-test (test-cockpit--command
 			   'test-cockpit--make-test-function-command
-			   (test-cockpit--current-function-string)
+			   function-string
 			   args))
-  (test-cockpit--update-last-commands args))
+	     (test-cockpit--update-last-commands args))
+    (message "Not in a unit test module file")))
 
 ;;;###autoload
 (defun test-cockpit-repeat-module ()
@@ -433,12 +440,25 @@ repetition."
 (transient-define-prefix test-cockpit-prefix ()
   "Test the project"
   :value 'test-cockpit--last-switches
-  ["Run test"
-   ("p" "project" test-cockpit-test-project)
-   ("m" "module" test-cockpit-test-module)
-   ("f" "function" test-cockpit-test-function)
-   ("c" "custom" test-cockpit-custom-test-command)
-   ("r" "repeat" test-cockpit-repeat-test)])
+  [])
+
+(defun test-cockpit--main-suffix ()
+  (let ((module-string (or (test-cockpit--current-module-string) (test-cockpit--last-module-string)))
+	(function-string (or (test-cockpit--current-function-string) (test-cockpit--last-function-string)))
+	(last-command (oref (test-cockpit--real-engine-or-error) last-command)))
+    (vconcat (remove nil (append `("Run tests"
+				   ("p" "project" test-cockpit-test-project)
+				   ,(if module-string
+					`("m"
+					  ,(format "module: %s" (test-cockpit--strip-project-root module-string))
+					  test-cockpit-test-module))
+				   ,(if function-string
+					`("f"
+					  ,(format "function: %s" (test-cockpit--strip-project-root function-string))
+					  test-cockpit-test-function))
+				   ("c" "custom" test-cockpit-custom-test-command)
+				   ,(if last-command
+					`("r" "repeat" test-cockpit-repeat-test))))))))
 
 (defun test-cockpit--strip-project-root (path)
   "Strip the project root path from a given PATH."
@@ -472,12 +492,15 @@ If the repeat suffix has been appended it is removed afterwards
 as will be no longer valid and we don't want the suffixes to
 accumulate."
   (interactive)
+  (transient-append-suffix 'test-cockpit-prefix '(-1) (test-cockpit--main-suffix))
   (test-cockpit--real-engine-or-error)
   (test-cockpit--insert-infix)
   (let ((appended-suffix-must-be-removed (test-cockpit--append-repeat-suffix)))
     (test-cockpit-prefix)
     (if appended-suffix-must-be-removed
-	(transient-remove-suffix 'test-cockpit-prefix '(-1)))))
+	(transient-remove-suffix 'test-cockpit-prefix '(-1)))
+    (transient-remove-suffix 'test-cockpit-prefix '(-1))))
+
 
 (defun test-cockpit--join-filter-switches (candidates allowed)
   "Join the list of strings CANDIDATES together.

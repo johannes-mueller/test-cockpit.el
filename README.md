@@ -117,6 +117,9 @@ You can also use the following commands to run tests in a more manual way
 * `test-cockpit-test-function` runs only the test of the function at point.
 * `test-cockpit-repeat-test` repeats exactly the *previous* test run.
 
+If the current function at point or the current module cannot be determined,
+the last tested module resp. last tested function are tested.  If there are no
+last tests, an error message is thrown.
 
 ## Status
 

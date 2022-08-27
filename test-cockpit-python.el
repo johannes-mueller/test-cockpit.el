@@ -55,10 +55,8 @@
 
 (defun test-cockpit--python--choose-module ()
   (if-let ((file-name-path (buffer-file-name)))
-    (if (string-prefix-p "test_" (file-name-nondirectory file-name-path))
-	(test-cockpit--strip-project-root file-name-path)
-      (concat "-k " (file-name-base file-name-path))
-    )))
+    (when (string-prefix-p "test_" (file-name-nondirectory file-name-path))
+	(test-cockpit--strip-project-root file-name-path))))
 
 (defun test-cockpit--python--test-function-command (string args)
   (concat (test-cockpit--python--common-switches args) " " string))
@@ -142,7 +140,8 @@
 	  (test-cockpit--python--test-method-or-class unindented-line unindented-pos))))
 
 (defun test-cockpit--python--test-function-path ()
-  (if-let ((file-name (buffer-file-name)))
+  (if-let ((file-name (when-let ((fn (buffer-file-name)))
+			(when (string-prefix-p "test_" (file-name-nondirectory fn)) fn))))
       (concat (test-cockpit--strip-project-root file-name)
 	   (if-let ((test-function (test-cockpit--python--find-current-test)))
 	       (concat "::" test-function)))))
