@@ -34,7 +34,7 @@
     ("-c" "print coverage report" "--coverage")]])
 
 (defun test-cockpit--npm-jest--test-project-command (_ switches)
-  (concat "npm test -- --color " (string-join switches)))
+  (concat "npm test -- --color " (string-join switches " ")))
 
 (defun test-cockpit--npm-jest--test-module-command (_ switches)
   (concat "npm test -- --color "

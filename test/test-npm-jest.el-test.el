@@ -22,6 +22,14 @@
     (compile (command) ((:input '("npm test -- --color --onlyChanged") :output 'success))))
    (test-cockpit-test-project '("--onlyChanged"))))
 
+(ert-deftest test-get-npm-test-test-project-command-two-switches ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+   ((projectile-project-type () ((:output 'npm :min-occur 0)))
+    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (compile (command) ((:input '("npm test -- --color --onlyChanged --coverage") :output 'success))))
+   (test-cockpit-test-project '("--onlyChanged" "--coverage"))))
+
 
 (ert-deftest test-get-npm-test-test-module-command-no-switches ()
   (setq test-cockpit--project-engines nil)
@@ -41,6 +49,18 @@
     (compile (command) ((:input '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --onlyFailures") :output 'success))))
    (test-cockpit-test-module '("--onlyFailures"))))
 
+(ert-deftest test-get-npm-test-test-module-command-two-switches ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+   ((projectile-project-type () ((:output 'npm :min-occur 0)))
+    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (buffer-file-name () ((:output "/path/to/otherfile.test.js")))
+    (compile (command)
+	     ((:input
+	       '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --onlyFailures --coverage")
+	       :output 'success))))
+   (test-cockpit-test-module '("--onlyFailures" "--coverage"))))
+
 
 (ert-deftest test-npm-jest-test-function-command-no-switches ()
   (setq test-cockpit--project-engines nil)
@@ -59,6 +79,18 @@
     (buffer-file-name () ((:output "/path/to/otherfile.test.js")))
     (compile (command) ((:input '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --testNamePattern 'desc it' --coverage") :output 'success))))
    (test-cockpit-test-function '("--coverage"))))
+
+(ert-deftest test-npm-jest-test-function-two-swiches ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+   ((projectile-project-type () ((:output 'npm :min-occur 0)))
+    (test-cockpit--npm-jest--find-current-test () ((:output "desc it")))
+    (buffer-file-name () ((:output "/path/to/otherfile.test.js")))
+    (compile (command)
+	     ((:input
+	       '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --testNamePattern 'desc it' --coverage --onlyFailures")
+	       :output 'success))))
+   (test-cockpit-test-function '("--coverage" "--onlyFailures"))))
 
 (ert-deftest test-npm-current-module-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
