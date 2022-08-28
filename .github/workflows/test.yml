@@ -41,7 +41,7 @@ jobs:
 
       - name: Run tests
         if: matrix.allow_failure != true
-        run: '$HOME/.cask/bin/cask exec ert-runner'
+        run: '$HOME/.cask/bin/cask exec ert-runner --verbose'
 
       - name: Run tests (allow failure)
         if: matrix.allow_failure == true
