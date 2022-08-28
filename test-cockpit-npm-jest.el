@@ -64,26 +64,35 @@
   (save-excursion
     (test-cockpit--npm-jest--find-marker "describe")))
 
-(defun test-cockpit--npm-jest--find-marker (marker-regexp)
-  (let ((forward-sexp-function nil))
+(defun test-cockpit--npm-jest--goto-initial-marker (marker-regexp)
     (when (search-backward-regexp (concat
 				   "^\s*"
 				   marker-regexp
 				   test-cockpit--npm-jest--test-modifier-regexp
 				   "[^[:alnum:]]")
 				 nil t )
-     (goto-char (match-end 0))
-     (when (string-match-p "each" (match-string-no-properties 0))
-       (forward-sexp) (forward-char))
-     (let ((start-pos (match-beginning 0))
-	   (next-sexp
-	    (let ((endpoint (save-excursion (forward-sexp) (forward-char) (point))))
-	      (buffer-substring (point) endpoint))))
-       (when-let ((result-string
-		   (progn
-		     (string-match "\\(['`\"]\\)\\(.*\\)\\1" next-sexp)
-		     (match-string-no-properties 2 next-sexp))))
-	 `(,start-pos ,result-string))))))
+      (goto-char (match-end 0))
+      (match-beginning 0)))
+
+(defun test-cockpit--npm-jest--skip-potential-each-table ()
+  (when (string-match-p "each" (match-string-no-properties 0))
+    (forward-sexp) (forward-char)))
+
+(defun test-cockpit--npm-jest--test-name-sexp ()
+  (let ((endpoint (save-excursion (forward-sexp) (forward-char) (point))))
+    (buffer-substring (point) endpoint)))
+
+(defun test-cockpit--npm-jest--unqote-test-name-sexp (test-sexp)
+  (string-match "\\(['`\"]\\)\\(.*\\)\\1" test-sexp)
+  (match-string-no-properties 2 test-sexp))
+
+(defun test-cockpit--npm-jest--find-marker (marker-regexp)
+  (let ((forward-sexp-function nil))
+    (when-let ((start-pos (test-cockpit--npm-jest--goto-initial-marker marker-regexp)))
+      (test-cockpit--npm-jest--skip-potential-each-table)
+      (when-let ((result-string (test-cockpit--npm-jest--unqote-test-name-sexp
+				 (test-cockpit--npm-jest--test-name-sexp))))
+	 `(,start-pos ,result-string)))))
 
 (defun test-cockpit--npm-jest--find-current-test ()
   (save-excursion
