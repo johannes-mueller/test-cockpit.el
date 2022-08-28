@@ -171,8 +171,10 @@ trimmed string is then returned."
 The current module and function are determined automatically.
 The additional arguments are shipped as ARGS."
   (let ((engine (test-cockpit--retrieve-engine)))
-    (oset engine last-module-string (test-cockpit--current-module-string))
-    (oset engine last-function-string (test-cockpit--current-function-string))
+    (when-let ((last-module (test-cockpit--current-module-string)))
+      (oset engine last-module-string last-module))
+    (when-let ((last-function (test-cockpit--current-function-string)))
+      (oset engine last-function-string last-function))
     (oset engine last-args args)))
 
 (defun test-cockpit--make-test-project-command (project-string args)
