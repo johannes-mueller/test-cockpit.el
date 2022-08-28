@@ -11,7 +11,7 @@
 (defmacro with-temp-js-buffer (&rest body)
   (declare (indent 0) (debug t))
   (let ((temp-buffer (make-symbol "temp-buffer")))
-    `(let ((,temp-buffer (generate-new-buffer " *temp*" t)))
+    `(let ((,temp-buffer (generate-new-buffer " *temp*")))
        ;; `kill-buffer' can change current-buffer in some odd cases.
        	 (with-current-buffer ,temp-buffer
 	     (unwind-protect
