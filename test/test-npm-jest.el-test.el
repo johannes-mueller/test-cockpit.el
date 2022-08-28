@@ -10,6 +10,7 @@
 
 (defmacro with-temp-js-buffer (&rest body)
   (declare (indent 0) (debug t))
+  (message "entering js-buffer")
   (let ((temp-buffer (make-symbol "temp-buffer")))
     `(let ((,temp-buffer (generate-new-buffer " *temp*" t)))
        ;; `kill-buffer' can change current-buffer in some odd cases.
