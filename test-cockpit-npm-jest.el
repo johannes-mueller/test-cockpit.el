@@ -55,24 +55,37 @@
 	    test-cockpit--npm-jest--test-match-regex-list))
       candidate)))
 
+(defconst test-cockpit--npm-jest--test-modifier-regexp "\\(\\.[[:word:]]+\\)*")
+
 (defun test-cockpit--npm-jest--find-current-it ()
-  (when (search-backward-regexp "\\(test\\|it\\)(\\(['`\"]\\)\\(.*\\)\\2" nil t)
-    `(,(match-beginning 0) ,(match-string 3))))
+  (test-cockpit--npm-jest--find-marker "\\(test\\|it\\)"))
 
 (defun test-cockpit--npm-jest--find-current-desc ()
   (save-excursion
-    (when (search-backward-regexp "describe(\\(['`\"]\\)\\(.*\\)\\1" nil t)
-      `(,(match-beginning 0) ,(concat (match-string 2) " ")))))
+    (test-cockpit--npm-jest--find-marker "describe")))
+
+(defun test-cockpit--npm-jest--find-marker (marker-regexp)
+  (when (search-backward-regexp (concat
+				 marker-regexp
+				 test-cockpit--npm-jest--test-modifier-regexp)
+				nil t )
+    (goto-char (match-end 0))
+    (when (string-match-p "each" (match-string 0))
+      (forward-char) (forward-sexp))
+    (when (search-forward-regexp "([\s\n]*\\(['`\"]\\)\\(.*\\)\\1" nil t)
+      `(,(match-beginning 0) ,(match-string 2)))))
 
 (defun test-cockpit--npm-jest--find-current-test ()
   (save-excursion
     (let ((desc (test-cockpit--npm-jest--find-current-desc))
-	 (it (test-cockpit--npm-jest--find-current-it)))
+	  (it (test-cockpit--npm-jest--find-current-it)))
      (when (or desc it)
-       (concat (cadr desc)
-	       (if (or (not desc)
-		       (and it (> (car it) (car desc))))
-		   (cadr it)))))))
+       (string-trim
+	(string-join `(,(cadr desc)
+		       ,(if (or (not desc)
+				(and it (> (car it) (car desc))))
+			    (cadr it)))
+		     " "))))))
 
 (provide 'test-cockpit-npm-jest)
 

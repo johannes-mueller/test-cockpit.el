@@ -150,7 +150,7 @@ describe('this thing', () => {
       (should (equal (test-cockpit--npm-jest--find-current-test) "this thing should work")))))
 
 
-(ert-deftest test-npm-find-current-test-simple-describe-only-outside-it-backtick ()
+(ert-deftest test-npm-find-current-simple-describe-only-outside-it-backtick ()
   (let ((buffer-contents "
 test('not this', () => {
     expect(something).toBe(expected);
@@ -166,10 +166,10 @@ describe(`that thing`, () => {
     (with-temp-buffer
       (insert buffer-contents)
       (goto-char 96)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "that thing ")))))
+      (should (equal (test-cockpit--npm-jest--find-current-test) "that thing")))))
 
 
-(ert-deftest test-npm-find-current-test-simple-describe-no-it-double-quote ()
+(ert-deftest test-npm-find-current-simple-describe-no-it-double-quote ()
   (let ((buffer-contents "
 describe(\"this very thing\", () => {
 
@@ -181,7 +181,7 @@ describe(\"this very thing\", () => {
     (with-temp-buffer
       (insert buffer-contents)
       (goto-char 31)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing ")))))
+      (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing")))))
 
 
 (ert-deftest test-npm-find-current-test-not-change-point ()
@@ -195,3 +195,89 @@ test(\"should still work\", () => {
       (goto-char 50)
       (test-cockpit--npm-jest--find-current-test)
       (should (eq (point) 50)))))
+
+
+(ert-deftest test-npm-find-current-test-simple-modifiers ()
+  (let ((buffer-contents "
+test.only.concurrent.skip('should still work', () => {
+    expect(something).toBe(expected);
+})
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 70)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "should still work")))))
+
+
+(ert-deftest test-npm-find-current-desc-simple-modifiers ()
+  (let ((buffer-contents "
+describe.only.concurrent.skip('this very thing', () => {
+
+  it(`should still work`, () => {
+      expect(something).toBe(expected);
+  });
+});
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 56)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing")))))
+
+
+(ert-deftest test-npm-find-current-test-simple-test-single-quote-extra-space ()
+  (let ((buffer-contents "
+test ( 'this should still work', () => {
+    expect(something).toBe(expected);
+})
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 50)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "this should still work")))))
+
+(ert-deftest test-npm-find-current-test-simple-test-single-quote-extra-line-break ()
+  (let ((buffer-contents "
+test
+   (
+    'this should still work', () => {
+    expect(something).toBe(expected);
+})
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 58)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "this should still work")))))
+
+(ert-deftest test-npm-find-current-test-simple-array ()
+  (let ((buffer-contents "
+test.only.each([
+    [1, 1, fn('foo')],
+    [1, 2, fn('foo')],
+    [2, 1, fn('foo')],
+])('should $a $b still work', () => {
+    expect(something).toBe(expected);
+})
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 70)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "should $a $b still work")))))
+
+
+(ert-deftest test-npm-find-current-desc-simple-array ()
+  (let ((buffer-contents "
+describe.each([
+    [1, 1, fn('foo')],
+    [1, 2, fn('foo')],
+    [2, 1, fn('foo')],
+])('this very thing', () => {
+
+  it(`should still work`, () => {
+      expect(something).toBe(expected);
+  });
+});
+"))
+    (with-temp-buffer
+      (insert buffer-contents)
+      (goto-char 56)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing")))))
