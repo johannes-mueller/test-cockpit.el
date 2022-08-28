@@ -65,15 +65,25 @@
     (test-cockpit--npm-jest--find-marker "describe")))
 
 (defun test-cockpit--npm-jest--find-marker (marker-regexp)
-  (when (search-backward-regexp (concat
-				 marker-regexp
-				 test-cockpit--npm-jest--test-modifier-regexp)
-				nil t )
-    (goto-char (match-end 0))
-    (when (string-match-p "each" (match-string 0))
-      (forward-char) (forward-sexp))
-    (when (search-forward-regexp "([\s\n]*\\(['`\"]\\)\\(.*\\)\\1" nil t)
-      `(,(match-beginning 0) ,(match-string 2)))))
+  (let ((forward-sexp-function nil))
+    (when (search-backward-regexp (concat
+				   "^\s*"
+				   marker-regexp
+				   test-cockpit--npm-jest--test-modifier-regexp
+				   "[^[:alnum:]]")
+				 nil t )
+     (goto-char (match-end 0))
+     (when (string-match-p "each" (match-string-no-properties 0))
+       (forward-sexp) (forward-char))
+     (let ((start-pos (match-beginning 0))
+	   (next-sexp
+	    (let ((endpoint (save-excursion (forward-sexp) (forward-char) (point))))
+	      (buffer-substring (point) endpoint))))
+       (when-let ((result-string
+		   (progn
+		     (string-match "\\(['`\"]\\)\\(.*\\)\\1" next-sexp)
+		     (match-string-no-properties 2 next-sexp))))
+	 `(,start-pos ,result-string))))))
 
 (defun test-cockpit--npm-jest--find-current-test ()
   (save-excursion

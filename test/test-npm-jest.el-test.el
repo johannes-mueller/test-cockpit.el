@@ -1,6 +1,24 @@
 (require 'mocker)
 (require 'test-cockpit-npm-jest)
 
+(require 'cc-mode)
+(defvar js-testing-syntax-table
+  (let ((table (make-syntax-table)))
+    (c-populate-syntax-table table)
+    (modify-syntax-entry ?` "\"" table)
+    table))
+
+(defmacro with-temp-js-buffer (&rest body)
+  (declare (indent 0) (debug t))
+  (let ((temp-buffer (make-symbol "temp-buffer")))
+    `(let ((,temp-buffer (generate-new-buffer " *temp*" t)))
+       ;; `kill-buffer' can change current-buffer in some odd cases.
+       	 (with-current-buffer ,temp-buffer
+	     (unwind-protect
+		 (with-syntax-table js-testing-syntax-table ,@body)
+               (and (buffer-name ,temp-buffer)
+                    (kill-buffer ,temp-buffer)))))))
+
 
 (ert-deftest test-cockpit-npm-jest-type-available ()
   (should (alist-get 'npm test-cockpit--project-types)))
@@ -116,7 +134,7 @@ test('this should work', () => {
     expect(something).toBe(expected);
 })
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
       (should (equal (test-cockpit--npm-jest--find-current-test) "this should work")))))
@@ -126,7 +144,7 @@ test('this should work', () => {
   (let ((buffer-contents "
 
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 1)
       (should (eq (test-cockpit--npm-jest--find-current-test) nil)))))
@@ -138,7 +156,7 @@ it('should work', () => {
     expect(something).toBe(expected);
 })
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
       (should (equal (test-cockpit--npm-jest--find-current-test) "should work")))))
@@ -150,7 +168,7 @@ it(`should still work`, () => {
     expect(something).toBe(expected);
 })
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
       (should (equal (test-cockpit--npm-jest--find-current-test) "should still work")))))
@@ -162,7 +180,7 @@ test(\"should still work\", () => {
     expect(something).toBe(expected);
 })
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
       (should (equal (test-cockpit--npm-jest--find-current-test) "should still work")))))
@@ -176,7 +194,7 @@ describe('this thing', () => {
   });
 });
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 70)
       (should (equal (test-cockpit--npm-jest--find-current-test) "this thing should work")))))
@@ -195,7 +213,7 @@ describe(`that thing`, () => {
   });
 });
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 96)
       (should (equal (test-cockpit--npm-jest--find-current-test) "that thing")))))
@@ -210,7 +228,7 @@ describe(\"this very thing\", () => {
   });
 });
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 31)
       (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing")))))
@@ -222,7 +240,7 @@ test(\"should still work\", () => {
     expect(something).toBe(expected);
 })
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
       (test-cockpit--npm-jest--find-current-test)
@@ -235,7 +253,7 @@ test.only.concurrent.skip('should still work', () => {
     expect(something).toBe(expected);
 })
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 70)
       (should (equal (test-cockpit--npm-jest--find-current-test) "should still work")))))
@@ -250,10 +268,10 @@ describe.only.concurrent.skip('this very thing', () => {
   });
 });
 "))
-    (with-temp-buffer
-      (insert buffer-contents)
-      (goto-char 56)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing")))))
+    (with-temp-js-buffer
+     (insert buffer-contents)
+     (goto-char 56)
+     (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing")))))
 
 
 (ert-deftest test-npm-find-current-test-simple-test-single-quote-extra-space ()
@@ -262,7 +280,7 @@ test ( 'this should still work', () => {
     expect(something).toBe(expected);
 })
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
       (should (equal (test-cockpit--npm-jest--find-current-test) "this should still work")))))
@@ -275,7 +293,7 @@ test
     expect(something).toBe(expected);
 })
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 58)
       (should (equal (test-cockpit--npm-jest--find-current-test) "this should still work")))))
@@ -290,7 +308,7 @@ test.only.each([
     expect(something).toBe(expected);
 })
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 70)
       (should (equal (test-cockpit--npm-jest--find-current-test) "should $a $b still work")))))
@@ -309,7 +327,53 @@ describe.each([
   });
 });
 "))
-    (with-temp-buffer
+    (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 56)
       (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing")))))
+
+
+(ert-deftest test-npm-find-anglar-case-describe ()
+  (let ((buffer-contents "
+describe('AppComponent', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [
+        AppComponent
+      ],
+    }).compileComponents();
+  });
+
+  it('should create the app', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+"))
+    (with-temp-js-buffer
+      (insert buffer-contents)
+      (goto-char 190)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "AppComponent")))))
+
+
+(ert-deftest test-npm-find-anglar-case-distracting-test-marker ()
+  (let ((buffer-contents "
+describe('AppComponent', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [
+        AppComponent
+      ],
+    }).compileComponents();
+  });
+
+  it('should create the test app', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+"))
+    (with-temp-js-buffer
+      (insert buffer-contents)
+      (goto-char 288)
+      (should (equal (test-cockpit--npm-jest--find-current-test) "AppComponent should create the test app")))))
