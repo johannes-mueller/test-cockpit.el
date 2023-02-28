@@ -7,6 +7,12 @@
 (ert-deftest test-python-project-python-pkg-type-available ()
   (should (alist-get 'python-pkg test-cockpit--project-types)))
 
+(ert-deftest test-python-project-python-tox-type-available ()
+  (should (alist-get 'python-tox test-cockpit--project-types)))
+
+(ert-deftest test-python-project-python-toml-type-available ()
+  (should (alist-get 'python-toml test-cockpit--project-types)))
+
 (ert-deftest test-python-pytest-binary-path-no-venv ()
   (should (equal (test-cockpit--python--pytest-binary-path) "pytest")))
 
