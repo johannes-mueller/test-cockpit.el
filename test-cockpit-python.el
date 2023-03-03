@@ -46,7 +46,8 @@
     "--disable-warnings"
     "--capture=no"
     "-k"
-    "-m"))
+    "-m"
+    "--mypy"))
 
 (defun test-cockpit--python--test-project-command (_ args)
   (concat (test-cockpit--python--common-switches args)))
@@ -100,7 +101,8 @@
     ("-k" test-cockpit--python--restrict-substring)
     ("-f" "only lastly failed tests" "--last-failed")
     ("-b" "build extensions before testing" "build_ext")
-    ("-m" test-cockpit--python--marker-switch)]
+    ("-m" test-cockpit--python--marker-switch)
+    ("-M" "test type hints" "--mypy")]
    ["Output"
     ("-v" "show single tests" "--verbose")
     ("-c" "print coverage report" "--cov-report=term")
