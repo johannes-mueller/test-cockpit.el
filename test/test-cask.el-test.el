@@ -42,15 +42,15 @@
 (ert-deftest test-get-cask-test-module-no-el-test-file ()
     (setq test-cockpit--project-engines nil)
     (mocker-let ((projectile-project-type () ((:output 'emacs-cask)))
-		 (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-		 (buffer-file-name () ((:output "tests/foo.el"))))
+                 (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+                 (buffer-file-name () ((:output "tests/foo.el"))))
       (should (eq (test-cockpit--current-module-string) nil))))
 
 (ert-deftest test-get-cask-test-function-no-el-test-file ()
     (setq test-cockpit--project-engines nil)
     (mocker-let ((projectile-project-type () ((:output 'emacs-cask)))
-		 (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-		 (buffer-file-name () ((:output "tests/foo.el"))))
+                 (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+                 (buffer-file-name () ((:output "tests/foo.el"))))
       (should (eq (test-cockpit--current-function-string) nil))))
 
 
@@ -73,7 +73,7 @@
    (let ((infix (test-cockpit-infix)))
      (should
       (and (equal (aref infix 0) "Cask specific switches")
-	   (equal (aref infix 1) '("-i" "Run `cask install` before test" "install")))))))
+           (equal (aref infix 1) '("-i" "Run `cask install` before test" "install")))))))
 
 (ert-deftest test-cask-insert-install-command-unset ()
   (should (equal (test-cockpit--cask--insert-install-command "foo" nil) "foo")))

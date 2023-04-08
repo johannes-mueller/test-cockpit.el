@@ -24,13 +24,13 @@
 
 (defun test-cockpit--mix--apply-switch (command switch)
   (cond ((equal switch "reset") (concat "MIX_ENV=test mix ecto.reset && " command))
-	((equal switch "debuglog") (concat "MIX_TEST_LOGLEVEL=debug " command))
-	(t (concat command " " switch))))
+        ((equal switch "debuglog") (concat "MIX_TEST_LOGLEVEL=debug " command))
+        (t (concat command " " switch))))
 
 (defun test-cockpit--mix--apply-switches(command switches)
   (if switches
       (let ((command (test-cockpit--mix--apply-switch command (car switches))))
-	(test-cockpit--mix--apply-switches command (cdr switches)))
+        (test-cockpit--mix--apply-switches command (cdr switches)))
     command))
 
 (defun test-cockpit--mix--test-project-command (_ switches)

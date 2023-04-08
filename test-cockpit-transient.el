@@ -22,16 +22,16 @@
 
 (cl-defmethod transient-infix-read ((obj test-cockpit--transient--selection))
   (let ((prompt (oref obj prompt))
-	(choices (oref obj choices)))
+        (choices (oref obj choices)))
     (completing-read prompt (funcall choices))))
 
 (cl-defmethod transient-infix-set ((obj test-cockpit--transient--selection) item)
   (let* ((variable (oref obj variable))
-	 (selected (symbol-value variable)))
+         (selected (symbol-value variable)))
     (set variable
-	 (if (member item selected)
-	     (delete item selected)
-	   (append selected (list item))))
+         (if (member item selected)
+             (delete item selected)
+           (append selected (list item))))
     (oset obj value (symbol-value variable))))
 
 (cl-defmethod transient-format-value ((obj test-cockpit--transient--selection))
@@ -41,11 +41,11 @@
     (concat
      (propertize "[" 'face 'transient-inactive-value)
      (mapconcat (lambda (item)
-		  (if (member item enabled-items)
-		      (propertize item 'face 'transient-value)
-		    (propertize item 'face 'transient-inactive-value)))
-		(funcall choices)
-		(propertize ", " 'face 'transient-inactive-value))
+                  (if (member item enabled-items)
+                      (propertize item 'face 'transient-value)
+                    (propertize item 'face 'transient-inactive-value)))
+                (funcall choices)
+                (propertize ", " 'face 'transient-inactive-value))
      (propertize "]" 'face 'transient-inactive-value))))
 
 

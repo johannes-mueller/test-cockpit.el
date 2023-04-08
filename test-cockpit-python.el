@@ -58,7 +58,7 @@
 (defun test-cockpit--python--choose-module ()
   (if-let ((file-name-path (buffer-file-name)))
     (when (string-prefix-p "test_" (file-name-nondirectory file-name-path))
-	(test-cockpit--strip-project-root file-name-path))))
+        (test-cockpit--strip-project-root file-name-path))))
 
 (defun test-cockpit--python--test-function-command (string args)
   (concat (test-cockpit--python--common-switches args) " " string))
@@ -70,12 +70,12 @@
 
 (defun test-cockpit--python--common-switches (args)
   (concat (test-cockpit--python--build-ext-command args)
-	  (test-cockpit--python--pytest-binary-path)
-	  " --color=yes"
-	  (test-cockpit--add-leading-space-to-switches
-	   (test-cockpit--join-filter-switches
-	    (test-cockpit--python--insert-no-coverage-to-switches args)
-	    test-cockpit--python--allowed-switches))))
+          (test-cockpit--python--pytest-binary-path)
+          " --color=yes"
+          (test-cockpit--add-leading-space-to-switches
+           (test-cockpit--join-filter-switches
+            (test-cockpit--python--insert-no-coverage-to-switches args)
+            test-cockpit--python--allowed-switches))))
 
 (defun test-cockpit--python--pytest-binary-path () "pytest")
 
@@ -114,7 +114,7 @@
   (save-excursion
     (end-of-line)
     (if (search-backward-regexp "^\\([[:alpha:]].*\\)$" nil t)
-	(match-string 1))))
+        (match-string 1))))
 
 (defun test-cockpit--python--test-function-in-line (line)
   (if (string-match "def[[:space:]]+\\(test_[[:word:]_]*\\)" line)
@@ -127,27 +127,27 @@
 (defun test-cockpit--python--maybe-test-method (line pos)
   (save-excursion
     (if (and (search-backward-regexp "def[[:space:]]+\\([[:alpha:]][[:word:]_]*\\)" nil t)
-	     (< pos (match-beginning 0))
-	     (string-prefix-p "test_" (match-string 1)))
-	(concat "::" (match-string 1)))))
+             (< pos (match-beginning 0))
+             (string-prefix-p "test_" (match-string 1)))
+        (concat "::" (match-string 1)))))
 
 (defun test-cockpit--python--test-method-or-class (line pos)
   (if-let ((test-class (test-cockpit--python--class-in-line line)))
       (concat test-class
-	      (test-cockpit--python--maybe-test-method line pos))))
+              (test-cockpit--python--maybe-test-method line pos))))
 
 (defun test-cockpit--python--find-current-test ()
   (if-let* ((unindented-line (test-cockpit--python--find-last-unindented-line))
-	    (unindented-pos (match-beginning 0)))
+            (unindented-pos (match-beginning 0)))
       (or (test-cockpit--python--test-function-in-line unindented-line)
-	  (test-cockpit--python--test-method-or-class unindented-line unindented-pos))))
+          (test-cockpit--python--test-method-or-class unindented-line unindented-pos))))
 
 (defun test-cockpit--python--test-function-path ()
   (if-let ((file-name (when-let ((fn (buffer-file-name)))
-			(when (string-prefix-p "test_" (file-name-nondirectory fn)) fn))))
+                        (when (string-prefix-p "test_" (file-name-nondirectory fn)) fn))))
       (concat (test-cockpit--strip-project-root file-name)
-	   (if-let ((test-function (test-cockpit--python--find-current-test)))
-	       (concat "::" test-function)))))
+           (if-let ((test-function (test-cockpit--python--find-current-test)))
+               (concat "::" test-function)))))
 
 (provide 'test-cockpit-python)
 

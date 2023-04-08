@@ -38,21 +38,21 @@
 
 (defun test-cockpit--npm-jest--test-module-command (_ switches)
   (concat "npm test -- --color "
-	  "--testPathPattern '"(regexp-quote (test-cockpit--npm-jest--choose-module))"' "
-	  (string-join switches " ")))
+          "--testPathPattern '"(regexp-quote (test-cockpit--npm-jest--choose-module))"' "
+          (string-join switches " ")))
 
 (defun test-cockpit--npm-jest--test-function-command (_ switches)
   (concat "npm test -- --color "
-	  "--testPathPattern '"(regexp-quote (test-cockpit--npm-jest--choose-module))"' "
-	  "--testNamePattern '"(regexp-quote (test-cockpit--npm-jest--find-current-test))"' "
-	  (string-join switches " ")))
+          "--testPathPattern '"(regexp-quote (test-cockpit--npm-jest--choose-module))"' "
+          "--testNamePattern '"(regexp-quote (test-cockpit--npm-jest--find-current-test))"' "
+          (string-join switches " ")))
 
 (defun test-cockpit--npm-jest--choose-module ()
   (let ((candidate (buffer-file-name)))
     (when (and candidate
-	       (cl-find-if
-		(lambda (pattern) (string-match-p pattern candidate))
-	    test-cockpit--npm-jest--test-match-regex-list))
+               (cl-find-if
+                (lambda (pattern) (string-match-p pattern candidate))
+            test-cockpit--npm-jest--test-match-regex-list))
       candidate)))
 
 (defconst test-cockpit--npm-jest--test-modifier-regexp "\\(\\.[[:word:]]+\\)*")
@@ -66,11 +66,11 @@
 
 (defun test-cockpit--npm-jest--goto-initial-marker (marker-regexp)
     (when (search-backward-regexp (concat
-				   "^\s*"
-				   marker-regexp
-				   test-cockpit--npm-jest--test-modifier-regexp
-				   "[^[:alnum:]]")
-				 nil t )
+                                   "^\s*"
+                                   marker-regexp
+                                   test-cockpit--npm-jest--test-modifier-regexp
+                                   "[^[:alnum:]]")
+                                 nil t )
       (goto-char (match-end 0))
       (match-beginning 0)))
 
@@ -91,20 +91,20 @@
     (when-let ((start-pos (test-cockpit--npm-jest--goto-initial-marker marker-regexp)))
       (test-cockpit--npm-jest--skip-potential-each-table)
       (when-let ((result-string (test-cockpit--npm-jest--unqote-test-name-sexp
-				 (test-cockpit--npm-jest--test-name-sexp))))
-	 `(,start-pos ,result-string)))))
+                                 (test-cockpit--npm-jest--test-name-sexp))))
+         `(,start-pos ,result-string)))))
 
 (defun test-cockpit--npm-jest--find-current-test ()
   (save-excursion
     (let ((desc (test-cockpit--npm-jest--find-current-desc))
-	  (it (test-cockpit--npm-jest--find-current-it)))
+          (it (test-cockpit--npm-jest--find-current-it)))
      (when (or desc it)
        (string-trim
-	(string-join `(,(cadr desc)
-		       ,(if (or (not desc)
-				(and it (> (car it) (car desc))))
-			    (cadr it)))
-		     " "))))))
+        (string-join `(,(cadr desc)
+                       ,(if (or (not desc)
+                                (and it (> (car it) (car desc))))
+                            (cadr it)))
+                     " "))))))
 
 (provide 'test-cockpit-npm-jest)
 
