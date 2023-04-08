@@ -2,7 +2,7 @@
 
 ;; Author: Johannes Mueller <github@johannes-mueller.org
 ;; URL: https://github.com/johannes-mueller/test-cockpit.el
-;; License: GPLv2
+;; License: GPLv3
 
 ;;; Commentary:
 
