@@ -13,9 +13,9 @@
   (let ((temp-buffer (make-symbol "temp-buffer")))
     `(let ((,temp-buffer (generate-new-buffer " *temp*")))
        ;; `kill-buffer' can change current-buffer in some odd cases.
-       	 (with-current-buffer ,temp-buffer
-	     (unwind-protect
-		 (with-syntax-table js-testing-syntax-table ,@body)
+                (with-current-buffer ,temp-buffer
+             (unwind-protect
+                 (with-syntax-table js-testing-syntax-table ,@body)
                (and (buffer-name ,temp-buffer)
                     (kill-buffer ,temp-buffer)))))))
 
@@ -74,9 +74,9 @@
     (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
     (buffer-file-name () ((:output "/path/to/otherfile.test.js")))
     (compile (command)
-	     ((:input
-	       '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --onlyFailures --coverage")
-	       :output 'success))))
+             ((:input
+               '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --onlyFailures --coverage")
+               :output 'success))))
    (test-cockpit-test-module '("--onlyFailures" "--coverage"))))
 
 
@@ -105,9 +105,9 @@
     (test-cockpit--npm-jest--find-current-test () ((:output "desc it")))
     (buffer-file-name () ((:output "/path/to/otherfile.test.js")))
     (compile (command)
-	     ((:input
-	       '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --testNamePattern 'desc it' --coverage --onlyFailures")
-	       :output 'success))))
+             ((:input
+               '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --testNamePattern 'desc it' --coverage --onlyFailures")
+               :output 'success))))
    (test-cockpit-test-function '("--coverage" "--onlyFailures"))))
 
 (ert-deftest test-npm-current-module-string-no-file-buffer-is-nil ()

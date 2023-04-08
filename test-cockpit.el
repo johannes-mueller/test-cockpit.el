@@ -51,21 +51,21 @@ a derived class of `test-cockpit--engine'.")
 
 (defclass test-cockpit--engine ()
   ((last-command :initarg :last-command
-		 :initform nil)
+                 :initform nil)
    (last-switches :initarg :last-switches
-		  :initform nil)
+                  :initform nil)
    (last-build-command :initarg :last-build-command
-		       :initform nil)
+                       :initform nil)
    (last-test-command :initarg :last-test-command
-		       :initform nil)
+                       :initform nil)
    (last-module-string :initarg :last-module-string
-		       :initform nil)
+                       :initform nil)
    (last-function-string :initarg :last-function-string
-			 :initform nil)
+                         :initform nil)
    (last-args :initarg :last-args
-	      :initform nil)
+              :initform nil)
    (is-dummy-engine :initarg :is-dummy-engine
-		    :initform nil))
+                    :initform nil))
   "The base class for a test-cockpit engine.
 For every project type supported by `test-cockpit.el' a derived
 class is needed which implements the methods of the base class.")
@@ -109,8 +109,8 @@ the argument list passed to the test frame work."
 PROJECT-TYPE is the type given by `pojectile-project-type' and
 ENGINE-CLASS is a derived class of `test-cockpit-engine'."
   (setq test-cockpit--project-types
-	(cons `(,project-type . (lambda () (make-instance ,engine-class)))
-	      test-cockpit--project-types)))
+        (cons `(,project-type . (lambda () (make-instance ,engine-class)))
+              test-cockpit--project-types)))
 
 (defun test-cockpit-register-project-type-alias (alias project-type)
   "Register an alias for a known project type.
@@ -119,8 +119,8 @@ by the same commands, yet they are different for projectile.  In
 those cases the already registered PROJECT-TYPE can be registered
 again as ALIAS."
   (setq test-cockpit--project-types
-	(cons `(,alias . ,(alist-get project-type test-cockpit--project-types))
-	      test-cockpit--project-types)))
+        (cons `(,alias . ,(alist-get project-type test-cockpit--project-types))
+              test-cockpit--project-types)))
 
 (defun test-cockpit--make-dummy-engine ()
   "Make a dummy for the case that the project type is not supported.
@@ -132,7 +132,7 @@ In those cases we fall back to `porjectile-test-project'."
 If the current project type is not supported a dummy engine is
 returned."
   (if-let* ((engine-factory (alist-get (projectile-project-type) test-cockpit--project-types))
-	    (real-engine (funcall engine-factory)))
+            (real-engine (funcall engine-factory)))
       real-engine
     (test-cockpit--make-dummy-engine)))
 
@@ -153,7 +153,7 @@ If no engine is yet started for the project, it will be started."
   "Retrieve the engine for the project; error if the project type is unsupported."
   (let ((engine (test-cockpit--retrieve-engine)))
     (if (oref engine is-dummy-engine)
-	(signal "Project type %s not supported by test-cockpit or engine not installed" (projectile-project-type))
+        (signal "Project type %s not supported by test-cockpit or engine not installed" (projectile-project-type))
       engine)))
 
 (defun test-cockpit--make-test-command (method thing args)
@@ -163,8 +163,8 @@ actual function to setup the call.  To this function the THING to
 be tested as well as additional ARGS are passed.  The resulting
 trimmed string is then returned."
   (string-trim (funcall
-		(funcall method (test-cockpit--retrieve-engine))
-		thing args)))
+                (funcall method (test-cockpit--retrieve-engine))
+                thing args)))
 
 (defun test-cockpit--update-last-commands (args)
   "Update the attributes for the engine's last test command.
@@ -243,12 +243,12 @@ ARGS is the UI state for language specific settings."
    (list (transient-args 'test-cockpit-prefix)))
 
   (if-let ((module-string (or (test-cockpit--current-module-string)
-			      (test-cockpit--last-module-string))))
+                              (test-cockpit--last-module-string))))
       (progn (test-cockpit--run-test
-	      (test-cockpit--command 'test-cockpit--make-test-module-command
-				     module-string
-				     args))
-	     (test-cockpit--update-last-commands args))
+              (test-cockpit--command 'test-cockpit--make-test-module-command
+                                     module-string
+                                     args))
+             (test-cockpit--update-last-commands args))
     (message "Not in a unit test module file")))
 
 ;;;###autoload
@@ -260,12 +260,12 @@ settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((function-string (or (test-cockpit--current-function-string)
-			      (test-cockpit--last-function-string))))
+                              (test-cockpit--last-function-string))))
       (progn (test-cockpit--run-test (test-cockpit--command
-			   'test-cockpit--make-test-function-command
-			   function-string
-			   args))
-	     (test-cockpit--update-last-commands args))
+                           'test-cockpit--make-test-function-command
+                           function-string
+                           args))
+             (test-cockpit--update-last-commands args))
     (message "Not in a unit test module file")))
 
 ;;;###autoload
@@ -289,9 +289,9 @@ the user can repeat the last module test with different ARGS."
    (list (transient-args 'test-cockpit-prefix)))
   (if (test-cockpit--last-module-string)
       (test-cockpit--run-test (test-cockpit--command
-			       'test-cockpit--make-test-module-command
-			       (test-cockpit--last-module-string)
-			       args)))
+                               'test-cockpit--make-test-module-command
+                               (test-cockpit--last-module-string)
+                               args)))
   (test-cockpit-dispatch))
 
 ;;;###autoload
@@ -321,9 +321,9 @@ the user can repeat the last function test with different ARGS."
    (list (transient-args 'test-cockpit-prefix)))
   (if (test-cockpit--last-function-string)
       (test-cockpit--run-test (test-cockpit--command
-			       'test-cockpit--make-test-function-command
-			       (test-cockpit--last-function-string)
-			       args)))
+                               'test-cockpit--make-test-function-command
+                               (test-cockpit--last-function-string)
+                               args)))
   (test-cockpit-dispatch))
 
 (defun test-cockpit-repeat-test (&optional _args)
@@ -446,21 +446,21 @@ repetition."
 
 (defun test-cockpit--main-suffix ()
   (let ((module-string (or (test-cockpit--current-module-string) (test-cockpit--last-module-string)))
-	(function-string (or (test-cockpit--current-function-string) (test-cockpit--last-function-string)))
-	(last-command (oref (test-cockpit--real-engine-or-error) last-command)))
+        (function-string (or (test-cockpit--current-function-string) (test-cockpit--last-function-string)))
+        (last-command (oref (test-cockpit--real-engine-or-error) last-command)))
     (vconcat (remove nil (append `("Run tests"
-				   ("p" "project" test-cockpit-test-project)
-				   ,(if module-string
-					`("m"
-					  ,(format "module: %s" (test-cockpit--strip-project-root module-string))
-					  test-cockpit-test-module))
-				   ,(if function-string
-					`("f"
-					  ,(format "function: %s" (test-cockpit--strip-project-root function-string))
-					  test-cockpit-test-function))
-				   ("c" "custom" test-cockpit-custom-test-command)
-				   ,(if last-command
-					`("r" "repeat" test-cockpit-repeat-test))))))))
+                                   ("p" "project" test-cockpit-test-project)
+                                   ,(if module-string
+                                        `("m"
+                                          ,(format "module: %s" (test-cockpit--strip-project-root module-string))
+                                          test-cockpit-test-module))
+                                   ,(if function-string
+                                        `("f"
+                                          ,(format "function: %s" (test-cockpit--strip-project-root function-string))
+                                          test-cockpit-test-function))
+                                   ("c" "custom" test-cockpit-custom-test-command)
+                                   ,(if last-command
+                                        `("r" "repeat" test-cockpit-repeat-test))))))))
 
 (defun test-cockpit--strip-project-root (path)
   "Strip the project root path from a given PATH."
@@ -469,17 +469,17 @@ repetition."
 (defun test-cockpit--transient-suffix-for-repeat ()
   "Setup transient suffix for repeat commands if possible."
   (let ((module-string (test-cockpit--last-module-string))
-	(function-string (test-cockpit--last-function-string)))
+        (function-string (test-cockpit--last-function-string)))
     (if (or module-string function-string)
-	(vconcat (remove nil (append `("Repeat tests"
-				       ,(if module-string
-					    `("M"
-					      ,(format "last module: %s" (test-cockpit--strip-project-root module-string))
-					      test-cockpit--do-repeat-module))
-				       ,(if function-string
-					    `("F"
-					      ,(format "last function: %s" (test-cockpit--strip-project-root function-string))
-					      test-cockpit--do-repeat-function)))))))))
+        (vconcat (remove nil (append `("Repeat tests"
+                                       ,(if module-string
+                                            `("M"
+                                              ,(format "last module: %s" (test-cockpit--strip-project-root module-string))
+                                              test-cockpit--do-repeat-module))
+                                       ,(if function-string
+                                            `("F"
+                                              ,(format "last function: %s" (test-cockpit--strip-project-root function-string))
+                                              test-cockpit--do-repeat-function)))))))))
 
 (defun test-cockpit--append-repeat-suffix ()
   "Append the repeat suffix to the transient prefix if possible.
@@ -500,7 +500,7 @@ accumulate."
   (let ((appended-suffix-must-be-removed (test-cockpit--append-repeat-suffix)))
     (test-cockpit-prefix)
     (if appended-suffix-must-be-removed
-	(transient-remove-suffix 'test-cockpit-prefix '(-1)))
+        (transient-remove-suffix 'test-cockpit-prefix '(-1)))
     (transient-remove-suffix 'test-cockpit-prefix '(-1))))
 
 
@@ -510,12 +510,12 @@ Candidates not in ALLOWED are excluded.  The items are separated
 with a space."
   (string-join
    (delete 'exclude
-	   (mapcar (lambda (candidate)
-		     (if (cl-find-if
-			  (lambda (allowed-prefix) (string-prefix-p allowed-prefix candidate)) allowed)
-			 candidate
-		       'exclude))
-		   candidates))
+           (mapcar (lambda (candidate)
+                     (if (cl-find-if
+                          (lambda (allowed-prefix) (string-prefix-p allowed-prefix candidate)) allowed)
+                         candidate
+                       'exclude))
+                   candidates))
    " "))
 
 (defun test-cockpit--add-leading-space-to-switches (switches)
