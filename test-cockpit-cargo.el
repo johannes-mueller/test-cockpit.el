@@ -1,8 +1,10 @@
 ;;; test-cockpit-cargo.el --- The package to test cargo projects in test-cockpit
 
-;; Author: Johannes Mueller <github@johannes-mueller.org
+;; Author: Johannes Mueller <github@johannes-mueller.org>
 ;; URL: https://github.com/johannes-mueller/test-cockpit.el
+;; Version: 0.1.0
 ;; License: GPLv3
+;; Package-Requires: ((emacs "27.1") (toml "20230411.1449"))
 
 ;;; Commentary:
 
