@@ -29,7 +29,7 @@ jobs:
         include:
           - emacs_version: 'snapshot'
             allow_failure: true
-          - emacs_version: 'relase-snapshot'
+          - emacs_version: 'release-snapshot'
             allow_failure: true
     steps:
       - uses: actions/checkout@v2
