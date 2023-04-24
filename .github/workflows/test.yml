@@ -29,6 +29,8 @@ jobs:
         include:
           - emacs_version: 'snapshot'
             allow_failure: true
+          - emacs_version: 'relase-snapshot'
+            allow_failure: true
     steps:
       - uses: actions/checkout@v2
       - uses: purcell/setup-emacs@master
