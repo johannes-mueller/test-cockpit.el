@@ -84,7 +84,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'npm :min-occur 0)))
-    (test-cockpit--npm-jest--find-current-test () ((:output "desc it")))
+    (test-cockpit-npm-jest--find-current-test () ((:output "desc it")))
     (buffer-file-name () ((:output "/path/to/file.test.js")))
     (compile (command) ((:input '("npm test -- --color --testPathPattern '/path/to/file\\.test\\.js' --testNamePattern 'desc it'") :output 'success))))
    (test-cockpit-test-function)))
@@ -93,7 +93,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'npm :min-occur 0)))
-    (test-cockpit--npm-jest--find-current-test () ((:output "desc it")))
+    (test-cockpit-npm-jest--find-current-test () ((:output "desc it")))
     (buffer-file-name () ((:output "/path/to/otherfile.test.js")))
     (compile (command) ((:input '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --testNamePattern 'desc it' --coverage") :output 'success))))
    (test-cockpit-test-function '("--coverage"))))
@@ -102,7 +102,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'npm :min-occur 0)))
-    (test-cockpit--npm-jest--find-current-test () ((:output "desc it")))
+    (test-cockpit-npm-jest--find-current-test () ((:output "desc it")))
     (buffer-file-name () ((:output "/path/to/otherfile.test.js")))
     (compile (command)
              ((:input
@@ -112,19 +112,19 @@
 
 (ert-deftest test-npm-current-module-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
-    (let ((engine (make-instance test-cockpit--npm-jest--engine)))
+    (let ((engine (make-instance test-cockpit-npm-jest--engine)))
       (should (eq (test-cockpit--engine-current-module-string engine) nil)))))
 
 
 (ert-deftest test-npm-current-module-string-test-file-buffer-is-filename ()
   (mocker-let ((buffer-file-name () ((:output "/some/path/file.test.js"))))
-    (let ((engine (make-instance test-cockpit--npm-jest--engine)))
+    (let ((engine (make-instance test-cockpit-npm-jest--engine)))
       (should (equal (test-cockpit--engine-current-module-string engine) "/some/path/file.test.js")))))
 
 
 (ert-deftest test-npm-current-module-string-no-test-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output "/some/path/file.js"))))
-    (let ((engine (make-instance test-cockpit--npm-jest--engine)))
+    (let ((engine (make-instance test-cockpit-npm-jest--engine)))
       (should (equal (test-cockpit--engine-current-module-string engine) nil)))))
 
 
@@ -137,7 +137,7 @@ test('this should work', () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "this should work")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "this should work")))))
 
 
 (ert-deftest test-npm-find-current-test-simple-test-no-test ()
@@ -147,7 +147,7 @@ test('this should work', () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 1)
-      (should (eq (test-cockpit--npm-jest--find-current-test) nil)))))
+      (should (eq (test-cockpit-npm-jest--find-current-test) nil)))))
 
 
 (ert-deftest test-npm-find-current-test-simple-it-single-quote ()
@@ -159,7 +159,7 @@ it('should work', () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "should work")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "should work")))))
 
 
 (ert-deftest test-npm-find-current-test-simple-it-backtick ()
@@ -171,7 +171,7 @@ it(`should still work`, () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "should still work")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "should still work")))))
 
 
 (ert-deftest test-npm-find-current-test-simple-test-double-quote ()
@@ -183,7 +183,7 @@ test(\"should still work\", () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "should still work")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "should still work")))))
 
 
 (ert-deftest test-npm-find-current-test-simple-describe-it-single-quote ()
@@ -197,7 +197,7 @@ describe('this thing', () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 70)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "this thing should work")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "this thing should work")))))
 
 
 (ert-deftest test-npm-find-current-simple-describe-only-outside-it-backtick ()
@@ -216,7 +216,7 @@ describe(`that thing`, () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 96)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "that thing")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "that thing")))))
 
 
 (ert-deftest test-npm-find-current-simple-describe-no-it-double-quote ()
@@ -231,7 +231,7 @@ describe(\"this very thing\", () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 31)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "this very thing")))))
 
 
 (ert-deftest test-npm-find-current-test-not-change-point ()
@@ -243,7 +243,7 @@ test(\"should still work\", () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
-      (test-cockpit--npm-jest--find-current-test)
+      (test-cockpit-npm-jest--find-current-test)
       (should (eq (point) 50)))))
 
 
@@ -256,7 +256,7 @@ test.only.concurrent.skip('should still work', () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 70)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "should still work")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "should still work")))))
 
 
 (ert-deftest test-npm-find-current-desc-simple-modifiers ()
@@ -271,7 +271,7 @@ describe.only.concurrent.skip('this very thing', () => {
     (with-temp-js-buffer
      (insert buffer-contents)
      (goto-char 56)
-     (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing")))))
+     (should (equal (test-cockpit-npm-jest--find-current-test) "this very thing")))))
 
 
 (ert-deftest test-npm-find-current-test-simple-test-single-quote-extra-space ()
@@ -283,7 +283,7 @@ test ( 'this should still work', () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 50)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "this should still work")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "this should still work")))))
 
 (ert-deftest test-npm-find-current-test-simple-test-single-quote-extra-line-break ()
   (let ((buffer-contents "
@@ -296,7 +296,7 @@ test
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 58)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "this should still work")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "this should still work")))))
 
 (ert-deftest test-npm-find-current-test-simple-array ()
   (let ((buffer-contents "
@@ -311,7 +311,7 @@ test.only.each([
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 70)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "should $a $b still work")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "should $a $b still work")))))
 
 
 (ert-deftest test-npm-find-current-desc-simple-array ()
@@ -330,7 +330,7 @@ describe.each([
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 56)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "this very thing")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "this very thing")))))
 
 
 (ert-deftest test-npm-find-anglar-case-describe ()
@@ -353,7 +353,7 @@ describe('AppComponent', () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 190)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "AppComponent")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "AppComponent")))))
 
 
 (ert-deftest test-npm-find-anglar-case-distracting-test-marker ()
@@ -376,4 +376,4 @@ describe('AppComponent', () => {
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 288)
-      (should (equal (test-cockpit--npm-jest--find-current-test) "AppComponent should create the test app")))))
+      (should (equal (test-cockpit-npm-jest--find-current-test) "AppComponent should create the test app")))))

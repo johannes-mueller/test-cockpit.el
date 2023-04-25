@@ -7,12 +7,12 @@
 
 (ert-deftest test-current-module-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
-    (let ((engine (make-instance test-cockpit--cask-engine)))
+    (let ((engine (make-instance test-cockpit-cask-engine)))
       (should (eq (test-cockpit--engine-current-module-string engine) nil)))))
 
 (ert-deftest test-current-function-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil :min-occur 0))))
-    (let ((engine (make-instance test-cockpit--cask-engine)))
+    (let ((engine (make-instance test-cockpit-cask-engine)))
       (should (eq (test-cockpit--engine-current-function-string engine) nil)))))
 
 (ert-deftest test-get-cask-test-project ()
@@ -76,9 +76,9 @@
            (equal (aref infix 1) '("-i" "Run `cask install` before test" "install")))))))
 
 (ert-deftest test-cask-insert-install-command-unset ()
-  (should (equal (test-cockpit--cask--insert-install-command "foo" nil) "foo")))
+  (should (equal (test-cockpit-cask--insert-install-command "foo" nil) "foo")))
 
 (ert-deftest test-cask-insert-install-command-set ()
-  (should (equal (test-cockpit--cask--insert-install-command "foo" "install") "cask install && foo")))
+  (should (equal (test-cockpit-cask--insert-install-command "foo" "install") "cask install && foo")))
 
 ;;; test-cask.el-test.el ends here

@@ -1,8 +1,10 @@
-;;; test-cockpit.el --- A command center to run tests of a software project
+;;; test-cockpit.el --- A command center to run tests of a software project -*- lexical-binding: t; -*-
 
-;; Author: Johannes Mueller <github@johannes-mueller.org
+;; Author: Johannes Mueller <github@johannes-mueller.org>
 ;; URL: https://github.com/johannes-mueller/test-cockpit.el
+;; Version: 0.1.0
 ;; License: GPLv3
+;; Package-Requires: ((emacs "28.1"))
 
 ;;; Commentary:
 
@@ -182,25 +184,30 @@ The additional arguments are shipped as ARGS."
 PROJECT-STRING is usually nil.  The argument is here to make the function
 signature compatible with `test-cockpit--make-test-module-command' and
 `test-cockpit--make-test-function-command'."
-  (test-cockpit--make-test-command 'test-cockpit--test-project-command project-string args))
+  (test-cockpit--make-test-command
+   'test-cockpit--test-project-command project-string args))
 
 (defun test-cockpit--make-test-module-command (module-string args)
   "Call the test-module-command function with ARGS of the current project type.
 MODULE-STRING is the string determining the module to test."
-  (test-cockpit--make-test-command 'test-cockpit--test-module-command module-string args))
+  (test-cockpit--make-test-command
+   'test-cockpit--test-module-command module-string args))
 
 (defun test-cockpit--make-test-function-command (func-string args)
   "Call the test-function-command function with ARGS of the current project type.
 FUNC-STRING is the string determining the function to test."
-  (test-cockpit--make-test-command 'test-cockpit--test-function-command func-string args))
+  (test-cockpit--make-test-command
+   'test-cockpit--test-function-command func-string args))
 
 (defun test-cockpit-infix ()
   "Call the infix function of the current project type and return the infix array."
-  (test-cockpit--transient-infix (funcall (alist-get (projectile-project-type) test-cockpit--project-types))))
+  (test-cockpit--transient-infix
+   (funcall (alist-get (projectile-project-type) test-cockpit--project-types))))
 
 (defun test-cockpit--insert-infix ()
   "Insert the infix array into the transient-prefix."
-  (unless (equal (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2) '(:description "Run test"))
+  (unless (equal (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
+                 '(:description "Run test"))
     (transient-remove-suffix 'test-cockpit-prefix '(0)))
   (if-let (infix (test-cockpit-infix))
       (transient-insert-suffix 'test-cockpit-prefix '(0) infix)))
@@ -241,7 +248,6 @@ The exact determination of the model is done by the language specific package.
 ARGS is the UI state for language specific settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-
   (if-let ((module-string (or (test-cockpit--current-module-string)
                               (test-cockpit--last-module-string))))
       (progn (test-cockpit--run-test
@@ -260,11 +266,11 @@ settings."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((function-string (or (test-cockpit--current-function-string)
-                              (test-cockpit--last-function-string))))
-      (progn (test-cockpit--run-test (test-cockpit--command
-                           'test-cockpit--make-test-function-command
-                           function-string
-                           args))
+                                (test-cockpit--last-function-string))))
+      (progn (test-cockpit--run-test
+              (test-cockpit--command 'test-cockpit--make-test-function-command
+                                     function-string
+                                     args))
              (test-cockpit--update-last-commands args))
     (message "Not in a unit test module file")))
 
@@ -277,7 +283,8 @@ Using this function you can do that without jumping back to the
 test code.  If there is no last test module to call, the main
 dispatch dialog is invoked."
   (interactive)
-  (test-cockpit--do-repeat-module (oref (test-cockpit--retrieve-engine) last-args)))
+  (test-cockpit--do-repeat-module
+   (oref (test-cockpit--retrieve-engine) last-args)))
 
 (defun test-cockpit--do-repeat-module (args)
   "Internal version of `test-cockpit-repeat-module'.
@@ -300,16 +307,8 @@ the user can repeat the last module test with different ARGS."
 If there is no last test function to call, the main dispatch
 dialog is invoked."
   (interactive)
-  (test-cockpit--do-repeat-function (oref (test-cockpit--retrieve-engine) last-args)))
-
-;;;###autoload
-(defun test-cockpit-custom-test-command ()
-  "Run `compile' command interactively to allow a custom test command.
-The command run is then stored in as last command of the project
-and thus can be repeated using `test-cockpit-repeat-test'."
-  (interactive)
-  (call-interactively 'compile)
-  (oset (test-cockpit--retrieve-engine) last-command compile-command))
+  (test-cockpit--do-repeat-function
+   (oref (test-cockpit--retrieve-engine) last-args)))
 
 (defun test-cockpit--do-repeat-function (args)
   "Internal version of `test-cockpit-repeat-function'.
@@ -326,6 +325,15 @@ the user can repeat the last function test with different ARGS."
                                args)))
   (test-cockpit-dispatch))
 
+;;;###autoload
+(defun test-cockpit-custom-test-command ()
+  "Run `compile' command interactively to allow a custom test command.
+The command run is then stored in as last command of the project
+and thus can be repeated using `test-cockpit-repeat-test'."
+  (interactive)
+  (call-interactively 'compile)
+  (oset (test-cockpit--retrieve-engine) last-command compile-command))
+
 (defun test-cockpit-repeat-test (&optional _args)
   "Repeat the last test if the current project had last test.
 If the for the project no test has been run during the current
@@ -339,7 +347,8 @@ session, the main dispatch dialog is invoked."
 (defun test-cockpit-test-or-projectile-build ()
   "Test or build the project depending on if the project type is supported.
 If the project type is supported, test-cockpit-repeat-test is
-run.  Otherwise the project build is launched by calling projectile-compile-project."
+run.  Otherwise the project build is launched by calling
+projectile-compile-project."
   (interactive)
   (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
       (test-cockpit--projectile-build)
@@ -512,7 +521,9 @@ with a space."
    (delete 'exclude
            (mapcar (lambda (candidate)
                      (if (cl-find-if
-                          (lambda (allowed-prefix) (string-prefix-p allowed-prefix candidate)) allowed)
+                          (lambda (allowed-prefix)
+                            (string-prefix-p allowed-prefix candidate))
+                          allowed)
                          candidate
                        'exclude))
                    candidates))
