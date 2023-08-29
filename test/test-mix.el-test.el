@@ -4,12 +4,12 @@
 (ert-deftest test-cockpit-mix-type-available ()
   (should (alist-get 'elixir test-cockpit--project-types)))
 
-(ert-deftest test-current-module-string-no-file-buffer-is-nil ()
+(ert-deftest test-elixir-current-module-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
     (let ((engine (make-instance test-cockpit--mix-engine)))
       (should (eq (test-cockpit--engine-current-module-string engine) nil)))))
 
-(ert-deftest test-current-function-string-no-file-buffer-is-nil ()
+(ert-deftest test-elixir-current-function-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
     (let ((engine (make-instance test-cockpit--mix-engine)))
       (should (eq (test-cockpit--engine-current-function-string engine) nil)))))
@@ -98,7 +98,7 @@
                (compile (command) ((:input '("mix test function-string --failed") :output 'success))))
     (test-cockpit-test-function '("--failed"))))
 
-(ert-deftest test-get-elixir-test-function-command-failed-switch ()
+(ert-deftest test-get-elixir-test-function-command-trace-switch ()
   (setq test-cockpit--project-engines nil)
   (mocker-let ((projectile-project-type () ((:output 'elixir :min-occur 0)))
                (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))

@@ -30,12 +30,12 @@
     (should (equal (test-cockpit-cargo--features-switch) "--features bar foo")))
   )
 
-(ert-deftest test-current-module-string-no-file-buffer-is-nil ()
+(ert-deftest test-cargo-current-module-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
     (let ((engine (make-instance test-cockpit-cargo-engine)))
       (should (eq (test-cockpit--engine-current-module-string engine) nil)))))
 
-(ert-deftest test-current-function-string-no-file-buffer-is-nil ()
+(ert-deftest test-cargo-current-function-string-no-file-buffer-is-nil ()
   (let ((engine (make-instance test-cockpit-cargo-engine)))
     (should (eq (test-cockpit--engine-current-function-string engine) nil))))
 
