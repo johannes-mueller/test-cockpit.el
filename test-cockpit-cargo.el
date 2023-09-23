@@ -1,10 +1,10 @@
-;;; test-cockpit-cargo.el --- The package to test cargo projects in test-cockpit
+;;; test-cockpit-cargo.el --- The package to test cargo projects in test-cockpit -*- lexical-binding: t; -*-
 
 ;; Author: Johannes Mueller <github@johannes-mueller.org>
 ;; URL: https://github.com/johannes-mueller/test-cockpit.el
 ;; Version: 0.1.0
 ;; License: GPLv3
-;; Package-Requires: ((emacs "27.1") (toml "20230411.1449"))
+;; Package-Requires: ((emacs "28.1") (toml "20230411.1449"))
 
 ;;; Commentary:
 
@@ -28,17 +28,17 @@
 
 (defclass test-cockpit-cargo-engine (test-cockpit--engine) ())
 
-(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit-cargo-engine))
+(cl-defmethod test-cockpit--test-project-command ((_obj test-cockpit-cargo-engine))
   'test-cockpit-cargo--test-project-command)
-(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit-cargo-engine))
+(cl-defmethod test-cockpit--test-module-command ((_obj test-cockpit-cargo-engine))
   'test-cockpit-cargo--test-module-command )
-(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit-cargo-engine))
+(cl-defmethod test-cockpit--test-function-command ((_obj test-cockpit-cargo-engine))
   'test-cockpit-cargo--test-function-command)
-(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit-cargo-engine))
+(cl-defmethod test-cockpit--transient-infix ((_obj test-cockpit-cargo-engine))
   (test-cockpit-cargo--infix))
-(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit-cargo-engine))
-  (test-cockpit-cargo-built-module-path-or-file-path-fallback))
-(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit-cargo-engine))
+(cl-defmethod test-cockpit--engine-current-module-string ((_obj test-cockpit-cargo-engine))
+  (test-cockpit-cargo--build-module-path-or-file-path-fallback))
+(cl-defmethod test-cockpit--engine-current-function-string ((_obj test-cockpit-cargo-engine))
   (test-cockpit-cargo--build-test-fn-path))
 
 
@@ -50,14 +50,14 @@
           (test-cockpit-cargo--append-test-switches args)))
 
 (defun test-cockpit-cargo--test-module-command (module-string args)
-  "Setup the command to test the module at point with ARGS."
+  "Setup the command to test the MODULE-STRING with ARGS."
   (concat (test-cockpit-cargo--command-with-inserted-switches args)
           " "
           module-string
           (test-cockpit-cargo--append-test-switches args)))
 
 (defun test-cockpit-cargo--test-function-command (function-string args)
-  "Setup the command to test the function at point with ARGS."
+  "Setup the command to test FUNCTION-STRING with ARGS."
   (concat (test-cockpit-cargo--command-with-inserted-switches args)
           " "
           function-string
@@ -84,7 +84,7 @@
       "")))
 
 (defun test-cockpit-cargo--build-module-path ()
-  "Determine the qualified module module path at point."
+  "Determine the qualified module path at point."
   (when-let* ((file-name (buffer-file-name))
               (relative-path (replace-regexp-in-string
                               "\\(::mod\\|^src::lib\\|^src::main\\)?\\.rs$" ""
@@ -98,7 +98,8 @@
               ((string> mod "")))
     mod))
 
-(defun test-cockpit-cargo-built-module-path-or-file-path-fallback ()
+(defun test-cockpit-cargo--build-module-path-or-file-path-fallback ()
+  "Return the qualified module path at point or if not available the filename base."
   (when-let ((file-name (buffer-file-name)))
     (concat (or (test-cockpit-cargo--build-module-path)
                 (file-name-base (buffer-file-name)))
@@ -152,14 +153,14 @@
   "The currently enabled cargo features.")
 
 (defun test-cockpit-cargo--features-switch ()
-  "Setup the --features switch from the currently enabled features"
+  "Setup the --features switch from the currently enabled features."
   (concat ""
           (when test-cockpit-cargo--enabled-features
             (string-join
              (cons "--features" test-cockpit-cargo--enabled-features) " "))))
 
 (defun test-cockpit-cargo--command-with-inserted-switches (args)
-  "Setup the prefix for the cargo test command."
+  "Setup the prefix for the cargo test command based on ARGS."
   (string-trim-right
    (string-join (seq-filter (lambda (s) (string> s ""))
                             `("cargo test --color=always"
@@ -177,7 +178,7 @@
                    cargo-toml-data)))))
 
 (transient-define-infix test-cockpit-cargo--toggle-feature ()
-  :class 'test-cockpit--transient--selection
+  :class 'test-cockpit-transient-selection
   :variable 'test-cockpit-cargo--enabled-features
   :prompt "feature: "
   :choices 'test-cockpit-cargo--read-crate-features

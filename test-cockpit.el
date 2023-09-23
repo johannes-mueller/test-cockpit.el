@@ -72,37 +72,37 @@ a derived class of `test-cockpit--engine'.")
 For every project type supported by `test-cockpit.el' a derived
 class is needed which implements the methods of the base class.")
 
-(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--engine))
+(cl-defmethod test-cockpit--test-project-command ((_obj test-cockpit--engine))
   "Supply the function to be called when the whole project is to be tested.
-The function has to have the signature (defun fun (_ ARGS)) where
+The function has to have the signature `(defun fun (_ ARGS))' where
 ARGS is the argument list passed to the test frame work."
   nil)
 
-(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--engine))
+(cl-defmethod test-cockpit--test-module-command ((_obj test-cockpit--engine))
   "Supply the function to be called when a module is to be tested.
-The function has to have the signature (defun fun (STRING ARGS))
+The function has to have the signature `(defun fun (STRING ARGS))'
 where STRING is identifies the module, like returned by the
 method `test-cockpit--engine-current-module-string' and ARGS is
 the argument list passed to the test frame work."
   nil)
 
-(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--engine))
+(cl-defmethod test-cockpit--test-function-command ((_obj test-cockpit--engine))
   "Supply the function to be called when a function is to be tested.
-The function has to have the signature (defun fun (STRING ARGS))
+The function has to have the signature `(defun fun (STRING ARGS))'
 where STRING is identifies the function, like returned by the
 method `test-cockpit--engine-current-function-string' and ARGS is
 the argument list passed to the test frame work."
   nil)
 
-(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--engine))
+(cl-defmethod test-cockpit--transient-infix ((_obj test-cockpit--engine))
   "Supply the transient infix for the project type specific switches."
   nil)
 
-(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--engine))
+(cl-defmethod test-cockpit--engine-current-module-string ((_obj test-cockpit--engine))
   "Supply the string identifying the current module at point."
   nil)
 
-(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--engine))
+(cl-defmethod test-cockpit--engine-current-function-string ((_obj test-cockpit--engine))
   "Supply the string identifying the current function at point."
   nil)
 
@@ -155,7 +155,8 @@ If no engine is yet started for the project, it will be started."
   "Retrieve the engine for the project; error if the project type is unsupported."
   (let ((engine (test-cockpit--retrieve-engine)))
     (if (oref engine is-dummy-engine)
-        (signal "Project type %s not supported by test-cockpit or engine not installed" (projectile-project-type))
+        (signal "Project type %s not supported by test-cockpit or engine not installed"
+                (projectile-project-type))
       engine)))
 
 (defun test-cockpit--make-test-command (method thing args)
@@ -164,9 +165,8 @@ The supplied METHOD for the current engine is called to get the
 actual function to setup the call.  To this function the THING to
 be tested as well as additional ARGS are passed.  The resulting
 trimmed string is then returned."
-  (string-trim (funcall
-                (funcall method (test-cockpit--retrieve-engine))
-                thing args)))
+  (let ((test-fun (funcall method (test-cockpit--retrieve-engine))))
+    (string-trim (funcall test-fun thing args))))
 
 (defun test-cockpit--update-last-commands (args)
   "Update the attributes for the engine's last test command.
@@ -205,7 +205,7 @@ FUNC-STRING is the string determining the function to test."
    (funcall (alist-get (projectile-project-type) test-cockpit--project-types))))
 
 (defun test-cockpit--insert-infix ()
-  "Insert the infix array into the transient-prefix."
+  "Insert the infix array into the `transient-prefix'."
   (unless (equal (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
                  '(:description "Run test"))
     (transient-remove-suffix 'test-cockpit-prefix '(0)))
@@ -245,7 +245,10 @@ ARGS is the UI state for language specific settings."
 (defun test-cockpit-test-module (&optional args)
   "Test the module of the current buffer.
 The exact determination of the model is done by the language specific package.
-ARGS is the UI state for language specific settings."
+ARGS is the UI state for language specific settings.
+
+If we are not in a test module buffer, the last module we were in
+is tested."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((module-string (or (test-cockpit--current-module-string)
@@ -262,7 +265,10 @@ ARGS is the UI state for language specific settings."
   "Run the test function at point.
 The exact determination of the function is done by the language
 specific package.  ARGS is the UI state for language specific
-settings."
+settings.
+
+If we are not in a test function, the last module test function we
+were in is tested."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((function-string (or (test-cockpit--current-function-string)
@@ -346,9 +352,9 @@ session, the main dispatch dialog is invoked."
 
 (defun test-cockpit-test-or-projectile-build ()
   "Test or build the project depending on if the project type is supported.
-If the project type is supported, test-cockpit-repeat-test is
-run.  Otherwise the project build is launched by calling
-projectile-compile-project."
+If the project type is supported, function
+`test-cockpit-repeat-test' is run.  Otherwise the project build
+is launched by calling the function `projectile-compile-project'."
   (interactive)
   (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
       (test-cockpit--projectile-build)
@@ -356,12 +362,13 @@ projectile-compile-project."
 
 (defun test-cockpit-repeat-test-or-projectile-build ()
   "Repeat the last test or build action (native or projectile).
-If the project type is supported, test-cockpit-repeat test is
-invoked.  That means, the last test action is repeated or if the
-project has not seen a test action during the session, the test
-menu is shown.  If the project type is unknown the last build
-command is repeated by projectile-build-project a prompt to type a
-build command is shown."
+If the project type is supported, function `test-cockpit-repeat'
+test is invoked.  That means, the last test action is repeated or
+if the project has not seen a test action during the session, the
+test menu is shown.  If the project type is unknown the last
+build command is repeated by the function
+`projectile-build-project' a prompt to type a build command is
+shown."
   (interactive)
   (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
       (test-cockpit--repeat-projectile-build)
@@ -369,9 +376,9 @@ build command is shown."
 
 (defun test-cockpit-test-or-projectile-test ()
   "Test the project falling back projectile if project type is not supported.
-If the project type is supported, test-cockpit-repeat-test is
-run.  Otherwise the project tested calling
-projectile-test-project."
+If the project type is supported, function
+`test-cockpit-repeat-test' is run.  Otherwise the project tested
+calling the function `projectile-test-project'."
   (interactive)
   (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
       (test-cockpit--projectile-test)
@@ -379,12 +386,12 @@ projectile-test-project."
 
 (defun test-cockpit-repeat-test-or-projectile-test ()
   "Repeat the last test action (native or projectile).
-If the project type is supported, test-cockpit-repeat test is
-invoked.  That means, the last test action is repeated or if the
-project has not seen a test action during the session, the test
-menu is shown.  If the project type is unknown the last test
-command is repeated by projectile-test-project a prompt to type a
-test command is shown."
+If the project type is supported, function `test-cockpit-repeat'
+test is invoked.  That means, the last test action is repeated or
+if the project has not seen a test action during the session, the
+test menu is shown.  If the project type is unknown the last test
+command is repeated by the function `projectile-test-project' a
+prompt to type a test command is shown."
   (interactive)
   (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
       (test-cockpit--repeat-projectile-test)
@@ -393,9 +400,9 @@ test command is shown."
 (defun test-cockpit--projectile-build (&optional last-command)
   "Launch a projectile driven build process.
 If last executed command LAST-COMMAND is given the command is
-repeated as is.  Otherwise `projectile-compile-project' is called
-interactively and the actual compile command is stored for
-repetition."
+repeated as is.  Otherwise function `projectile-compile-project'
+is called interactively and the actual compile command is stored
+for repetition."
   (if last-command
       (test-cockpit--issue-compile-command last-command)
     (projectile-compile-project nil)
@@ -408,8 +415,8 @@ repetition."
 (defun test-cockpit--projectile-test (&optional last-command)
   "Launch a projectile driven test process.
 If last executed command LAST-COMMAND is given the command is
-repeated as is.  Otherwise `projectile-test-project' is called
-interactively and the actual test command is stored for
+repeated as is.  Otherwise function `projectile-test-project' is
+called interactively and the actual test command is stored for
 repetition."
   (if last-command
       (test-cockpit--issue-compile-command last-command)
@@ -449,7 +456,7 @@ repetition."
   (oref (test-cockpit--retrieve-engine) last-switches))
 
 (transient-define-prefix test-cockpit-prefix ()
-  "Test the project"
+  "Test the project."
   :value 'test-cockpit--last-switches
   [])
 

@@ -1,4 +1,4 @@
-;;; test-cockpit-cask.el --- The package to test cask projects in test-cockpit
+;;; test-cockpit-cask.el --- The package to test cask projects in test-cockpit -*- lexical-binding: t; -*-
 
 ;; Author: Johannes Mueller <github@johannes-mueller.org>
 ;; URL: https://github.com/johannes-mueller/test-cockpit.el
@@ -19,22 +19,22 @@
 
 (defclass test-cockpit-cask-engine (test-cockpit--engine) ())
 
-(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit-cask-engine))
+(cl-defmethod test-cockpit--test-project-command ((_obj test-cockpit-cask-engine))
   'test-cockpit-cask--test-project-command)
 
-(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit-cask-engine))
+(cl-defmethod test-cockpit--test-module-command ((_obj test-cockpit-cask-engine))
   'test-cockpit-cask--test-module-command )
 
-(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit-cask-engine))
+(cl-defmethod test-cockpit--test-function-command ((_obj test-cockpit-cask-engine))
   'test-cockpit-cask--test-function-command)
 
-(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit-cask-engine))
+(cl-defmethod test-cockpit--transient-infix ((_obj test-cockpit-cask-engine))
   (test-cockpit-cask--infix))
 
-(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit-cask-engine))
+(cl-defmethod test-cockpit--engine-current-module-string ((_obj test-cockpit-cask-engine))
   (when-let ((fn (buffer-file-name))) (when (string-suffix-p ".el-test.el" fn) fn)))
 
-(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit-cask-engine))
+(cl-defmethod test-cockpit--engine-current-function-string ((_obj test-cockpit-cask-engine))
   (when-let ((fn (buffer-file-name)))
     (when (string-suffix-p ".el-test.el" fn)
       (which-function))))

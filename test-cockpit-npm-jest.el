@@ -1,4 +1,4 @@
-;;; test-cockpit-npm-jest.el --- The package to test ts-jest projects in test-cockpit
+;;; test-cockpit-npm-jest.el --- The package to test ts-jest projects in test-cockpit -*- lexical-binding: t; -*-
 
 ;; Author: Johannes Mueller <github@johannes-mueller.org>
 ;; URL: https://github.com/johannes-mueller/test-cockpit.el
@@ -19,22 +19,22 @@
 
 (defclass test-cockpit-npm-jest--engine (test-cockpit--engine) ())
 
-(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit-npm-jest--engine))
+(cl-defmethod test-cockpit--test-project-command ((_obj test-cockpit-npm-jest--engine))
   'test-cockpit-npm-jest--test-project-command)
 
-(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit-npm-jest--engine))
+(cl-defmethod test-cockpit--test-module-command ((_obj test-cockpit-npm-jest--engine))
   'test-cockpit-npm-jest--test-module-command)
 
-(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit-npm-jest--engine))
+(cl-defmethod test-cockpit--engine-current-module-string ((_obj test-cockpit-npm-jest--engine))
   (test-cockpit-npm-jest--choose-module))
 
-(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit-npm-jest--engine))
+(cl-defmethod test-cockpit--test-function-command ((_obj test-cockpit-npm-jest--engine))
   'test-cockpit-npm-jest--test-function-command)
 
-(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit-npm-jest--engine))
+(cl-defmethod test-cockpit--engine-current-function-string ((_obj test-cockpit-npm-jest--engine))
   (test-cockpit-npm-jest--find-current-test))
 
-(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit-npm-jest--engine))
+(cl-defmethod test-cockpit--transient-infix ((_obj test-cockpit-npm-jest--engine))
   (test-cockpit-npm-jest--infix))
 
 (test-cockpit-register-project-type 'npm 'test-cockpit-npm-jest--engine)
