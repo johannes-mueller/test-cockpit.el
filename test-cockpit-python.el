@@ -17,21 +17,21 @@
 (require 'test-cockpit)
 
 (defvar test-cockpit-python-build-ext-command "python setup.py build_ext --inplace"
-  "The command to build the python extensions")
+  "The command to build the python extensions.")
 
 (defclass test-cockpit-python-engine (test-cockpit--engine) ())
 
-(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit-python-engine))
+(cl-defmethod test-cockpit--test-project-command ((_obj test-cockpit-python-engine))
   'test-cockpit-python--test-project-command)
-(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit-python-engine))
+(cl-defmethod test-cockpit--test-module-command ((_obj test-cockpit-python-engine))
   'test-cockpit-python--test-module-command)
-(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit-python-engine))
+(cl-defmethod test-cockpit--test-function-command ((_obj test-cockpit-python-engine))
   'test-cockpit-python--test-function-command)
-(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit-python-engine))
+(cl-defmethod test-cockpit--transient-infix ((_obj test-cockpit-python-engine))
   (test-cockpit-python--infix))
-(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit-python-engine))
+(cl-defmethod test-cockpit--engine-current-module-string ((_obj test-cockpit-python-engine))
   (test-cockpit-python--choose-module))
-(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit-python-engine))
+(cl-defmethod test-cockpit--engine-current-function-string ((_obj test-cockpit-python-engine))
   (test-cockpit-python--test-function-path))
 
 (test-cockpit-register-project-type 'python-pip 'test-cockpit-python-engine)
@@ -52,36 +52,40 @@
     "--mypy"))
 
 (defun test-cockpit-python--test-project-command (_ args)
+  "Make the test project command from ARGS."
   (concat (test-cockpit-python--common-switches args)))
 
 (defun test-cockpit-python--test-module-command (string args)
+  "Make the test module command from STRING and ARGS."
   (concat (test-cockpit-python--common-switches args) " " string))
 
 (defun test-cockpit-python--choose-module ()
+  "Find the current test module."
   (when-let ((file-name-path (buffer-file-name))
              ((string-prefix-p "test_" (file-name-nondirectory file-name-path))))
     (test-cockpit--strip-project-root file-name-path)))
 
 (defun test-cockpit-python--test-function-command (string args)
+  "Make the test function command from STRING and ARGS."
   (concat (test-cockpit-python--common-switches args) " " string))
 
 (defun test-cockpit-python--build-ext-command (args)
+  "Add the build extensions command if ARGS demands it."
   (if (member "build_ext" args)
       (concat test-cockpit-python-build-ext-command " && ")
     ""))
 
 (defun test-cockpit-python--common-switches (args)
+  "Extract the common python switches from ARGS."
   (concat (test-cockpit-python--build-ext-command args)
-          (test-cockpit-python--pytest-binary-path)
-          " --color=yes"
+          "pytest --color=yes"
           (test-cockpit--add-leading-space-to-switches
            (test-cockpit--join-filter-switches
             (test-cockpit-python--insert-no-coverage-to-switches args)
             test-cockpit-python--allowed-switches))))
 
-(defun test-cockpit-python--pytest-binary-path () "pytest")
-
 (defun test-cockpit-python--insert-no-coverage-to-switches (switches)
+  "Adjust the coverage report switch according to SWITCHES."
   (if (not (seq-find (lambda (sw) (string-prefix-p "--cov-report=" sw)) switches))
       (append switches '("--cov-report="))
     switches))
@@ -113,38 +117,44 @@
     ("-n" "don't capture output" "--capture=no")]])
 
 (defun test-cockpit-python--find-last-unindented-line ()
+  "Find the last unindented line from current point in current buffer."
   (save-excursion
     (end-of-line)
     (when (search-backward-regexp "^\\([[:alpha:]].*\\)$" nil t)
       (match-string 1))))
 
 (defun test-cockpit-python--test-function-in-line (line)
+  "Find a test function in LINE."
   (when (string-match "def[[:space:]]+\\(test_[[:word:]_]*\\)" line)
     (match-string 1 line)))
 
 (defun test-cockpit-python--class-in-line (line)
+  "Find a test class in LINE."
   (when (string-match "^class[[:space:]]+\\(Test[[:word:]_]*\\)\\((.*)\\)?:" line)
     (match-string 1 line)))
 
-(defun test-cockpit-python--maybe-test-method (line pos)
+(defun test-cockpit-python--maybe-test-method (pos)
+  "Determine the string of the method at POS to be tested, if any."
   (save-excursion
-    (when (and
-           (search-backward-regexp "def[[:space:]]+\\([[:alpha:]][[:word:]_]*\\)" nil t)
-           (< pos (match-beginning 0))
-           (string-prefix-p "test_" (match-string 1)))
+    (when (and (search-backward-regexp "def[[:space:]]+\\([[:alpha:]][[:word:]_]*\\)" nil t)
+               (< pos (match-beginning 0))
+               (string-prefix-p "test_" (match-string 1)))
       (concat "::" (match-string 1)))))
 
 (defun test-cockpit-python--test-method-or-class (line pos)
+  "Determine the current test at LINE and POS (class or method)."
   (when-let ((test-class (test-cockpit-python--class-in-line line)))
-    (concat test-class (test-cockpit-python--maybe-test-method line pos))))
+    (concat test-class (test-cockpit-python--maybe-test-method pos))))
 
 (defun test-cockpit-python--find-current-test ()
+  "Determine the current test at point."
   (when-let* ((unindented-line (test-cockpit-python--find-last-unindented-line))
-            (unindented-pos (match-beginning 0)))
+              (unindented-pos (match-beginning 0)))
     (or (test-cockpit-python--test-function-in-line unindented-line)
         (test-cockpit-python--test-method-or-class unindented-line unindented-pos))))
 
 (defun test-cockpit-python--test-function-path ()
+  "Determine the path to the test function at point."
   (when-let* ((file-name (buffer-file-name))
               ((string-prefix-p "test_" (file-name-nondirectory file-name))))
     (concat (test-cockpit--strip-project-root file-name)

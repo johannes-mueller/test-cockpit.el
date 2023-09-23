@@ -13,9 +13,6 @@
 (ert-deftest test-python-project-python-toml-type-available ()
   (should (alist-get 'python-toml test-cockpit--project-types)))
 
-(ert-deftest test-python-pytest-binary-path-no-venv ()
-  (should (equal (test-cockpit-python--pytest-binary-path) "pytest")))
-
 (ert-deftest test-python-current-module-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
     (let ((engine (make-instance test-cockpit-python-engine)))
@@ -31,9 +28,8 @@
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip :min-occur 0)))
     (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-    (test-cockpit-python--pytest-binary-path () ((:output "/foo/bin/pytest")))
     (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
-    (compile (command) ((:input '("/foo/bin/pytest --color=yes --cov-report=") :output 'success :occur 1))))
+    (compile (command) ((:input '("pytest --color=yes --cov-report=") :output 'success :occur 1))))
    (test-cockpit-test-project)))
 
 (ert-deftest test-python-get-python-test-project-command-switches ()
@@ -41,12 +37,11 @@
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-       (test-cockpit-python--pytest-binary-path () ((:output "/foo/bin/pytest")))
        (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py"))))
     (dolist (struct '((("--last-failed" "--baba" "-mslow" "--mypy")
-                       "/foo/bin/pytest --color=yes --last-failed -mslow --mypy --cov-report=")
+                       "pytest --color=yes --last-failed -mslow --mypy --cov-report=")
                       (("--cov-report=term" "--bubu" "-mslow")
-                       "/foo/bin/pytest --color=yes --cov-report=term -mslow")))
+                       "pytest --color=yes --cov-report=term -mslow")))
       (let ((arglist (pop struct))
             (expected (pop struct)))
         (mocker-let
@@ -58,7 +53,6 @@
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
     (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/home/user/project")))
-    (test-cockpit-python--pytest-binary-path () ((:output "pytest")))
     (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
     (compile (command) ((:input '("pytest --color=yes --cov-report= tests/path/to/test_foo.py") :output 'success :occur 1))))
    (test-cockpit-test-module)))
@@ -84,12 +78,11 @@
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-       (test-cockpit-python--pytest-binary-path () ((:output "/foo/bin/pytest")))
        (buffer-file-name () ((:output "/home/user/project/path/to/test_foo.py"))))
     (dolist (struct '((("--last-failed" "--baba foo")
-                       "/foo/bin/pytest --color=yes --last-failed --cov-report= /home/user/project/path/to/test_foo.py")
+                       "pytest --color=yes --last-failed --cov-report= /home/user/project/path/to/test_foo.py")
                       (("--cov-report=term" "--bubu foo")
-                       "/foo/bin/pytest --color=yes --cov-report=term /home/user/project/path/to/test_foo.py")))
+                       "pytest --color=yes --cov-report=term /home/user/project/path/to/test_foo.py")))
       (let ((arglist (pop struct))
             (expected (pop struct)))
         (mocker-let
@@ -101,7 +94,6 @@
   (mocker-let
    ((projectile-project-type () ((:output 'python-pip)))
     (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-    (test-cockpit-python--pytest-binary-path () ((:output "pytest")))
     (test-cockpit-python--test-function-path () ((:output "test_foo")))
     (buffer-file-name () ((:output "/home/user/project/path/to/foo.py")))
     (compile (command) ((:input '("pytest --color=yes --cov-report= test_foo") :output 'success :occur 1))))
@@ -112,13 +104,12 @@
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip :occur 1)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-       (test-cockpit-python--pytest-binary-path () ((:output "/foo/bin/pytest")))
        (test-cockpit-python--test-function-path () ((:output "test_foo")))
        (buffer-file-name () ((:output "/home/user/project/path/to/foo.py"))))
     (dolist (struct '((("--last-failed" "--baba test_foo")
-                       "/foo/bin/pytest --color=yes --last-failed --cov-report= test_foo")
+                       "pytest --color=yes --last-failed --cov-report= test_foo")
                       (("--cov-report=term" "--bubu test_foo")
-                       "/foo/bin/pytest --color=yes --cov-report=term test_foo")))
+                       "pytest --color=yes --cov-report=term test_foo")))
       (let ((arglist (pop struct))
             (expected (pop struct)))
         (mocker-let
@@ -130,9 +121,8 @@
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip :occur 1)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-       (test-cockpit-python--pytest-binary-path () ((:output "/foo/bin/pytest")))
        (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
-       (compile (command) ((:input '("python setup.py build_ext --inplace && /foo/bin/pytest --color=yes --last-failed --cov-report=")
+       (compile (command) ((:input '("python setup.py build_ext --inplace && pytest --color=yes --last-failed --cov-report=")
                                    :output 'success :occur 1))))
     (test-cockpit-test-project '("--last-failed" "build_ext"))))
 
@@ -142,9 +132,8 @@
     (mocker-let
        ((projectile-project-type () ((:output 'python-pip :occur 1)))
         (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-        (test-cockpit-python--pytest-binary-path () ((:output "/foo/bin/pytest" :occur 1)))
         (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
-        (compile (command) ((:input '("foo build-ext command && /foo/bin/pytest --color=yes --last-failed --cov-report=")
+        (compile (command) ((:input '("foo build-ext command && pytest --color=yes --last-failed --cov-report=")
                                     :output 'success :occur 1))))
      (test-cockpit-test-project '("--last-failed" "build_ext")))))
 

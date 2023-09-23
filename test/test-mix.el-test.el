@@ -6,12 +6,12 @@
 
 (ert-deftest test-elixir-current-module-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
-    (let ((engine (make-instance test-cockpit--mix-engine)))
+    (let ((engine (make-instance test-cockpit-mix--engine)))
       (should (eq (test-cockpit--engine-current-module-string engine) nil)))))
 
 (ert-deftest test-elixir-current-function-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
-    (let ((engine (make-instance test-cockpit--mix-engine)))
+    (let ((engine (make-instance test-cockpit-mix--engine)))
       (should (eq (test-cockpit--engine-current-function-string engine) nil)))))
 
 (ert-deftest test-get-elixir-test-project-command-no-switches ()

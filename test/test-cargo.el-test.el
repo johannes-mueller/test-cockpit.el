@@ -44,7 +44,7 @@
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-       (test-cockpit-cargo-built-module-path-or-file-path-fallback () ((:output "bar")))
+       (test-cockpit-cargo--build-module-path-or-file-path-fallback () ((:output "bar")))
        (compile (command) ((:input '("cargo test --color=always") :output 'success :occur 1))))
     (test-cockpit-test-project)))
 
