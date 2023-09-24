@@ -55,6 +55,15 @@ jobs:
       - name: Package lint
         run: 'cask emacs -Q -batch -f package-lint-batch-and-exit *.el || true'
 
+      - name: Checkdoc
+        run: |
+          for FILE in *.el
+          do cask emacs -batch \
+              -eval "(setq checkdoc-force-docstrings-flag nil)" \
+              -eval "(setq checkdoc-verb-check-experimental-flag nil)" \
+              -eval "(checkdoc-file \"${FILE}\")"
+          done
+
       - name: Run tests (allow failure)
         if: matrix.allow_failure == true
         run: $HOME/.cask/bin/cask exec ert-runner || true
