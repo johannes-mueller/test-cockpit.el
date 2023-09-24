@@ -45,6 +45,9 @@ jobs:
       - name: Install dependencies
         run: '$HOME/.cask/bin/cask install'
 
+      - name: Byte compile files
+        run: '$HOME/.cask/bin/cask build'
+
       - name: Run tests
         if: matrix.allow_failure != true
         run: '$HOME/.cask/bin/cask exec ert-runner'

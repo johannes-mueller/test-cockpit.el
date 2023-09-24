@@ -15,6 +15,7 @@
 ;;; Code:
 
 (require 'test-cockpit)
+(require 'which-func)
 
 
 (defclass test-cockpit-cask-engine (test-cockpit--engine) ())

@@ -346,8 +346,8 @@ If the for the project no test has been run during the current
 session, the main dispatch dialog is invoked."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if-let (last-command (oref (test-cockpit--real-engine-or-error) last-command))
-      (test-cockpit--run-test last-command)
+  (if-let (last-cmd (oref (test-cockpit--real-engine-or-error) last-command))
+      (test-cockpit--run-test last-cmd)
     (test-cockpit-dispatch)))
 
 (defun test-cockpit-test-or-projectile-build ()
@@ -397,14 +397,14 @@ prompt to type a test command is shown."
       (test-cockpit--repeat-projectile-test)
     (test-cockpit-repeat-test)))
 
-(defun test-cockpit--projectile-build (&optional last-command)
+(defun test-cockpit--projectile-build (&optional last-cmd)
   "Launch a projectile driven build process.
-If last executed command LAST-COMMAND is given the command is
+If last executed command LAST-CMD is given the command is
 repeated as is.  Otherwise function `projectile-compile-project'
 is called interactively and the actual compile command is stored
 for repetition."
-  (if last-command
-      (test-cockpit--issue-compile-command last-command)
+  (if last-cmd
+      (test-cockpit--issue-compile-command last-cmd)
     (projectile-compile-project nil)
     (oset (test-cockpit--retrieve-engine) last-build-command compile-command)))
 
@@ -412,14 +412,14 @@ for repetition."
   "Repeat the last projectile driven build process."
   (test-cockpit--projectile-build (test-cockpit--last-build-command)))
 
-(defun test-cockpit--projectile-test (&optional last-command)
+(defun test-cockpit--projectile-test (&optional last-cmd)
   "Launch a projectile driven test process.
-If last executed command LAST-COMMAND is given the command is
+If last executed command LAST-CMD is given the command is
 repeated as is.  Otherwise function `projectile-test-project' is
 called interactively and the actual test command is stored for
 repetition."
-  (if last-command
-      (test-cockpit--issue-compile-command last-command)
+  (if last-cmd
+      (test-cockpit--issue-compile-command last-cmd)
     (projectile-test-project nil)
     (oset (test-cockpit--retrieve-engine) last-test-command compile-command)))
 
@@ -463,7 +463,7 @@ repetition."
 (defun test-cockpit--main-suffix ()
   (let ((module-string (or (test-cockpit--current-module-string) (test-cockpit--last-module-string)))
         (function-string (or (test-cockpit--current-function-string) (test-cockpit--last-function-string)))
-        (last-command (oref (test-cockpit--real-engine-or-error) last-command)))
+        (last-cmd (oref (test-cockpit--real-engine-or-error) last-command)))
     (vconcat (remove nil (append `("Run tests"
                                    ("p" "project" test-cockpit-test-project)
                                    ,(if module-string
@@ -475,7 +475,7 @@ repetition."
                                           ,(format "function: %s" (test-cockpit--strip-project-root function-string))
                                           test-cockpit-test-function))
                                    ("c" "custom" test-cockpit-custom-test-command)
-                                   ,(if last-command
+                                   ,(if last-cmd
                                         `("r" "repeat" test-cockpit-repeat-test))))))))
 
 (defun test-cockpit--strip-project-root (path)
@@ -514,7 +514,7 @@ accumulate."
   (test-cockpit--real-engine-or-error)
   (test-cockpit--insert-infix)
   (let ((appended-suffix-must-be-removed (test-cockpit--append-repeat-suffix)))
-    (test-cockpit-prefix)
+    (transient-setup 'test-cockpit-prefix)
     (if appended-suffix-must-be-removed
         (transient-remove-suffix 'test-cockpit-prefix '(-1)))
     (transient-remove-suffix 'test-cockpit-prefix '(-1))))

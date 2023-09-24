@@ -5,6 +5,7 @@
 
 (depends-on "transient")
 (depends-on "projectile")
+(depends-on "toml")
 
 (development
  (depends-on "mocker")

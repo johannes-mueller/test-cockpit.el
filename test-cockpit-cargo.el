@@ -25,6 +25,7 @@
 
 (require 'test-cockpit)
 (require 'test-cockpit-transient)
+(require 'toml)
 
 (defclass test-cockpit-cargo-engine (test-cockpit--engine) ())
 
