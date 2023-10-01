@@ -1,10 +1,9 @@
 (require 'mocker)
-(require 'test-cockpit-transient)
 
 (ert-deftest test-selection-variable-init-nil ()
   (let ((foo-variable nil))
     (transient-define-infix foo-infix ()
-     :class 'test-cockpit-transient-selection
+     :class 'test-cockpit--transient-selection
      :variable 'foo-variable)
     (let ((obj (plist-get (symbol-plist 'foo-infix) 'transient--suffix)))
       (transient-init-value obj)
@@ -13,7 +12,7 @@
 (ert-deftest test-selection-variable-init-non-nil ()
   (let ((foo-variable '("foo")))
     (transient-define-infix foo-infix ()
-     :class 'test-cockpit-transient-selection
+     :class 'test-cockpit--transient-selection
      :variable 'foo-variable)
     (let ((obj (plist-get (symbol-plist 'foo-infix) 'transient--suffix)))
       (transient-init-value obj)
@@ -24,7 +23,7 @@
 (ert-deftest test-selection-variable-read ()
   (let ((foo-variable nil))
     (transient-define-infix foo-infix ()
-     :class 'test-cockpit-transient-selection
+     :class 'test-cockpit--transient-selection
      :prompt "choicename: "
      :choices 'dummy-choices
      :variable 'foo-variable)
@@ -38,7 +37,7 @@
 (ert-deftest test-selection-variable-set ()
   (let ((foo-variable nil))
     (transient-define-infix foo-infix ()
-     :class 'test-cockpit-transient-selection
+     :class 'test-cockpit--transient-selection
      :variable 'foo-variable)
     (let ((obj (plist-get (symbol-plist 'foo-infix) 'transient--suffix)))
       (transient-infix-set obj "foo")
@@ -53,7 +52,7 @@
 
 (ert-deftest test-selection-variable-format ()
     (transient-define-infix foo-infix ()
-     :class 'test-cockpit-transient-selection
+     :class 'test-cockpit--transient-selection
      :choices 'dummy-choices)
     (let ((obj (plist-get (symbol-plist 'foo-infix) 'transient--suffix)))
       (oset obj value nil)

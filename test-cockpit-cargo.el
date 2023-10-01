@@ -24,7 +24,6 @@
 ;;; Code:
 
 (require 'test-cockpit)
-(require 'test-cockpit-transient)
 (require 'toml)
 
 (defclass test-cockpit-cargo-engine (test-cockpit--engine) ())
@@ -179,7 +178,7 @@
                    cargo-toml-data)))))
 
 (transient-define-infix test-cockpit-cargo--toggle-feature ()
-  :class 'test-cockpit-transient-selection
+  :class 'test-cockpit--transient-selection
   :variable 'test-cockpit-cargo--enabled-features
   :prompt "feature: "
   :choices 'test-cockpit-cargo--read-crate-features
