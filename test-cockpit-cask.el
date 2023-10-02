@@ -1,10 +1,9 @@
-;;; test-cockpit-cask.el --- The package to test cask projects in test-cockpit -*- lexical-binding: t; -*-
+;;; test-cockpit-cask.el --- The package to test cask projects in test-cockpit -*- lexical-binding: t; package-lint-main-file: "test-cockpit.el"; -*-
 
 ;; Author: Johannes Mueller <github@johannes-mueller.org>
 ;; URL: https://github.com/johannes-mueller/test-cockpit.el
 ;; Version: 0.1.0
 ;; License: GPLv3
-;; Package-Requires: ((emacs "28.1"))
 
 ;;; Commentary:
 
