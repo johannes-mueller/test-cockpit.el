@@ -544,25 +544,24 @@ with a space."
       ""
     (concat " " switches)))
 
-
 (defclass test-cockpit--transient-selection (transient-variable)
   ((scope :initarg :scope))
-  "A transient-variable to select from a list of mutually non exclusive items.")
+  "A `transient-variable' to select from a list of mutually non exclusive items.")
 
 (cl-defmethod transient-init-value ((obj test-cockpit--transient-selection))
-  "Implement `transient-init-value' for `test-cockpit--transient-selection' OBJ."
+  "Implement function `transient-init-value' for OBJ."
   (let ((variable (oref obj variable)))
     (oset obj value (symbol-value variable))))
 
 (cl-defmethod transient-infix-read ((obj test-cockpit--transient-selection))
-  "Implement `transient-infix-read' for `test-cockpit--transient-selection' OBJ."
+  "Implement function `transient-infix-read' for OBJ."
   (let ((prompt (oref obj prompt))
         (choices (oref obj choices)))
     (completing-read prompt (funcall choices))))
 
 (cl-defmethod transient-infix-set ((obj test-cockpit--transient-selection) item)
-  "Implement `transient-infix-set' for `test-cockpit--transient-selection' OBJ.
-The item ITEM is toggled in the list of selected items."
+  "Implement function `transient-infix-set'.
+The item ITEM is toggled in the list of selected items of OBJ."
   (let* ((variable (oref obj variable))
          (selected (symbol-value variable)))
     (set variable
@@ -572,8 +571,9 @@ The item ITEM is toggled in the list of selected items."
     (oset obj value (symbol-value variable))))
 
 (cl-defmethod transient-format-value ((obj test-cockpit--transient-selection))
-  "Implement `transient-format-value' for `test-cockpit--transient-selection' OBJ.
-The list of selected items is formated in a way to present it to the user."
+  "Implement function `transient-format-value' for OBJ.
+The list of selected items is formatted in a way to present it to the user.
+OJB is just the self reference."
   (let ((enabled-items (oref obj value))
         (choices (oref obj choices)))
     (concat
