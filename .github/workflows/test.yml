@@ -54,7 +54,6 @@ jobs:
         run: |
           for FILE in *.el
           do cask emacs -batch \
-              -eval "(setq checkdoc-force-docstrings-flag nil)" \
               -eval "(setq checkdoc-verb-check-experimental-flag nil)" \
               -eval "(checkdoc-file \"${FILE}\")"
           done
