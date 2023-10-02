@@ -48,7 +48,7 @@
 
 
 (defun test-cockpit-cask--insert-install-command (command install)
-  "Prepend 'cask install' command to the test COMMAND if requested by INSTALL."
+  "Prepend \"cask install\" command to the test COMMAND if requested by INSTALL."
   (if (equal install '"install") (concat "cask install && " command) command))
 
 (defun test-cockpit-cask--test-project-command (_ install)
