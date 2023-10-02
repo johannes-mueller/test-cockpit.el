@@ -462,6 +462,7 @@ repetition."
   [])
 
 (defun test-cockpit--main-suffix ()
+  "Setup the main menu common for all projects for testing."
   (let ((module-string (or (test-cockpit--current-module-string) (test-cockpit--last-module-string)))
         (function-string (or (test-cockpit--current-function-string) (test-cockpit--last-function-string)))
         (last-cmd (oref (test-cockpit--real-engine-or-error) last-command)))
@@ -549,15 +550,19 @@ with a space."
   "A transient-variable to select from a list of mutually non exclusive items.")
 
 (cl-defmethod transient-init-value ((obj test-cockpit--transient-selection))
+  "Implement `transient-init-value' for `test-cockpit--transient-selection' OBJ."
   (let ((variable (oref obj variable)))
     (oset obj value (symbol-value variable))))
 
 (cl-defmethod transient-infix-read ((obj test-cockpit--transient-selection))
+  "Implement `transient-infix-read' for `test-cockpit--transient-selection' OBJ."
   (let ((prompt (oref obj prompt))
         (choices (oref obj choices)))
     (completing-read prompt (funcall choices))))
 
 (cl-defmethod transient-infix-set ((obj test-cockpit--transient-selection) item)
+  "Implement `transient-infix-set' for `test-cockpit--transient-selection' OBJ.
+The item ITEM is toggled in the list of selected items."
   (let* ((variable (oref obj variable))
          (selected (symbol-value variable)))
     (set variable
@@ -567,6 +572,8 @@ with a space."
     (oset obj value (symbol-value variable))))
 
 (cl-defmethod transient-format-value ((obj test-cockpit--transient-selection))
+  "Implement `transient-format-value' for `test-cockpit--transient-selection' OBJ.
+The list of selected items is formated in a way to present it to the user."
   (let ((enabled-items (oref obj value))
         (choices (oref obj choices)))
     (concat
@@ -578,7 +585,6 @@ with a space."
                 (funcall choices)
                 (propertize ", " 'face 'transient-inactive-value))
      (propertize "]" 'face 'transient-inactive-value))))
-
 
 
 (provide 'test-cockpit)

@@ -22,16 +22,24 @@
 (defclass test-cockpit-python-engine (test-cockpit--engine) ())
 
 (cl-defmethod test-cockpit--test-project-command ((_obj test-cockpit-python-engine))
-  'test-cockpit-python--test-project-command)
+  "Implement test-cockpit--test-project-command." 'test-cockpit-python--test-project-command)
+
 (cl-defmethod test-cockpit--test-module-command ((_obj test-cockpit-python-engine))
-  'test-cockpit-python--test-module-command)
+  "Implement test-cockpit--test-module-command." 'test-cockpit-python--test-module-command)
+
 (cl-defmethod test-cockpit--test-function-command ((_obj test-cockpit-python-engine))
-  'test-cockpit-python--test-function-command)
+  "Implement test-cockpit--test-function-command." 'test-cockpit-python--test-function-command)
+
 (cl-defmethod test-cockpit--transient-infix ((_obj test-cockpit-python-engine))
+  "Implement test-cockpit--test-infix."
   (test-cockpit-python--infix))
+
 (cl-defmethod test-cockpit--engine-current-module-string ((_obj test-cockpit-python-engine))
+  "Implement test-cockpit--engine-current-module-string."
   (test-cockpit-python--choose-module))
+
 (cl-defmethod test-cockpit--engine-current-function-string ((_obj test-cockpit-python-engine))
+  "Implement test-cockpit--engine-current-function-string."
   (test-cockpit-python--test-function-path))
 
 (test-cockpit-register-project-type 'python-pip 'test-cockpit-python-engine)
@@ -103,6 +111,7 @@
   :argument "-m")
 
 (defun test-cockpit-python--infix ()
+  "Setup the pytest specific test switches."
   [["Switches"
     ("-k" test-cockpit-python--restrict-substring)
     ("-f" "only lastly failed tests" "--last-failed")

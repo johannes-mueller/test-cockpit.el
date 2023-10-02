@@ -29,16 +29,24 @@
 (defclass test-cockpit-cargo-engine (test-cockpit--engine) ())
 
 (cl-defmethod test-cockpit--test-project-command ((_obj test-cockpit-cargo-engine))
-  'test-cockpit-cargo--test-project-command)
+  "Implement test-cockpit--test-project-command." 'test-cockpit-cargo--test-project-command)
+
 (cl-defmethod test-cockpit--test-module-command ((_obj test-cockpit-cargo-engine))
-  'test-cockpit-cargo--test-module-command )
+  "Implement test-cockpit--test-module-command." 'test-cockpit-cargo--test-module-command )
+
 (cl-defmethod test-cockpit--test-function-command ((_obj test-cockpit-cargo-engine))
-  'test-cockpit-cargo--test-function-command)
+  "Implement test-cockpit--test-function-command." 'test-cockpit-cargo--test-function-command)
+
 (cl-defmethod test-cockpit--transient-infix ((_obj test-cockpit-cargo-engine))
+  "Implement test-cockpit--test-infix."
   (test-cockpit-cargo--infix))
+
 (cl-defmethod test-cockpit--engine-current-module-string ((_obj test-cockpit-cargo-engine))
+  "Implement test-cockpit--engine-current-module-string."
   (test-cockpit-cargo--build-module-path-or-file-path-fallback))
+
 (cl-defmethod test-cockpit--engine-current-function-string ((_obj test-cockpit-cargo-engine))
+  "Implement test-cockpit--engine-current-function-string."
   (test-cockpit-cargo--build-test-fn-path))
 
 
@@ -66,37 +74,54 @@
 (defconst test-cockpit-cargo--mod-regexp
   "^\s*mod\s+\\([[:word:][:multibyte:]_][[:word:][:multibyte:]_[:digit:]]*\\)\s*{")
 
+(defun test-cockpit-cargo--build-module-path ()
+  "Determine the qualified module path at point, if any."
+  (when-let* ((file-name (buffer-file-name))
+              (relative-path (test-cockpit-cargo--relative-module-path file-name))
+              (module (test-cockpit-cargo--strip-leading-src relative-path))
+              ((string> module "")))
+    module))
+
+(defun test-cockpit-cargo--relative-module-path (file-name)
+  "Make the path of FILE-NAME relative to the project root with :: as delimiter."
+  (replace-regexp-in-string
+   "\\(::mod\\|^src::lib\\|^src::main\\)?\\.rs$" ""
+   (replace-regexp-in-string
+    "/" "::"
+    (test-cockpit--strip-project-root file-name))))
+
+(defun test-cockpit-cargo--strip-leading-src (module-path)
+  "Drop the leading `src' of MODULE-PATH."
+  (replace-regexp-in-string
+   "^\\(src\\)?::" ""
+   (test-cockpit-cargo--add-buffer-relative-module-path module-path)))
+
+(defun test-cockpit-cargo--add-buffer-relative-module-path (file-module-path)
+  "Add the buffer relative module path to FILE-MODULE-PATH."
+  (concat file-module-path (test-cockpit-cargo--track-module-path (point))))
+
 (defun test-cockpit-cargo--track-module-path (initial-point)
-  "Recursively find all modules in the current buffer before INITIAL-POINT."
+  "Recursively build the module path to the module before INITIAL-POINT."
   (set-match-data nil)
   (save-excursion
     (search-backward-regexp test-cockpit-cargo--mod-regexp nil t)
     (if-let ((mod (match-string 1)))
-        (let ((next-search-start-pos (match-beginning 0)))
-          (search-forward "{")
-          (backward-char 1)
-          (forward-sexp)
-          (concat (save-excursion
-                    (goto-char next-search-start-pos)
-                    (test-cockpit-cargo--track-module-path initial-point))
-                  (when (> (point) initial-point)
-                    (concat "::" mod))))
+        (concat (save-excursion
+                  (goto-char (match-beginning 0))
+                  (test-cockpit-cargo--track-module-path initial-point))
+                (test-cockpit-cargo--current-module initial-point mod))
       "")))
 
-(defun test-cockpit-cargo--build-module-path ()
-  "Determine the qualified module path at point."
-  (when-let* ((file-name (buffer-file-name))
-              (relative-path (replace-regexp-in-string
-                              "\\(::mod\\|^src::lib\\|^src::main\\)?\\.rs$" ""
-                              (replace-regexp-in-string
-                               "/" "::"
-                               (test-cockpit--strip-project-root file-name))))
-              (mod (replace-regexp-in-string
-                    "^\\(src\\)?::" ""
-                    (concat relative-path
-                            (test-cockpit-cargo--track-module-path (point)))))
-              ((string> mod "")))
-    mod))
+(defun test-cockpit-cargo--goto-end-of-module ()
+  "Goto the end of the current module assuming being at its beginning."
+  (search-forward "{")
+  (backward-char 1)
+  (forward-sexp))
+
+(defun test-cockpit-cargo--current-module (initial-point mod)
+  "Return ::MOD if INITIAL-POINT is before the end of the current module."
+  (test-cockpit-cargo--goto-end-of-module)
+  (when (> (point) initial-point) (concat "::" mod)))
 
 (defun test-cockpit-cargo--build-module-path-or-file-path-fallback ()
   "Return the qualified module path at point or if not available the filename base."
@@ -108,18 +133,18 @@
 (defconst test-cockpit-cargo--test-fn-regexp
   "#\\[test\\][[:space:]\n]\\([[:space:]\n]*#\\[[^[]*\\][[:space:]\n]\\)*[[:space:]\n]*\\(async\s*\\)?\s*fn \\([[:alpha:]][[:word:]_]*\\)")
 
-(defun test-cockpit-cargo--find-test-fn-name ()
-  "Find the function marked as test in the at point."
-  (save-excursion
-    (search-backward-regexp test-cockpit-cargo--test-fn-regexp nil t)
-    (match-string 3)))
-
 (defun test-cockpit-cargo--build-test-fn-path ()
   "Determine the qualified function path at point."
   (when-let ((fn (test-cockpit-cargo--find-test-fn-name)))
     (if-let ((mod (test-cockpit-cargo--build-module-path)))
         (concat mod "::" fn)
       fn)))
+
+(defun test-cockpit-cargo--find-test-fn-name ()
+  "Find the function marked as test at point."
+  (save-excursion
+    (search-backward-regexp test-cockpit-cargo--test-fn-regexp nil t)
+    (match-string 3)))
 
 (defconst test-cockpit-cargo--insertable-switches
   '("--tests"
@@ -170,12 +195,15 @@
 
 (defun test-cockpit-cargo--read-crate-features ()
   "Read the features available in the current crate."
-  (let ((cargo-toml-data
-         (toml:read-from-file (concat (projectile-project-root) "Cargo.toml"))))
+  (let ((cargo-toml-data (test-cockpit-cargo--crate-data)))
     (seq-map (lambda (key-val) (car key-val))
              (cdr (seq-find
                    (lambda (group-kv) (string= (car group-kv) "features"))
                    cargo-toml-data)))))
+
+(defun test-cockpit-cargo--crate-data ()
+  "Read the data for the crate from Cargo.toml."
+  (toml:read-from-file (concat (projectile-project-root) "Cargo.toml")))
 
 (transient-define-infix test-cockpit-cargo--toggle-feature ()
   :class 'test-cockpit--transient-selection
@@ -185,7 +213,7 @@
   :description "features")
 
 (defun test-cockpit-cargo--infix ()
-  "The infix array for cargo projects."
+  "The switch menu for cargo projects."
   [["Targets"
     ("-t" "tests" "--tests")
     ("-b" "with benchmarks" "--benches")
