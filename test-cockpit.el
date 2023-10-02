@@ -4,6 +4,7 @@
 ;; URL: https://github.com/johannes-mueller/test-cockpit.el
 ;; Version: 0.1.0
 ;; License: GPLv3
+;; SPDX-License-Identifier: GPL-3.0-only
 ;; Package-Requires: ((emacs "28.1") (projectile "2.7") (toml "20230411.1449"))
 
 ;;; Commentary:
