@@ -338,7 +338,7 @@ the user can repeat the last function test with different ARGS."
 The command run is then stored in as last command of the project
 and thus can be repeated using `test-cockpit-repeat-test'."
   (interactive)
-  (call-interactively 'compile)
+  (call-interactively #'compile)
   (oset (test-cockpit--retrieve-engine) last-command compile-command))
 
 (defun test-cockpit-repeat-test (&optional _args)
