@@ -8,7 +8,9 @@
 
 ;;; Commentary:
 
-;; This is the package to test TypeScript/Jest projects in test-cockpit.
+;; test-cockpit is a unified user interface for test runners of different
+;; programming languages resp. their testing tools.  This is the module for the
+;; jest runner for the typescript programming language.
 
 ;;; Code:
 

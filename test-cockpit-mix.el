@@ -8,9 +8,9 @@
 
 ;;; Commentary:
 
-;; This is the package to test Elixir/mix  projects in test-cockpit.
-
-;; Specific switches and settings
+;; test-cockpit is a unified user interface for test runners of different
+;; programming languages resp. their testing tools.  This is the module for the
+;; mix runner for the elixir programming language.
 
 ;;; Code:
 

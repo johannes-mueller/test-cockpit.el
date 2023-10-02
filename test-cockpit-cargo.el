@@ -8,18 +8,9 @@
 
 ;;; Commentary:
 
-;; This is the package to test Rust/Cargo projects in test-cockpit.
-
-;; Specific switches and settings
-
-;; * Select kind of tests (--tests, --doc, --benchmarks, --examples)
-;; * Include or test only tests markt to ingnore (--ignored, --include-ignored)
-;; * Dump stdin and stdout to the *compilation* buffer (--nocapture)
-;; * Discover cargo features and let the user toggle them
-
-;; Badly missing features:
-
-;; * workspaces
+;; test-cockpit is a unified user interface for test runners of different
+;; programming languages resp. their testing tools.  This is the module for the
+;; cargo runner for the Rust programming language.
 
 ;;; Code:
 
