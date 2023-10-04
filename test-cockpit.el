@@ -367,6 +367,7 @@ and thus can be repeated using `test-cockpit-repeat-test'."
   (call-interactively #'compile)
   (oset (test-cockpit--retrieve-engine) last-command compile-command))
 
+;;;###autoload
 (defun test-cockpit-repeat-test (&optional _args)
   "Repeat the last test if the current project had last test.
 If the for the project no test has been run during the current
@@ -377,6 +378,7 @@ session, the main dispatch dialog is invoked."
       (test-cockpit--run-test last-cmd)
     (test-cockpit-dispatch)))
 
+;;;###autoload
 (defun test-cockpit-test-or-projectile-build ()
   "Test or build the project depending on if the project type is supported.
 If the project type is supported, function
@@ -387,6 +389,7 @@ is launched by calling the function `projectile-compile-project'."
       (test-cockpit--projectile-build)
     (test-cockpit-dispatch)))
 
+;;;###autoload
 (defun test-cockpit-repeat-test-or-projectile-build ()
   "Repeat the last test or build action (native or projectile).
 If the project type is supported, function `test-cockpit-repeat'
@@ -401,6 +404,7 @@ shown."
       (test-cockpit--repeat-projectile-build)
     (test-cockpit-repeat-test)))
 
+;;;###autoload
 (defun test-cockpit-test-or-projectile-test ()
   "Test the project falling back projectile if project type is not supported.
 If the project type is supported, function
@@ -411,6 +415,7 @@ calling the function `projectile-test-project'."
       (test-cockpit--projectile-test)
     (test-cockpit-dispatch)))
 
+;;;###autoload
 (defun test-cockpit-repeat-test-or-projectile-test ()
   "Repeat the last test action (native or projectile).
 If the project type is supported, function `test-cockpit-repeat'
