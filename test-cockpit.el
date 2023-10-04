@@ -547,21 +547,16 @@ accumulate."
         (transient-remove-suffix 'test-cockpit-prefix '(-1)))
     (transient-remove-suffix 'test-cockpit-prefix '(-1))))
 
-
 (defun test-cockpit--join-filter-switches (candidates allowed)
   "Join the list of strings CANDIDATES together.
 Candidates not in ALLOWED are excluded.  The items are separated
 with a space."
   (string-join
-   (delete 'exclude
-           (mapcar (lambda (candidate)
-                     (if (cl-find-if
-                          (lambda (allowed-prefix)
-                            (string-prefix-p allowed-prefix candidate))
-                          allowed)
-                         candidate
-                       'exclude))
-                   candidates))
+   (cl-remove-if-not
+    (lambda (candidate) (cl-find-if (lambda (allowed-prefix)
+                                      (string-prefix-p allowed-prefix candidate))
+                                    allowed))
+    candidates)
    " "))
 
 (defun test-cockpit--add-leading-space-to-switches (switches)
