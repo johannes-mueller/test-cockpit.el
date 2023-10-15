@@ -29,13 +29,10 @@ indicated testing environments
 
 ## Installation
 
-For now it's easiest to use
-[straight.el](https://github.com/raxod502/straight.el).
+Easiest way to install is from [MELPA](https://melpa.org).  If you have
+configured the MELPA sources you can just install the `test-cockpit-<language>`
+package using the `package-install` command.
 
-``` elisp
-(straight-use-package
- '(test-cockpit-<language> :type git :host github :repo "johannes-mueller/test-cockpit.el"))
-```
 where `<langauge>` is the programming language you need:
 * `python` for python - pytest
 * `cask` for elisp - cask / ert
@@ -43,7 +40,16 @@ where `<langauge>` is the programming language you need:
 * `elixir` for elixir - mix
 * `npm-jest` for JavaScript / TypeScript – jest
 
-Eventually there will be a MELPA package when the project gets more advanced.
+
+You can of course also use
+[straight.el](https://github.com/raxod502/straight.el). Put the following lines
+into your startup file.
+
+``` elisp
+(straight-use-package
+ '(test-cockpit-<language> :type git :host github :repo "johannes-mueller/test-cockpit.el"))
+```
+
 
 ### Dependencies
 
