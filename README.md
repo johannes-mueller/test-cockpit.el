@@ -135,14 +135,6 @@ The development started more than a year ago in early 2021.  Since then I have
 used it for my daily work and added new features every now and then.  It turns
 out to work smoothly and to be quite useful.
 
-## Future
-
-As soon as the whole thing stabilizes I will put it on MELPA. I am not yet
-decided if it will be one package, or individual ones for each language that
-have the core module as dependency. This would have the advantage that one does
-not need to install the dependencies for a language module that one does not
-want to use.
-
 
 ### Interesting feature ideas
 
@@ -152,13 +144,8 @@ want to use.
 * Generalizing it to a more comprehensive build-cockpit also doing simple
   builds and things like release uploads.
 
-
-## Issues
-
-The rust module uses `emacs-toml` in order to parse `Cargo.toml`. There are two
-issues with `emacs-toml` for both of which I filed a pull request. As long as
-they are not merged you need to use my fork of `emacs-toml`.
-
+Check the [issues](https://github.com/johannes-mueller/test-cockpit.el/issues)
+for more short term goals.
 
 ## Limitations
 
