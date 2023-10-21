@@ -349,7 +349,7 @@ describe('AppComponent', () => {
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
   });
-"))
+})"))
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 190)
@@ -372,8 +372,44 @@ describe('AppComponent', () => {
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
   });
-"))
+})"))
     (with-temp-js-buffer
       (insert buffer-contents)
       (goto-char 288)
       (should (equal (test-cockpit-npm-jest--find-current-test) "AppComponent should create the test app")))))
+
+
+(ert-deftest test-npm-empty-describe-block-before-it ()
+  (let ((buffer-contents "
+describe('outer', () => {
+  describe('middle', () => {
+  });
+
+  it('foo', async () => {
+    expect(2).toBe(2); // HERE
+  });
+});
+"))
+    (with-temp-js-buffer
+      (insert buffer-contents)
+      (goto-char 100)
+      (should (equal (test-cockpit-npm-jest--find-current-test) "outer foo")))))
+
+(ert-deftest test-npm-non-empty-describe-block-before-it ()
+  (let ((buffer-contents "
+describe('outer', () => {
+  describe('middle', () => {
+    it('bar', async () => {
+      expect(2).toBe(2); // HERE
+    });
+  });
+
+  it('foo', async () => {
+    expect(2).toBe(2); // HERE
+  });
+});
+"))
+    (with-temp-js-buffer
+      (insert buffer-contents)
+      (goto-char 150)
+      (should (equal (test-cockpit-npm-jest--find-current-test) "outer foo")))))
