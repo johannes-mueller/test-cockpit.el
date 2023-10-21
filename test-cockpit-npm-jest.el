@@ -110,17 +110,29 @@ Return a string that is understood by the --testNamePattern switch of jest."
   (save-excursion
     (test-cockpit-npm-jest--find-marker "describe")))
 
+(defun test-cockpit-npm-jest--end-point-of-entity ()
+  "Find the end position of the current test or test group supposing being at its begin."
+  (save-excursion
+    (backward-char)
+    (forward-sexp)
+    (point)))
+
 (defun test-cockpit-npm-jest--find-marker (marker-regexp)
   "Find the next marker defined by MARKER-REGEXP.
 
 A marker is a marker for a test or a test group understood by
 --testNamePattern of jest."
-  (let ((forward-sexp-function nil))
+  (let ((forward-sexp-function nil)
+        (old-point (point)))
     (when-let ((start-pos (test-cockpit-npm-jest--goto-initial-marker marker-regexp)))
-      (test-cockpit-npm-jest--skip-potential-each-table)
-      (when-let ((result-string (test-cockpit-npm-jest--unqote-test-name-sexp
-                                 (test-cockpit-npm-jest--test-name-sexp))))
-         `(,start-pos ,result-string)))))
+      (if (< (test-cockpit-npm-jest--end-point-of-entity) old-point)
+          (progn
+            (goto-char start-pos)
+            (test-cockpit-npm-jest--find-marker marker-regexp))
+        (test-cockpit-npm-jest--skip-potential-each-table)
+        (when-let ((result-string (test-cockpit-npm-jest--unqote-test-name-sexp
+                                   (test-cockpit-npm-jest--test-name-sexp))))
+          `(,start-pos ,result-string))))))
 
 (defun test-cockpit-npm-jest--goto-initial-marker (marker-regexp)
   "Go to the initial test or test group marker defined by MARKER-REGEXP.
