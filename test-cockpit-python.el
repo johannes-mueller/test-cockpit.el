@@ -17,7 +17,9 @@
 (require 'test-cockpit)
 
 (defcustom test-cockpit-python-override-project-settings nil
-  "If non nil override project settings for pytest.")
+  "If non nil override project settings for pytest."
+  :type '(boolean)
+  :group 'test-cockpit-python)
 
 (defvar test-cockpit-python-build-ext-command "python setup.py build_ext --inplace"
   "The command to build the python extensions.")
