@@ -111,7 +111,7 @@ Return a string that is understood by the --testNamePattern switch of jest."
     (test-cockpit-npm-jest--find-marker "describe")))
 
 (defun test-cockpit-npm-jest--end-point-of-entity ()
-  "Find the end position of the current test or test group supposing being at its begin."
+  "Find end position of current test or test group supposing being at its begin."
   (save-excursion
     (backward-char)
     (forward-sexp)
