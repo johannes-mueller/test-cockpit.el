@@ -16,6 +16,9 @@
 
 (require 'test-cockpit)
 
+(defcustom test-cockpit-python-override-project-settings nil
+  "If non nil override project settings for pytest.")
+
 (defvar test-cockpit-python-build-ext-command "python setup.py build_ext --inplace"
   "The command to build the python extensions.")
 
@@ -51,13 +54,15 @@
   '("--last-failed"
     "--verbose"
     "--cov-report="
+    "--cov"
     "--cov-report=term-missing"
     "-rFP"
     "--disable-warnings"
     "--capture=no"
     "-k"
     "-m"
-    "--mypy"))
+    "--mypy"
+    "-c /dev/null"))
 
 (defun test-cockpit-python--test-project-command (_ args)
   "Make the test project command from ARGS."
@@ -89,14 +94,29 @@
           "pytest --color=yes"
           (test-cockpit--add-leading-space-to-switches
            (test-cockpit--join-filter-switches
-            (test-cockpit-python--insert-no-coverage-to-switches args)
+            (test-cockpit-python--insert-override-to-switches
+             (test-cockpit-python--insert-project-coverage-to-switches args))
             test-cockpit-python--allowed-switches))))
 
-(defun test-cockpit-python--insert-no-coverage-to-switches (switches)
-  "Adjust the coverage report switch according to SWITCHES."
-  (if (not (seq-find (lambda (sw) (string-prefix-p "--cov-report=" sw)) switches))
-      (append switches '("--cov-report="))
+(defun test-cockpit-python--insert-override-to-switches (switches)
+  "Insert the '-c /dev/null' switch to SWITCHES if override is requested."
+  (if test-cockpit-python-override-project-settings
+      (append '("-c /dev/null") switches)
     switches))
+
+(defun test-cockpit-python--coverage-project-switch ()
+  "Make the switch `--cov <projectname>'."
+  (list (string-join `("--cov " ,(string-replace "-" "_" (projectile-project-name))))))
+
+(defun test-cockpit-python--insert-project-coverage-to-switches (switches)
+  "Adjust the coverage report switch according to SWITCHES."
+  (seq-reduce (lambda (acc sw)
+                (append
+                 (if (string-prefix-p "--cov-report=" sw)
+                     (append acc (test-cockpit-python--coverage-project-switch))
+                   acc)
+                 (list sw)))
+              switches '()))
 
 (transient-define-argument test-cockpit-python--restrict-substring ()
   :description "Restrict to tests matching string"
