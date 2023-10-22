@@ -1,4 +1,5 @@
 [![Test](https://github.com/johannes-mueller/test-cockpit.el/workflows/Tests/badge.svg)](https://github.com/johannes-mueller/test-cockpit.el/actions/workflows/test.yml)
+[![MELPA](https://melpa.org/packages/test-cockpit-badge.svg)](https://melpa.org/#/test-cockpit)
 
 # test-cockpit.el
 
