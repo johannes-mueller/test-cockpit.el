@@ -51,7 +51,7 @@
   '("--last-failed"
     "--verbose"
     "--cov-report="
-    "--cov-report=term"
+    "--cov-report=term-missing"
     "-rFP"
     "--disable-warnings"
     "--capture=no"
@@ -120,7 +120,7 @@
     ("-M" "test type hints" "--mypy")]
    ["Output"
     ("-v" "show single tests" "--verbose")
-    ("-c" "print coverage report" "--cov-report=term")
+    ("-c" "print coverage report" "--cov-report=term-missing")
     ("-r" "report output of passed tests" "-rFP")
     ("-w" "don't output warnings" "--disable-warnings")
     ("-n" "don't capture output" "--capture=no")]])
