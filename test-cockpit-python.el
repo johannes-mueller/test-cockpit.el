@@ -50,7 +50,7 @@
 (defconst test-cockpit-python--allowed-switches
   '("--last-failed"
     "--verbose"
-    "--cov-report="
+    "--no-cov"
     "--cov-report=term-missing"
     "-rFP"
     "--disable-warnings"
@@ -95,7 +95,7 @@
 (defun test-cockpit-python--insert-no-coverage-to-switches (switches)
   "Adjust the coverage report switch according to SWITCHES."
   (if (not (seq-find (lambda (sw) (string-prefix-p "--cov-report=" sw)) switches))
-      (append switches '("--cov-report="))
+      (append switches '("--no-cov"))
     switches))
 
 (transient-define-argument test-cockpit-python--restrict-substring ()
