@@ -51,7 +51,8 @@
   '("--last-failed"
     "--verbose"
     "--no-cov"
-    "--cov-report=term-missing"
+    "--cov"
+    "--cov-report"
     "-rFP"
     "--disable-warnings"
     "--capture=no"
@@ -85,11 +86,13 @@
 
 (defun test-cockpit-python--common-switches (args)
   "Extract the common python switches from ARGS."
+
   (concat (test-cockpit-python--build-ext-command args)
           "pytest --color=yes"
           (test-cockpit--add-leading-space-to-switches
            (test-cockpit--join-filter-switches
-            (test-cockpit-python--insert-no-coverage-to-switches args)
+            (test-cockpit-python--insert-project-coverage-to-switches
+             (test-cockpit-python--insert-no-coverage-to-switches args))
             test-cockpit-python--allowed-switches))))
 
 (defun test-cockpit-python--insert-no-coverage-to-switches (switches)
@@ -97,6 +100,21 @@
   (if (not (seq-find (lambda (sw) (string-prefix-p "--cov-report=" sw)) switches))
       (append switches '("--no-cov"))
     switches))
+
+(defun test-cockpit-python--coverage-project-switch ()
+  "Make the switch `--cov <projectname>'."
+  (list (string-join `("--cov " ,(string-replace "-" "_" (projectile-project-name))))))
+
+(defun test-cockpit-python--insert-project-coverage-to-switches (switches)
+  "Adjust the coverage report switch according to SWITCHES."
+  (seq-reduce (lambda (acc sw)
+                (append
+                 (if (string-prefix-p "--cov-report=" sw)
+                     (append acc (test-cockpit-python--coverage-project-switch))
+                   acc)
+                 (list sw)))
+              switches
+              '()))
 
 (transient-define-argument test-cockpit-python--restrict-substring ()
   :description "Restrict to tests matching string"

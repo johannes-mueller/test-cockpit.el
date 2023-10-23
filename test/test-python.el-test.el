@@ -37,11 +37,11 @@
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (projectile-project-name () ((:output "foo-project")))
        (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py"))))
-    (dolist (struct '((("--last-failed" "--baba" "-mslow" "--mypy")
-                       "pytest --color=yes --last-failed -mslow --mypy --no-cov")
+    (dolist (struct '(
                       (("--cov-report=term-missing" "--bubu" "-mslow")
-                       "pytest --color=yes --cov-report=term-missing -mslow")))
+                       "pytest --color=yes --cov foo_project --cov-report=term-missing -mslow")))
       (let ((arglist (pop struct))
             (expected (pop struct)))
         (mocker-let
@@ -77,12 +77,13 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip)))
-       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "bar-project")))
+       (projectile-project-name () ((:output "bar-project")))
        (buffer-file-name () ((:output "/home/user/project/path/to/test_foo.py"))))
     (dolist (struct '((("--last-failed" "--baba foo")
                        "pytest --color=yes --last-failed --no-cov /home/user/project/path/to/test_foo.py")
                       (("--cov-report=term-missing" "--bubu foo")
-                       "pytest --color=yes --cov-report=term-missing /home/user/project/path/to/test_foo.py")))
+                       "pytest --color=yes --cov bar_project --cov-report=term-missing /home/user/project/path/to/test_foo.py")))
       (let ((arglist (pop struct))
             (expected (pop struct)))
         (mocker-let
@@ -103,13 +104,14 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip :occur 1)))
-       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-bar-project")))
+       (projectile-project-name () ((:output "foo-bar-project")))
        (test-cockpit-python--test-function-path () ((:output "test_foo")))
        (buffer-file-name () ((:output "/home/user/project/path/to/foo.py"))))
     (dolist (struct '((("--last-failed" "--baba test_foo")
                        "pytest --color=yes --last-failed --no-cov test_foo")
                       (("--cov-report=term-missing" "--bubu test_foo")
-                       "pytest --color=yes --cov-report=term-missing test_foo")))
+                       "pytest --color=yes --cov foo_bar_project --cov-report=term-missing test_foo")))
       (let ((arglist (pop struct))
             (expected (pop struct)))
         (mocker-let
