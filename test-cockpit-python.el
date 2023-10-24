@@ -50,8 +50,9 @@
 (defconst test-cockpit-python--allowed-switches
   '("--last-failed"
     "--verbose"
-    "--cov-report="
-    "--cov-report=term"
+    "--no-cov"
+    "--cov"
+    "--cov-report"
     "-rFP"
     "--disable-warnings"
     "--capture=no"
@@ -85,18 +86,35 @@
 
 (defun test-cockpit-python--common-switches (args)
   "Extract the common python switches from ARGS."
+
   (concat (test-cockpit-python--build-ext-command args)
           "pytest --color=yes"
           (test-cockpit--add-leading-space-to-switches
            (test-cockpit--join-filter-switches
-            (test-cockpit-python--insert-no-coverage-to-switches args)
+            (test-cockpit-python--insert-project-coverage-to-switches
+             (test-cockpit-python--insert-no-coverage-to-switches args))
             test-cockpit-python--allowed-switches))))
 
 (defun test-cockpit-python--insert-no-coverage-to-switches (switches)
   "Adjust the coverage report switch according to SWITCHES."
   (if (not (seq-find (lambda (sw) (string-prefix-p "--cov-report=" sw)) switches))
-      (append switches '("--cov-report="))
+      (append switches '("--no-cov"))
     switches))
+
+(defun test-cockpit-python--coverage-project-switch ()
+  "Make the switch `--cov <projectname>'."
+  (list (string-join `("--cov " ,(string-replace "-" "_" (projectile-project-name))))))
+
+(defun test-cockpit-python--insert-project-coverage-to-switches (switches)
+  "Adjust the coverage report switch according to SWITCHES."
+  (seq-reduce (lambda (acc sw)
+                (append
+                 (if (string-prefix-p "--cov-report=" sw)
+                     (append acc (test-cockpit-python--coverage-project-switch))
+                   acc)
+                 (list sw)))
+              switches
+              '()))
 
 (transient-define-argument test-cockpit-python--restrict-substring ()
   :description "Restrict to tests matching string"
@@ -120,7 +138,7 @@
     ("-M" "test type hints" "--mypy")]
    ["Output"
     ("-v" "show single tests" "--verbose")
-    ("-c" "print coverage report" "--cov-report=term")
+    ("-c" "print coverage report" "--cov-report=term-missing")
     ("-r" "report output of passed tests" "-rFP")
     ("-w" "don't output warnings" "--disable-warnings")
     ("-n" "don't capture output" "--capture=no")]])

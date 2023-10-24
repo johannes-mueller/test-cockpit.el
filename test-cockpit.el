@@ -557,10 +557,10 @@ accumulate."
 Candidates not in ALLOWED are excluded.  The items are separated
 with a space."
   (string-join
-   (cl-remove-if-not
-    (lambda (candidate) (cl-find-if (lambda (allowed-prefix)
-                                      (string-prefix-p allowed-prefix candidate))
-                                    allowed))
+   (seq-remove
+    (lambda (candidate) (not (seq-find
+                              (lambda (allowed-prefix) (string-prefix-p allowed-prefix candidate))
+                              allowed)))
     candidates)
    " "))
 
