@@ -50,6 +50,7 @@
 (defconst test-cockpit-python--allowed-switches
   '("--last-failed"
     "--verbose"
+    "-vv"
     "--no-cov"
     "--cov"
     "--cov-report"
@@ -138,6 +139,7 @@
     ("-M" "test type hints" "--mypy")]
    ["Output"
     ("-v" "show single tests" "--verbose")
+    ("-V" "verbose output" "-vv")
     ("-c" "print coverage report" "--cov-report=term-missing")
     ("-r" "report output of passed tests" "-rFP")
     ("-w" "don't output warnings" "--disable-warnings")
