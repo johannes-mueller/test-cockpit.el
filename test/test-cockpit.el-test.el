@@ -179,8 +179,17 @@
   (tc--register-foo-project "foo")
   (mocker-let ((projectile-project-root (&optional dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
                (compile (command) ((:input '("test project") :output 'success))))
-    (test-cockpit-test-project)
-    ))
+    (test-cockpit-test-project)))
+
+
+(ert-deftest test-test-project-no-args-working-directory ()
+  (tc--register-foo-project "foo")
+  (mocker-let ((projectile-project-root (&optional dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
+    (cl-letf (((symbol-function 'compile)
+               (lambda (_cmd)
+                (should (equal default-directory "foo-project")))))
+    (test-cockpit-test-project))))
+
 
 (ert-deftest test-test-project-cached ()
   (tc--register-foo-project "foo")
