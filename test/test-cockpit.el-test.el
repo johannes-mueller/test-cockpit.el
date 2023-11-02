@@ -527,6 +527,14 @@
       (test-cockpit-custom-test-command)
       (test-cockpit-repeat-test))))
 
+(ert-deftest test-custom-test-command-default-directory ()
+  (tc--register-foo-project "foo")
+  (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
+    (cl-letf (((symbol-function 'call-interactively)
+               (lambda (_cmd)
+                (should (equal default-directory "foo-project")))))
+      (test-cockpit-custom-test-command))))
+
 (ert-deftest test-set-infix ()
   (tc--register-foo-project "foo")
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type))))
