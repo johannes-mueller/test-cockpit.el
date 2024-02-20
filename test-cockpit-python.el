@@ -54,7 +54,8 @@
     "--no-cov"
     "--cov"
     "--cov-report"
-    "-rFP"
+    "-r"
+    "--log-level"
     "--disable-warnings"
     "--capture=no"
     "-k"
@@ -129,6 +130,14 @@
   :key "-m"
   :argument "-m")
 
+(transient-define-infix test-cockpit-python--choose-loglevel ()
+  :class 'transient-switches
+  :key "-l"
+  :argument-format "--log-level=%s -rA"
+  :argument-regexp "\\(--log-level=\\(debug\\|info\\|warn\\|error\\) -rA\\)"
+  :choices '("debug" "info" "warn" "error")
+  :description "log level")
+
 (defun test-cockpit-python--infix ()
   "Setup the pytest specific test switches."
   [["Switches"
@@ -140,6 +149,7 @@
    ["Output"
     ("-v" "show single tests" "--verbose")
     ("-V" "verbose output" "-vv")
+    (test-cockpit-python--choose-loglevel)
     ("-c" "print coverage report" "--cov-report=term-missing")
     ("-r" "report output of passed tests" "-rFP")
     ("-w" "don't output warnings" "--disable-warnings")
