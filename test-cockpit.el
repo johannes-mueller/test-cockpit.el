@@ -86,6 +86,8 @@ a derived class of `test-cockpit--engine'.")
    (last-build-command :initarg :last-build-command
                        :initform nil)
    (last-test-command :initarg :last-test-command
+                      :initform nil)
+   (last-custom-command :initarg :last-custom-command
                        :initform nil)
    (last-module-string :initarg :last-module-string
                        :initform nil)
@@ -365,7 +367,10 @@ The command run is then stored in as last command of the project
 and thus can be repeated using `test-cockpit-repeat-test'."
   (interactive)
   (projectile-with-default-dir (projectile-project-root)
+    (when-let ((last-cmd (test-cockpit--last-custom-command)))
+      (setq compile-command last-cmd))
     (call-interactively #'compile))
+  (oset (test-cockpit--retrieve-engine) last-custom-command compile-command)
   (oset (test-cockpit--retrieve-engine) last-command compile-command))
 
 ;;;###autoload
@@ -483,6 +488,10 @@ repetition."
 (defun test-cockpit--last-test-command ()
   "Get the last test command stored in the current engine."
   (oref (test-cockpit--retrieve-engine) last-test-command))
+
+(defun test-cockpit--last-custom-command ()
+  "Get the last custom command stored in the current engine."
+  (oref (test-cockpit--retrieve-engine) last-custom-command))
 
 (defun test-cockpit--last-switches ()
   "Get the last switches stored in the current engine."
