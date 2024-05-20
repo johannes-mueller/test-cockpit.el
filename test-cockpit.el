@@ -228,7 +228,7 @@ FUNC-STRING is the string determining the function to test."
   (test-cockpit--make-test-command
    'test-cockpit--test-function-command func-string args))
 
-(defun test-cockpit-infix ()
+(defun test-cockpit--infix ()
   "Call the infix function of the current project type and return the infix array."
   (test-cockpit--transient-infix
    (funcall (alist-get (projectile-project-type) test-cockpit--project-types))))
@@ -238,7 +238,7 @@ FUNC-STRING is the string determining the function to test."
   (unless (equal (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
                  '(:description "Run test"))
     (transient-remove-suffix 'test-cockpit-prefix '(0)))
-  (if-let (infix (test-cockpit-infix))
+  (if-let (infix (test-cockpit--infix))
       (transient-insert-suffix 'test-cockpit-prefix '(0) infix)))
 
 (defun test-cockpit--run-test (command)

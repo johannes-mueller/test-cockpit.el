@@ -120,7 +120,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'elixir))))
-   (let ((infix (test-cockpit-infix)))
+   (let ((infix (test-cockpit--infix)))
      (should
       (and (equal (aref infix 0) "Mix specific switches")
            (equal (aref infix 1) '("-r" "Reset Ecto before test" "reset"))

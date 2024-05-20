@@ -389,7 +389,7 @@ async def test_first_outer():
 
 (ert-deftest test-python-python-infix ()
   (mocker-let ((projectile-project-type () ((:output 'python-pip))))
-    (let ((infix (test-cockpit-infix)))
+    (let ((infix (test-cockpit--infix)))
       (should (equal (aref (aref infix 0) 0) "Switches"))
       (should (equal (car (aref (aref infix 0) 1)) "-k"))
       (should (equal (aref (aref infix 0) 2) '("-f" "only lastly failed tests" "--last-failed")))
