@@ -445,7 +445,13 @@ prompt to type a test command is shown."
     (test-cockpit-repeat-test)))
 
 
-(defun test-cockpit--repeat-interactive-test (args)
+;;;###autoload
+(defun test-cockpit--repeat-interactive-test (&optional args)
+  "Repeat the last interactive test command.
+This is not meant to be called directly but as a result the transient dispatch
+in order to call the last test action with modified ARGS."
+  (interactive
+   (list (transient-args 'test-cockpit-prefix)))
   (when-let ((last-cmd (test-cockpit--last-interactive-test-command)))
     (funcall last-cmd args)))
 
@@ -513,6 +519,7 @@ repetition."
   (oref (test-cockpit--retrieve-engine) last-switches))
 
 (defun test-cockpit--last-interactive-test-command ()
+  "Get the last interactive test command."
   (oref (test-cockpit--retrieve-engine) last-interactive-cmd))
 
 (transient-define-prefix test-cockpit-prefix ()
@@ -537,7 +544,7 @@ repetition."
                                           test-cockpit-test-function))
                                    ("c" "custom" test-cockpit-custom-test-command)
                                    ,(if last-cmd
-                                        `("r" "repeat" test-cockpit-repeat-test))))))))
+                                        `("r" "repeat" test-cockpit--repeat-interactive-test))))))))
 
 (defun test-cockpit--strip-project-root (path)
   "Strip the project root path from a given PATH."
