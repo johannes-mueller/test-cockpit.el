@@ -137,6 +137,10 @@ the argument list passed to the test frame work."
   "Supply the string identifying the current function at point."
   nil)
 
+(cl-defmethod test-cockpit--engine-dape-last-test-config ((_obj test-cockpit--engine))
+  "Supply the dape testing configuration."
+  nil)
+
 (defun test-cockpit-register-project-type (project-type engine-class)
   "Register a language testing package.
 PROJECT-TYPE is the type given by `pojectile-project-type' and
@@ -211,6 +215,7 @@ The additional arguments are shipped as ARGS."
     (oset engine last-args args)))
 
 (defun test-cockpit--update-last-interactive-command (function)
+  "Update thte last interactive command function"
   (let ((engine (test-cockpit--retrieve-engine)))
     (oset engine last-interactive-cmd function)))
 
@@ -444,7 +449,6 @@ prompt to type a test command is shown."
       (test-cockpit--repeat-projectile-test)
     (test-cockpit-repeat-test)))
 
-
 ;;;###autoload
 (defun test-cockpit--repeat-interactive-test (&optional args)
   "Repeat the last interactive test command.
@@ -455,6 +459,13 @@ in order to call the last test action with modified ARGS."
   (when-let ((last-cmd (test-cockpit--last-interactive-test-command)))
     (funcall last-cmd args)))
 
+;;;###autoload
+(defun test-cockpit-dape-debug-repeat-test ()
+  "Repeat the last test action calling the dape debugger, if available."
+  (interactive)
+  (when-let
+      ((config (test-cockpit--dape-debug-last-test)))
+    (dape config)))
 
 (defun test-cockpit--projectile-build (&optional last-cmd)
   "Launch a projectile driven build process.
@@ -522,6 +533,10 @@ repetition."
   "Get the last interactive test command."
   (oref (test-cockpit--retrieve-engine) last-interactive-cmd))
 
+(defun test-cockpit--dape-debug-last-test ()
+  "Get the dape configuration for the last test."
+  (test-cockpit--engine-dape-last-test-config (test-cockpit--retrieve-engine)))
+
 (transient-define-prefix test-cockpit-prefix ()
   "Test the project."
   :value 'test-cockpit--last-switches
@@ -531,7 +546,8 @@ repetition."
   "Setup the main menu common for all projects for testing."
   (let ((module-string (or (test-cockpit--current-module-string) (test-cockpit--last-module-string)))
         (function-string (or (test-cockpit--current-function-string) (test-cockpit--last-function-string)))
-        (last-cmd (oref (test-cockpit--real-engine-or-error) last-interactive-cmd)))
+        (dape-adaptor (test-cockpit--dape-debug-last-test))
+        (last-cmd (test-cockpit--last-interactive-test-command)))
     (vconcat (remove nil (append `("Run tests"
                                    ("p" "project" test-cockpit-test-project)
                                    ,(if module-string
@@ -542,6 +558,8 @@ repetition."
                                         `("f"
                                           ,(format "function: %s" (test-cockpit--strip-project-root function-string))
                                           test-cockpit-test-function))
+                                   ,(if (and dape-adaptor last-cmd)
+                                        `("d" "dape debug repeat" test-cockpit-dape-debug-repeat-test))
                                    ("c" "custom" test-cockpit-custom-test-command)
                                    ,(if last-cmd
                                         `("r" "repeat" test-cockpit--repeat-interactive-test))))))))

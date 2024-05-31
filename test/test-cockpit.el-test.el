@@ -42,6 +42,39 @@
   (should (eq (alist-get 'foo-project-type test-cockpit--project-types)
               (alist-get 'foo-project-type-alias test-cockpit--project-types))))
 
+
+(defclass test-cockpit--dape-engine (test-cockpit--engine)
+  ((current-module-string :initarg :current-module-string
+                         :initform nil)
+   (current-function-string :initarg :current-function-string
+                            :initform nil)))
+
+(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--dape-engine))
+  (lambda (_ args) (concat "test project" " " (string-join args " "))))
+(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--dape-engine))
+  (lambda (module args) (concat "test module" " " module " " (string-join args " "))))
+(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--dape-engine))
+  (lambda (func args) (concat "test function" " " func " " (string-join args " "))))
+(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--dape-engine))
+  ["Dape" ("-f" "dape" "--dape")])
+(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--dape-engine))
+  (oref obj current-module-string))
+(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--dape-engine))
+  (oref obj current-function-string))
+(cl-defmethod test-cockpit--engine-dape-last-test-config ((obj test-cockpit--dape-engine))
+  'dape-foo-config)
+
+(defun tc--register-dape-project (test-string)
+  (setq test-cockpit--project-engines nil)
+  (test-cockpit-register-project-type 'dape-project-type 'test-cockpit--dape-engine)
+  (mocker-let ((projectile-project-type () ((:output 'dape-project-type :min-occur 0)))
+               (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "dape-project" :min-occur 0))))
+    (oset (test-cockpit--retrieve-engine) current-module-string
+          (when test-string (concat test-string "-module-string")))
+    (oset (test-cockpit--retrieve-engine) current-function-string
+          (when test-string (concat test-string "-function-string")))))
+
+
 (ert-deftest test-current-module-string-dummy ()
   (setq test-cockpit--project-engines nil)
   (mocker-let ((projectile-project-type () ((:output 'bar-project-type)))
@@ -361,6 +394,16 @@
     (test-cockpit-test-module '("bar" "foo"))
     (test-cockpit--do-repeat-function nil)))
 
+(ert-deftest test-dape-debug-repeat-test--not-available ()
+  (tc--register-foo-project "foo")
+  (test-cockpit-dape-debug-repeat-test))
+
+(ert-deftest test-dape-debug-repeat-test--available ()
+  (tc--register-dape-project "dape")
+  (mocker-let ((projectile-project-type () ((:output 'dape-project-type)))
+               (dape (config) ((:input '(dape-foo-config) :output 'success))))
+    (test-cockpit-dape-debug-repeat-test)))
+
 
 (ert-deftest test-main-suffix--all-nil ()
   (tc--register-foo-project "foo")
@@ -425,6 +468,36 @@
                     ("p" "project" test-cockpit-test-project)
                     ("f" "function: some-last-function" test-cockpit-test-function)
                     ("c" "custom" test-cockpit-custom-test-command)]))))
+
+(ert-deftest test-main-suffix-dape-debug-no-last-test ()
+  (tc--register-dape-project "dape")
+  (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "dape-project")))
+               (test-cockpit--current-module-string () ((:output nil)))
+               (test-cockpit--current-function-string () ((:output nil)))
+               (test-cockpit--last-module-string () ((:output nil)))
+               (test-cockpit--last-function-string () ((:output "dape-project/some-last-function")))
+               (test-cockpit--last-interactive-test-command () ((:output nil))))
+    (should (equal (test-cockpit--main-suffix)
+                   ["Run tests"
+                    ("p" "project" test-cockpit-test-project)
+                    ("f" "function: some-last-function" test-cockpit-test-function)
+                    ("c" "custom" test-cockpit-custom-test-command)]))))
+
+(ert-deftest test-main-suffix-dape-debug-with-last-test ()
+  (tc--register-dape-project "dape")
+  (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "dape-project")))
+               (test-cockpit--current-module-string () ((:output nil)))
+               (test-cockpit--current-function-string () ((:output nil)))
+               (test-cockpit--last-module-string () ((:output nil)))
+               (test-cockpit--last-function-string () ((:output "dape-project/some-last-function")))
+               (test-cockpit--last-interactive-test-command () ((:output 'some-cmd))))
+    (should (equal (test-cockpit--main-suffix)
+                   ["Run tests"
+                    ("p" "project" test-cockpit-test-project)
+                    ("f" "function: some-last-function" test-cockpit-test-function)
+                    ("d" "dape debug repeat" test-cockpit-dape-debug-repeat-test)
+                    ("c" "custom" test-cockpit-custom-test-command)
+                    ("r" "repeat" test-cockpit--repeat-interactive-test)]))))
 
 
 (ert-deftest test-repeat-transient-suffix-nil ()
