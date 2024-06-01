@@ -60,7 +60,8 @@
     "--capture=no"
     "-k"
     "-m"
-    "--mypy"))
+    "--mypy"
+    "--exitfirst"))
 
 (defun test-cockpit-python--test-project-command (_ args)
   "Make the test project command from ARGS."
@@ -143,6 +144,7 @@
   [["Switches"
     ("-k" test-cockpit-python--restrict-substring)
     ("-f" "only lastly failed tests" "--last-failed")
+    ("-x" "exit after first fail" "--exitfirst")
     ("-b" "build extensions before testing" "build_ext")
     ("-m" test-cockpit-python--marker-switch)
     ("-M" "test type hints" "--mypy")]
