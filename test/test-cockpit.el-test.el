@@ -75,6 +75,39 @@
           (when test-string (concat test-string "-function-string")))))
 
 
+(defclass test-cockpit--other-actions-engine (test-cockpit--engine)
+  ((current-module-string :initarg :current-module-string
+                         :initform nil)
+   (current-function-string :initarg :current-function-string
+                            :initform nil)))
+
+(cl-defmethod test-cockpit--test-project-command ((obj test-cockpit--other-actions-engine))
+  (lambda (_ args) (concat "test project" " " (string-join args " "))))
+(cl-defmethod test-cockpit--test-module-command ((obj test-cockpit--other-actions-engine))
+  (lambda (module args) (concat "test module" " " module " " (string-join args " "))))
+(cl-defmethod test-cockpit--test-function-command ((obj test-cockpit--other-actions-engine))
+  (lambda (func args) (concat "test function" " " func " " (string-join args " "))))
+(cl-defmethod test-cockpit--transient-infix ((obj test-cockpit--other-actions-engine))
+  ["Other-Actions" ("-f" "other-actions" "--other-actions")])
+(cl-defmethod test-cockpit--engine-current-module-string ((obj test-cockpit--other-actions-engine))
+  (oref obj current-module-string))
+(cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--other-actions-engine))
+  (oref obj current-function-string))
+(cl-defmethod test-cockpit--engine-other-actions-infix ((obj test-cockpit--other-actions-engine))
+  ["Other stuff" ("D" "build docs" tc--build-docs)])
+
+(defun tc--register-other-actions-project (test-string)
+  (setq test-cockpit--project-engines nil)
+  (test-cockpit-register-project-type 'other-actions-project-type 'test-cockpit--other-actions-engine)
+  (mocker-let ((projectile-project-type () ((:output 'other-actions-project-type :min-occur 0)))
+               (projectile-project-root (&optional _dir)
+                                        ((:input-matcher (lambda (_) t) :output "other-actions-project" :min-occur 0))))
+    (oset (test-cockpit--retrieve-engine) current-module-string
+          (when test-string (concat test-string "-module-string")))
+    (oset (test-cockpit--retrieve-engine) current-function-string
+          (when test-string (concat test-string "-function-string")))))
+
+
 (ert-deftest test-current-module-string-dummy ()
   (setq test-cockpit--project-engines nil)
   (mocker-let ((projectile-project-type () ((:output 'bar-project-type)))
@@ -416,6 +449,21 @@
                    ["Run tests"
                     ("p" "project" test-cockpit-test-project)
                     ("c" "custom" test-cockpit-custom-test-command)]))))
+
+
+(ert-deftest test-main-suffix--other-actions ()
+  (tc--register-other-actions-project "other")
+  (mocker-let ((projectile-project-type () ((:output 'other-actions-project-type)))
+               (test-cockpit--current-module-string () ((:output nil)))
+               (test-cockpit--current-function-string () ((:output nil)))
+               (test-cockpit--last-module-string () ((:output nil)))
+               (test-cockpit--last-function-string () ((:output nil))))
+    (should (equal (test-cockpit--main-suffix)
+                   [["Run tests"
+                     ("p" "project" test-cockpit-test-project)
+                     ("c" "custom" test-cockpit-custom-test-command)]
+                    ["Other stuff"
+                     ("D" "build docs" tc--build-docs)]]))))
 
 
 (ert-deftest test-main-suffix--current-module ()

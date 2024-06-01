@@ -143,6 +143,10 @@ the argument list passed to the test frame work."
   "Supply the dape testing configuration."
   nil)
 
+(cl-defmethod test-cockpit--engine-other-actions-infix ((_obj test-cockpit--engine))
+  "Supply the infix for other actions."
+  nil)
+
 (defun test-cockpit-register-project-type (project-type engine-class)
   "Register a language testing package.
 PROJECT-TYPE is the type given by `pojectile-project-type' and
@@ -545,7 +549,7 @@ repetition."
   :value 'test-cockpit--last-switches
   [])
 
-(defun test-cockpit--main-suffix ()
+(defun test-cockpit--test-action-suffix ()
   "Setup the main menu common for all projects for testing."
   (let ((module-string (or (test-cockpit--current-module-string) (test-cockpit--last-module-string)))
         (function-string (or (test-cockpit--current-function-string) (test-cockpit--last-function-string)))
@@ -566,6 +570,14 @@ repetition."
                                    ("c" "custom" test-cockpit-custom-test-command)
                                    ,(if last-cmd
                                         `("r" "repeat" test-cockpit--repeat-interactive-test))))))))
+
+(defun test-cockpit--main-suffix ()
+  "Setup the main menu common for all projects for testing and actions."
+  (if-let
+      ((other-actions-suffix
+        (test-cockpit--engine-other-actions-infix (test-cockpit--retrieve-engine))))
+      `[,(test-cockpit--test-action-suffix) ,other-actions-suffix]
+    (test-cockpit--test-action-suffix)))
 
 (defun test-cockpit--strip-project-root (path)
   "Strip the project root path from a given PATH."
