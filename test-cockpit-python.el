@@ -61,7 +61,8 @@
     "-k"
     "-m"
     "--mypy"
-    "--exitfirst"))
+    "--exitfirst"
+    "--showlocals"))
 
 (defun test-cockpit-python--test-project-command (_ args)
   "Make the test project command from ARGS."
@@ -155,7 +156,8 @@
     ("-c" "print coverage report" "--cov-report=term-missing")
     ("-r" "report output of passed tests" "-rFP")
     ("-w" "don't output warnings" "--disable-warnings")
-    ("-n" "don't capture output" "--capture=no")]])
+    ("-n" "don't capture output" "--capture=no")
+    ("-L" "show locals in tracebacks" "--showlocals")]])
 
 (defun test-cockpit-python--find-last-unindented-line ()
   "Find the last unindented line from current point in current buffer."
