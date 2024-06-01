@@ -61,6 +61,8 @@
 ;; the last tested module resp. last tested function are tested.  If there are no
 ;; last tests, an error message is thrown.
 
+;; There is experimental state support of the Dape package to run DAP debug sessions.
+
 ;;; Code:
 
 (require 'transient)
