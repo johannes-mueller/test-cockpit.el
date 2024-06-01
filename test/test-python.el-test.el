@@ -403,4 +403,5 @@ async def test_first_outer():
       (should (equal (aref (aref infix 1) 4) '("-c" "print coverage report" "--cov-report=term-missing")))
       (should (equal (aref (aref infix 1) 5) '("-r" "report output of passed tests" "-rFP")))
       (should (equal (aref (aref infix 1) 6) '("-w" "don't output warnings" "--disable-warnings")))
-      (should (equal (aref (aref infix 1) 7) '("-n" "don't capture output" "--capture=no"))))))
+      (should (equal (aref (aref infix 1) 7) '("-n" "don't capture output" "--capture=no")))
+      (should (equal (aref (aref infix 1) 8) '("-L" "show locals in tracebacks" "--showlocals"))))))
