@@ -70,11 +70,14 @@
     "--cov-report"
     "-r"
     "--log-level"
+    "--tb"
     "--disable-warnings"
     "--capture=no"
     "-k"
     "-m"
-    "--mypy"))
+    "--mypy"
+    "--exitfirst"
+    "--showlocals"))
 
 (defun test-cockpit-python--test-project-command (_ args)
   "Make the test project command from ARGS."
@@ -152,11 +155,21 @@
   :choices '("debug" "info" "warn" "error")
   :description "log level")
 
+(transient-define-infix test-cockpit-python--choose-traceback ()
+  :class 'transient-switches
+  :key "-t"
+  :argument-format "--tb=%s"
+  :argument-regexp "--tb=\\(long\\|short\\|line\\|native\\|no\\)"
+  :choices '("long" "short" "line" "native" "no")
+  :description "show traceback style")
+
+
 (defun test-cockpit-python--infix ()
   "Setup the pytest specific test switches."
   [["Switches"
     ("-k" test-cockpit-python--restrict-substring)
     ("-f" "only lastly failed tests" "--last-failed")
+    ("-x" "exit after first fail" "--exitfirst")
     ("-b" "build extensions before testing" "build_ext")
     ("-m" test-cockpit-python--marker-switch)
     ("-M" "test type hints" "--mypy")]
@@ -167,7 +180,9 @@
     ("-c" "print coverage report" "--cov-report=term-missing")
     ("-r" "report output of passed tests" "-rFP")
     ("-w" "don't output warnings" "--disable-warnings")
-    ("-n" "don't capture output" "--capture=no")]])
+    ("-n" "don't capture output" "--capture=no")
+    ("-L" "show locals in tracebacks" "--showlocals")
+    (test-cockpit-python--choose-traceback)]])
 
 (defun test-cockpit-python--find-last-unindented-line ()
   "Find the last unindented line from current point in current buffer."
