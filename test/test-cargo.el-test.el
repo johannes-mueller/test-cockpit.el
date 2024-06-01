@@ -239,7 +239,7 @@ mod bar {
 (ert-deftest test-cargo-infix ()
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo))))
-    (let ((infix (test-cockpit-infix)))
+    (let ((infix (test-cockpit--infix)))
       (should (and (equal (aref (aref infix 0) 0) "Targets")
                    (equal (aref (aref infix 0) 1) '("-t" "tests" "--tests"))
                    (equal (aref (aref infix 0) 2) '("-b" "with benchmarks" "--benches"))

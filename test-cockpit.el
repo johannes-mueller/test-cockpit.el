@@ -95,6 +95,8 @@ a derived class of `test-cockpit--engine'.")
                          :initform nil)
    (last-args :initarg :last-args
               :initform nil)
+   (last-interactive-cmd :initarg :last-interactive-cmd
+                         :initform nil)
    (is-dummy-engine :initarg :is-dummy-engine
                     :initform nil))
   "The base class for a test-cockpit engine.
@@ -208,6 +210,10 @@ The additional arguments are shipped as ARGS."
       (oset engine last-function-string last-function))
     (oset engine last-args args)))
 
+(defun test-cockpit--update-last-interactive-command (function)
+  (let ((engine (test-cockpit--retrieve-engine)))
+    (oset engine last-interactive-cmd function)))
+
 (defun test-cockpit--make-test-project-command (project-string args)
   "Call the test-project-command function with ARGS of the current project type.
 PROJECT-STRING is usually nil.  The argument is here to make the function
@@ -228,7 +234,7 @@ FUNC-STRING is the string determining the function to test."
   (test-cockpit--make-test-command
    'test-cockpit--test-function-command func-string args))
 
-(defun test-cockpit-infix ()
+(defun test-cockpit--infix ()
   "Call the infix function of the current project type and return the infix array."
   (test-cockpit--transient-infix
    (funcall (alist-get (projectile-project-type) test-cockpit--project-types))))
@@ -238,7 +244,7 @@ FUNC-STRING is the string determining the function to test."
   (unless (equal (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
                  '(:description "Run test"))
     (transient-remove-suffix 'test-cockpit-prefix '(0)))
-  (if-let (infix (test-cockpit-infix))
+  (if-let (infix (test-cockpit--infix))
       (transient-insert-suffix 'test-cockpit-prefix '(0) infix)))
 
 (defun test-cockpit--run-test (command)
@@ -268,6 +274,7 @@ ARGS is the UI state for language specific settings."
    (list (transient-args 'test-cockpit-prefix)))
   (test-cockpit--run-test
    (test-cockpit--command 'test-cockpit--make-test-project-command nil args))
+  (test-cockpit--update-last-interactive-command 'test-cockpit-test-project)
   (test-cockpit--update-last-commands args))
 
 ;;;###autoload
@@ -286,6 +293,7 @@ is tested."
               (test-cockpit--command 'test-cockpit--make-test-module-command
                                      module-string
                                      args))
+             (test-cockpit--update-last-interactive-command 'test-cockpit-test-module)
              (test-cockpit--update-last-commands args))
     (message "Not in a unit test module file")))
 
@@ -306,6 +314,7 @@ were in is tested."
               (test-cockpit--command 'test-cockpit--make-test-function-command
                                      function-string
                                      args))
+             (test-cockpit--update-last-interactive-command 'test-cockpit-test-function)
              (test-cockpit--update-last-commands args))
     (message "Not in a unit test module file")))
 
@@ -435,6 +444,18 @@ prompt to type a test command is shown."
       (test-cockpit--repeat-projectile-test)
     (test-cockpit-repeat-test)))
 
+
+;;;###autoload
+(defun test-cockpit--repeat-interactive-test (&optional args)
+  "Repeat the last interactive test command.
+This is not meant to be called directly but as a result the transient dispatch
+in order to call the last test action with modified ARGS."
+  (interactive
+   (list (transient-args 'test-cockpit-prefix)))
+  (when-let ((last-cmd (test-cockpit--last-interactive-test-command)))
+    (funcall last-cmd args)))
+
+
 (defun test-cockpit--projectile-build (&optional last-cmd)
   "Launch a projectile driven build process.
 If last executed command LAST-CMD is given the command is
@@ -497,6 +518,10 @@ repetition."
   "Get the last switches stored in the current engine."
   (oref (test-cockpit--retrieve-engine) last-switches))
 
+(defun test-cockpit--last-interactive-test-command ()
+  "Get the last interactive test command."
+  (oref (test-cockpit--retrieve-engine) last-interactive-cmd))
+
 (transient-define-prefix test-cockpit-prefix ()
   "Test the project."
   :value 'test-cockpit--last-switches
@@ -506,7 +531,7 @@ repetition."
   "Setup the main menu common for all projects for testing."
   (let ((module-string (or (test-cockpit--current-module-string) (test-cockpit--last-module-string)))
         (function-string (or (test-cockpit--current-function-string) (test-cockpit--last-function-string)))
-        (last-cmd (oref (test-cockpit--real-engine-or-error) last-command)))
+        (last-cmd (oref (test-cockpit--real-engine-or-error) last-interactive-cmd)))
     (vconcat (remove nil (append `("Run tests"
                                    ("p" "project" test-cockpit-test-project)
                                    ,(if module-string
@@ -519,7 +544,7 @@ repetition."
                                           test-cockpit-test-function))
                                    ("c" "custom" test-cockpit-custom-test-command)
                                    ,(if last-cmd
-                                        `("r" "repeat" test-cockpit-repeat-test))))))))
+                                        `("r" "repeat" test-cockpit--repeat-interactive-test))))))))
 
 (defun test-cockpit--strip-project-root (path)
   "Strip the project root path from a given PATH."
