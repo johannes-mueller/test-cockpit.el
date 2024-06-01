@@ -463,9 +463,10 @@ in order to call the last test action with modified ARGS."
 (defun test-cockpit-dape-debug-repeat-test ()
   "Repeat the last test action calling the dape debugger, if available."
   (interactive)
-  (when-let
+  (if-let
       ((config (test-cockpit--dape-debug-last-test)))
-    (dape config)))
+      (dape config)
+    (user-error "No recent test-action has been performed or no Dape support for backend")))
 
 (defun test-cockpit--projectile-build (&optional last-cmd)
   "Launch a projectile driven build process.

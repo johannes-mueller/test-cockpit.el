@@ -396,7 +396,7 @@
 
 (ert-deftest test-dape-debug-repeat-test--not-available ()
   (tc--register-foo-project "foo")
-  (test-cockpit-dape-debug-repeat-test))
+  (should-error (test-cockpit-dape-debug-repeat-test)))
 
 (ert-deftest test-dape-debug-repeat-test--available ()
   (tc--register-dape-project "dape")

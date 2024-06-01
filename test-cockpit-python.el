@@ -45,7 +45,7 @@
 (cl-defmethod test-cockpit--engine-dape-last-test-config ((_obj test-cockpit-python-engine))
   (let* ((last-cmd (test-cockpit--last-interactive-test-command))
          (args (vconcat (pcase last-cmd
-                          ('nil [])
+                          ('test-cockpit-test-project [])
                           ('test-cockpit-test-module `[,(test-cockpit--last-module-string)])
                           ('test-cockpit-test-function `[,(test-cockpit--last-function-string)]))
                         (oref (test-cockpit--retrieve-engine) last-args))))

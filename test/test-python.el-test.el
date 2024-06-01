@@ -146,11 +146,13 @@
           (expected (pop struct)))
       (should (equal (test-cockpit-python--insert-no-coverage-to-switches arglist) expected)))))
 
-(ert-deftest test-python-dape-last-test-project-no-switches ()
+(ert-deftest test-python-dape-last-test-project ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'python-pip :occur 1)))
-       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (compile (command) ((:input-matcher (lambda (_) t) :output 'success))))
+    (test-cockpit-test-project)
     (should (equal (test-cockpit--dape-debug-last-test)
                    '(command "python"
                      command-args ("-m" "debugpy.adapter" "--host" "127.0.0.1" "--port" :autoport)
