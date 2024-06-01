@@ -56,6 +56,7 @@
     "--cov-report"
     "-r"
     "--log-level"
+    "--tb"
     "--disable-warnings"
     "--capture=no"
     "-k"
@@ -140,6 +141,15 @@
   :choices '("debug" "info" "warn" "error")
   :description "log level")
 
+(transient-define-infix test-cockpit-python--choose-traceback ()
+  :class 'transient-switches
+  :key "-t"
+  :argument-format "--tb=%s"
+  :argument-regexp "--tb=\\(long\\|short\\|line\\|native\\|no\\)"
+  :choices '("long" "short" "line" "native" "no")
+  :description "show traceback style")
+
+
 (defun test-cockpit-python--infix ()
   "Setup the pytest specific test switches."
   [["Switches"
@@ -157,7 +167,8 @@
     ("-r" "report output of passed tests" "-rFP")
     ("-w" "don't output warnings" "--disable-warnings")
     ("-n" "don't capture output" "--capture=no")
-    ("-L" "show locals in tracebacks" "--showlocals")]])
+    ("-L" "show locals in tracebacks" "--showlocals")
+    (test-cockpit-python--choose-traceback)]])
 
 (defun test-cockpit-python--find-last-unindented-line ()
   "Find the last unindented line from current point in current buffer."
