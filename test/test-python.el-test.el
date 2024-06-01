@@ -457,3 +457,27 @@ async def test_first_outer():
       (should (equal (aref (aref infix 1) 6) '("-w" "don't output warnings" "--disable-warnings")))
       (should (equal (aref (aref infix 1) 7) '("-n" "don't capture output" "--capture=no")))
       (should (equal (aref (aref infix 1) 8) '("-L" "show locals in tracebacks" "--showlocals"))))))
+
+(ert-deftest test-python-other-actions-main-suffix ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let ((projectile-project-type () ((:output 'python-pip))))
+    (should (equal (test-cockpit--main-suffix)
+                   [["Run tests"
+	             ("p" "project" test-cockpit-test-project)
+	             ("c" "custom" test-cockpit-custom-test-command)]
+                    ["Documentation" ("D" "build documentation" test-cockpit-python-build-docs)]]))))
+
+(ert-deftest test-python-other-actions-call-default ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let ((projectile-project-type () ((:output 'python-pip)))
+               (compile (command) ((:input '("sphinx-build -b html docs _build") :output 'success :occur 2))))
+    (test-cockpit-python-build-docs)
+    (test-cockpit-repeat-test)))
+
+(ert-deftest test-python-other-actions-call-alternate ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let ((projectile-project-type () ((:output 'python-pip)))
+               (compile (command) ((:input '("some other cmd") :output 'success :occur 2))))
+    (let ((test-cockpit-python-build-docs-command "some other cmd"))
+      (test-cockpit-python-build-docs)
+      (test-cockpit-repeat-test))))

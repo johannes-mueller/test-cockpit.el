@@ -19,6 +19,9 @@
 (defvar test-cockpit-python-build-ext-command "python setup.py build_ext --inplace"
   "The command to build the python extensions.")
 
+(defvar test-cockpit-python-build-docs-command "sphinx-build -b html docs _build"
+  "The command to build the python package documentation.")
+
 (defclass test-cockpit-python-engine (test-cockpit--engine) ())
 
 (cl-defmethod test-cockpit--test-project-command ((_obj test-cockpit-python-engine))
@@ -55,6 +58,9 @@
     :cwd ,(projectile-project-root)
     :args ,args
     :justMyCode nil :console "integratedTerminal" :showReturnValue t :stopOnEntry nil)))
+
+(cl-defmethod test-cockpit--engine-other-actions-infix ((_obj test-cockpit-python-engine))
+  ["Documentation" ("D" "build documentation" test-cockpit-python-build-docs)])
 
 (test-cockpit-register-project-type 'python-pip 'test-cockpit-python-engine)
 (test-cockpit-register-project-type-alias 'python-pkg 'python-pip)
@@ -228,6 +234,12 @@
     (concat (test-cockpit--strip-project-root file-name)
             (when-let ((test-function (test-cockpit-python--find-current-test)))
               (concat "::" test-function)))))
+
+
+(defun test-cockpit-python-build-docs ()
+  (interactive)
+  "Issue the build documentation command."
+  (test-cockpit--run-test test-cockpit-python-build-docs-command))
 
 (provide 'test-cockpit-python)
 
