@@ -397,7 +397,9 @@ session, the main dispatch dialog is invoked."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (if-let (last-cmd (oref (test-cockpit--real-engine-or-error) last-command))
-      (test-cockpit--run-test last-cmd)
+      (if (eq last-cmd 'test-cockpit--last-command-was-dape)
+          (test-cockpit-dape-debug-repeat-test)
+      (test-cockpit--run-test last-cmd))
     (test-cockpit-dispatch)))
 
 ;;;###autoload
@@ -467,8 +469,13 @@ in order to call the last test action with modified ARGS."
   (interactive)
   (if-let
       ((config (test-cockpit--dape-debug-last-test)))
-      (dape config)
+      (test-cockpit--launch-dape config)
     (user-error "No recent test-action has been performed or no Dape support for backend")))
+
+(defun test-cockpit--launch-dape (config)
+  "Launch the dape debug session and memorize that last test was a dape session."
+  (dape config)
+  (oset (test-cockpit--retrieve-engine) last-command 'test-cockpit--last-command-was-dape))
 
 (defun test-cockpit--projectile-build (&optional last-cmd)
   "Launch a projectile driven build process.

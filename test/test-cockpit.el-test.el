@@ -405,6 +405,14 @@
     (test-cockpit-dape-debug-repeat-test)))
 
 
+(ert-deftest test-dape-debug-repeat-test--repeat ()
+  (tc--register-dape-project "dape")
+  (mocker-let ((projectile-project-type () ((:output 'dape-project-type)))
+               (dape (config) ((:input '(dape-foo-config) :output 'success :occur 2))))
+    (test-cockpit-dape-debug-repeat-test)
+    (test-cockpit-repeat-test)))
+
+
 (ert-deftest test-main-suffix--all-nil ()
   (tc--register-foo-project "foo")
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
