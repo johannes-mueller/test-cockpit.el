@@ -470,7 +470,7 @@ async def test_first_outer():
 (ert-deftest test-python-other-actions-call-default ()
   (setq test-cockpit--project-engines nil)
   (mocker-let ((projectile-project-type () ((:output 'python-pip)))
-               (compile (command) ((:input '("sphinx-build -b html docs _build") :output 'success :occur 2))))
+               (compile (command) ((:input '("sphinx-build -b html docs build/html") :output 'success :occur 2))))
     (test-cockpit-python-build-docs)
     (test-cockpit-repeat-test)))
 

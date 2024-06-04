@@ -19,7 +19,7 @@
 (defvar test-cockpit-python-build-ext-command "python setup.py build_ext --inplace"
   "The command to build the python extensions.")
 
-(defvar test-cockpit-python-build-docs-command "sphinx-build -b html docs _build"
+(defvar test-cockpit-python-build-docs-command "sphinx-build -b html docs build/html"
   "The command to build the python package documentation.")
 
 (defclass test-cockpit-python-engine (test-cockpit--engine) ())
