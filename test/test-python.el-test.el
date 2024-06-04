@@ -146,6 +146,58 @@
           (expected (pop struct)))
       (should (equal (test-cockpit-python--insert-no-coverage-to-switches arglist) expected)))))
 
+(ert-deftest test-python-dape-last-test-project ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+      ((projectile-project-type () ((:output 'python-pip :occur 1)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (compile (command) ((:input-matcher (lambda (_) t) :output 'success))))
+    (test-cockpit-test-project)
+    (should (equal (test-cockpit--dape-debug-last-test)
+                   '(command "python"
+                     command-args ("-m" "debugpy.adapter" "--host" "127.0.0.1" "--port" :autoport)
+                     port :autoport :request "launch" :type "python" :module "pytest"
+                     :cwd "foo-project"
+                     :args []
+                     :justMyCode nil :console "integratedTerminal" :showReturnValue t :stopOnEntry nil)))))
+
+(ert-deftest test-python-dape-last-test-module ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+      ((projectile-project-type () ((:output 'python-pip :occur 1)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/home/user/project")))
+       (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
+       (compile (command) ((:input-matcher (lambda (_) t) :output 'success))))
+    (test-cockpit-test-module)
+    (let ((config (test-cockpit--dape-debug-last-test)))
+      (should (equal (plist-get config :cwd) "/home/user/project"))
+      (should (equal (plist-get config :args) ["tests/path/to/test_foo.py"])))))
+
+(ert-deftest test-python-dape-last-test-function-no-switches ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+      ((projectile-project-type () ((:output 'python-pip :occur 1)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/home/user/project")))
+       (test-cockpit-python--test-function-path () ((:output "test_foo")))
+       (compile (command) ((:input-matcher (lambda (_) t) :output 'success))))
+    (test-cockpit-test-function)
+    (let ((config (test-cockpit--dape-debug-last-test)))
+      (should (equal (plist-get config :cwd) "/home/user/project"))
+      (should (equal (plist-get config :args) ["test_foo"])))))
+
+(ert-deftest test-python-dape-last-test-function-switches ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let
+      ((projectile-project-type () ((:output 'python-pip :occur 1)))
+       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/home/user/project")))
+       (test-cockpit-python--test-function-path () ((:output "test_foo")))
+       (compile (command) ((:input-matcher (lambda (_) t) :output 'success))))
+    (test-cockpit-test-function '("--verbose" "--capture=no"))
+    (let ((config (test-cockpit--dape-debug-last-test)))
+      (should (equal (plist-get config :cwd) "/home/user/project"))
+      (should (equal (plist-get config :args) ["test_foo" "--verbose" "--capture=no"])))))
+
+
 (ert-deftest test-python-find-test-method-simple ()
   (let ((buffer-contents "
 def test_first_outer():

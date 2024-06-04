@@ -42,6 +42,20 @@
   "Implement test-cockpit--engine-current-function-string."
   (test-cockpit-python--test-function-path))
 
+(cl-defmethod test-cockpit--engine-dape-last-test-config ((_obj test-cockpit-python-engine))
+  (let* ((last-cmd (test-cockpit--last-interactive-test-command))
+         (args (vconcat (pcase last-cmd
+                          ('test-cockpit-test-project [])
+                          ('test-cockpit-test-module `[,(test-cockpit--last-module-string)])
+                          ('test-cockpit-test-function `[,(test-cockpit--last-function-string)]))
+                        (oref (test-cockpit--retrieve-engine) last-args))))
+  `(command "python"
+    command-args ("-m" "debugpy.adapter" "--host" "127.0.0.1" "--port" :autoport)
+    port :autoport :request "launch" :type "python" :module "pytest"
+    :cwd ,(projectile-project-root)
+    :args ,args
+    :justMyCode nil :console "integratedTerminal" :showReturnValue t :stopOnEntry nil)))
+
 (test-cockpit-register-project-type 'python-pip 'test-cockpit-python-engine)
 (test-cockpit-register-project-type-alias 'python-pkg 'python-pip)
 (test-cockpit-register-project-type-alias 'python-tox 'python-pip)

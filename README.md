@@ -118,7 +118,6 @@ suit you best.
   Like `test-cockpit-test-or-projectile-test` but does not fallback to
   projectile.
 
-
 You can also use the following commands to run tests in a more manual way
 
 * `test-cockpit-test-project` to run the whole test suite.
@@ -129,6 +128,17 @@ You can also use the following commands to run tests in a more manual way
 If the current function at point or the current module cannot be determined,
 the last tested module resp. last tested function are tested.  If there are no
 last tests, an error message is thrown.
+
+
+## Dape support
+
+There are stubs to make use of the [Dape](https://github.com/svaante/dape/)
+package to call the recent test run in a Dape debugging session.  So far, only
+the python backend supports this feature.
+
+You can call this either using the transient UI or by the command
+`test-cockpit-dape-debug-repeat-test`.
+
 
 ## Status
 
@@ -141,7 +151,6 @@ out to work smoothly and to be quite useful.
 
 * Test discovery
 * Parsing test results to determine failed tests
-* dap-mode integration – launch lastly failed test in dap-mode
 * Generalizing it to a more comprehensive build-cockpit also doing simple
   builds and things like release uploads.
 
