@@ -476,19 +476,27 @@ in order to call the last test action with modified ARGS."
       (test-cockpit--launch-dape config)
     (user-error "No recent test-action has been performed or no Dape support for backend")))
 
+(defun test-cockpit-add-custom-action (project-type action)
+  "Add a custom ACTION to a test-cockpit of PROJECT-TYPE.
+
+  The PROJECT-TYPE must be a registered project type.  ACTION can
+  be either a function or a string.  A string is passed as is to
+  the `compile' function."
+  (let ((action-list (alist-get project-type test-cockpit--project-type-custom-actions))
+        (action (if (stringp (nth 2 action))
+                    (test-cockpit--make-compile-func action)
+                  action)))
+    (if action-list
+        (setcdr (assoc project-type test-cockpit--project-type-custom-actions)
+                (append action-list `(,action)))
+      (push `(,project-type . (,action))
+            test-cockpit--project-type-custom-actions))))
+
 (defun test-cockpit--make-compile-func (action)
   (let ((shortcut (pop action))
         (description (pop action))
         (command-line (pop action)))
     `(,shortcut ,description (lambda () (interactive) (compile ,command-line)))))
-
-(defun test-cockpit-add-custom-action (project-type action)
-  (let ((action-list (alist-get project-type test-cockpit--project-type-custom-actions)))
-    (if action-list
-        (setcdr (assoc project-type test-cockpit--project-type-custom-actions)
-                (append action-list `(,(test-cockpit--make-compile-func action))))
-      (push `(,project-type . (,(test-cockpit--make-compile-func action)))
-            test-cockpit--project-type-custom-actions))))
 
 (defun test-cockpit--custom-actions ()
   (when-let ((custom-actions (alist-get (projectile-project-type) test-cockpit--project-type-custom-actions)))

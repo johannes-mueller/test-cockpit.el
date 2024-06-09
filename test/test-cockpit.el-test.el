@@ -450,7 +450,7 @@
   (test-cockpit-add-custom-action
    'foo-project-type '("C" "some strange action" "some_strange_action --foo"))
   (test-cockpit-add-custom-action
-   'foo-project-type '("O" "another custom action" "another_custom_action --foo"))
+   'foo-project-type '("O" "another custom action" 'some-action-function))
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
                (test-cockpit--current-module-string () ((:output nil)))
                (test-cockpit--current-function-string () ((:output nil)))
@@ -462,7 +462,7 @@
                      ("c" "custom" test-cockpit-custom-test-command)]
                     ["Custom actions"
                      ("C" "some strange action" (lambda () (interactive) (compile "some_strange_action --foo")))
-                     ("O" "another custom action" (lambda () (interactive) (compile "another_custom_action --foo")))]]))))
+                     ("O" "another custom action" 'some-action-function)]]))))
 
 
 (ert-deftest test-main-suffix--current-module ()
