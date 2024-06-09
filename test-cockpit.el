@@ -80,6 +80,10 @@ Usually there is one such engine per project that has been
 visited during the current session.  An engine is an instance of
 a derived class of `test-cockpit--engine'.")
 
+
+(defvar test-cockpit--project-type-custom-actions '()
+  "Custom actions that can be registered on a project type level.")
+
 (defclass test-cockpit--engine ()
   ((last-command :initarg :last-command
                  :initform nil)
@@ -472,6 +476,24 @@ in order to call the last test action with modified ARGS."
       (test-cockpit--launch-dape config)
     (user-error "No recent test-action has been performed or no Dape support for backend")))
 
+(defun test-cockpit--make-compile-func (action)
+  (let ((shortcut (pop action))
+        (description (pop action))
+        (command-line (pop action)))
+    `(,shortcut ,description (lambda () (interactive) (compile ,command-line)))))
+
+(defun test-cockpit-add-custom-action (project-type action)
+  (let ((action-list (alist-get project-type test-cockpit--project-type-custom-actions)))
+    (if action-list
+        (setcdr (assoc project-type test-cockpit--project-type-custom-actions)
+                (append action-list `(,(test-cockpit--make-compile-func action))))
+      (push `(,project-type . (,(test-cockpit--make-compile-func action)))
+            test-cockpit--project-type-custom-actions))))
+
+(defun test-cockpit--custom-actions ()
+  (when-let ((custom-actions (alist-get (projectile-project-type) test-cockpit--project-type-custom-actions)))
+    (vconcat ["Custom actions"] (vconcat custom-actions))))
+
 (defun test-cockpit--launch-dape (config)
   "Launch the dape debug session and memorize that last test was a dape session."
   (dape config)
@@ -547,12 +569,13 @@ repetition."
   "Get the dape configuration for the last test."
   (test-cockpit--engine-dape-last-test-config (test-cockpit--retrieve-engine)))
 
+
 (transient-define-prefix test-cockpit-prefix ()
   "Test the project."
   :value 'test-cockpit--last-switches
   [])
 
-(defun test-cockpit--main-suffix ()
+(defun test-cockpit--test-action-suffix ()
   "Setup the main menu common for all projects for testing."
   (let ((module-string (or (test-cockpit--current-module-string) (test-cockpit--last-module-string)))
         (function-string (or (test-cockpit--current-function-string) (test-cockpit--last-function-string)))
@@ -573,6 +596,12 @@ repetition."
                                    ("c" "custom" test-cockpit-custom-test-command)
                                    ,(if last-cmd
                                         `("r" "repeat" test-cockpit--repeat-interactive-test))))))))
+
+(defun test-cockpit--main-suffix ()
+  "Setup the main menu common for all projects for testing and actions."
+  (if-let ((custom-actions-suffix (test-cockpit--custom-actions)))
+      `[,(test-cockpit--test-action-suffix) ,custom-actions-suffix]
+    (test-cockpit--test-action-suffix)))
 
 (defun test-cockpit--strip-project-root (path)
   "Strip the project root path from a given PATH."
