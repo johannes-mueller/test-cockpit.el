@@ -496,7 +496,7 @@ in order to call the last test action with modified ARGS."
   (let ((shortcut (pop action))
         (description (pop action))
         (command-line (pop action)))
-    `(,shortcut ,description (lambda () (interactive) (compile ,command-line)))))
+    `(,shortcut ,description (lambda () (interactive) (test-cockpit--run-test ,command-line)))))
 
 (defun test-cockpit--custom-actions ()
   (when-let ((custom-actions (alist-get (projectile-project-type) test-cockpit--project-type-custom-actions)))

@@ -442,7 +442,7 @@
                      ("p" "project" test-cockpit-test-project)
                      ("c" "custom" test-cockpit-custom-test-command)]
                     ["Custom actions"
-                     ("C" "some custom action" (lambda () (interactive) (compile "some_custom_action --foo")))]]))))
+                     ("C" "some custom action" (lambda () (interactive) (test-cockpit--run-test "some_custom_action --foo")))]]))))
 
 
 (ert-deftest test-main-suffix--two-custom-actions-added ()
@@ -461,7 +461,7 @@
                      ("p" "project" test-cockpit-test-project)
                      ("c" "custom" test-cockpit-custom-test-command)]
                     ["Custom actions"
-                     ("C" "some strange action" (lambda () (interactive) (compile "some_strange_action --foo")))
+                     ("C" "some strange action" (lambda () (interactive) (test-cockpit--run-test "some_strange_action --foo")))
                      ("O" "another custom action" 'some-action-function)]]))))
 
 
