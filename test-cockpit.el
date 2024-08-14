@@ -393,6 +393,19 @@ and thus can be repeated using `test-cockpit-repeat-test'."
   (oset (test-cockpit--retrieve-engine) last-custom-command compile-command)
   (oset (test-cockpit--retrieve-engine) last-command compile-command))
 
+
+(defun test-cockpit-dynamic-custom-test-command (command-template)
+  "Run `compile' command for a custom test command.
+The command run is determined by COMMAND-TEMPLATE where
+* %P is replaced with the absolute current procject root path
+* %F is replaced with the absolute current buffer file path
+* %f is replaced with the current buffer file path relative to project root"
+  (let* ((command (string-replace "%P" (projectile-project-root) command-template))
+         (command (string-replace "%F" (buffer-file-name) command))
+         (command (string-replace "%f" (substring (buffer-file-name) (length (projectile-project-root))) command)))
+    (test-cockpit--run-test command)))
+
+
 ;;;###autoload
 (defun test-cockpit-repeat-test (&optional _args)
   "Repeat the last test if the current project had last test.
