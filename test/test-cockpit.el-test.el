@@ -441,6 +441,15 @@
     (test-cockpit-dynamic-custom-test-command "command %P")
     (test-cockpit-repeat-test)))
 
+(ert-deftest test-custom-action-no-replace-project-root ()
+  (tc--register-foo-project "foo")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+               (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/path/to/project")))
+               (buffer-file-name () ((:output "/path/to/project/some/file.el")))
+               (compile (command) ((:input '("command %Project") :output 'success :occur 2))))
+    (test-cockpit-dynamic-custom-test-command "command %%Project")
+    (test-cockpit-repeat-test)))
+
 
 (ert-deftest test-custom-action-replace-absolute-file ()
   (tc--register-foo-project "foo")
@@ -449,6 +458,16 @@
                (buffer-file-name () ((:output "/path/to/project/some/file.el")))
                (compile (command) ((:input '("command /path/to/project/some/file.el") :output 'success :occur 2))))
     (test-cockpit-dynamic-custom-test-command "command %F")
+    (test-cockpit-repeat-test)))
+
+
+(ert-deftest test-custom-action-no-replace-absolute-file ()
+  (tc--register-foo-project "foo")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+               (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/path/to/project/")))
+               (buffer-file-name () ((:output "/path/to/project/some/file.el")))
+               (compile (command) ((:input '("command %Foo") :output 'success :occur 2))))
+    (test-cockpit-dynamic-custom-test-command "command %%Foo")
     (test-cockpit-repeat-test)))
 
 

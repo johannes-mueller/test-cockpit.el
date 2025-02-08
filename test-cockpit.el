@@ -393,18 +393,30 @@ and thus can be repeated using `test-cockpit-repeat-test'."
   (oset (test-cockpit--retrieve-engine) last-custom-command compile-command)
   (oset (test-cockpit--retrieve-engine) last-command compile-command))
 
+(defun test-cockpit--process-custom-command (command regex replacement)
+  "Replace REGEX in COMMAND with REPLACEMENT only if the first character of the match is not '%'"
+  (let ((replace-closure
+         (lambda (match)
+           (let ((marker (substring match 0 1))
+                 (old-text (substring match 1)))
+             (if (equal marker "%")
+                 old-text
+               (concat marker replacement))))))
+    (replace-regexp-in-string regex replace-closure command t)))
 
-(defun test-cockpit-dynamic-custom-test-command (command-template)
+;;;###autoload
+(defun test-cockpit-dynamic-custom-test-command (command)
   "Run `compile' command for a custom test command.
-The command run is determined by COMMAND-TEMPLATE where
+The command run is determined by COMMAND where
 * %P is replaced with the absolute current procject root path
 * %F is replaced with the absolute current buffer file path
 * %f is replaced with the current buffer file path relative to project root"
-  (let* ((command (string-replace "%P" (projectile-project-root) command-template))
-         (command (string-replace "%F" (buffer-file-name) command))
-         (command (string-replace "%f" (substring (buffer-file-name) (length (projectile-project-root))) command)))
+  (let* ((case-fold-search nil)
+         (relative-file-path (substring (buffer-file-name) (length (projectile-project-root))))
+         (command (test-cockpit--process-custom-command command "\\(.\\)%P" (projectile-project-root)))
+         (command (test-cockpit--process-custom-command command "\\(.\\)%F" (buffer-file-name)))
+         (command (test-cockpit--process-custom-command command "\\(.\\)%f" relative-file-path)))
     (test-cockpit--run-test command)))
-
 
 ;;;###autoload
 (defun test-cockpit-repeat-test (&optional _args)
