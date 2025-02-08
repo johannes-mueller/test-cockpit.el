@@ -124,7 +124,7 @@
       ((projectile-project-type () ((:output 'python-pip :occur 1)))
        (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
        (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
-       (compile (command) ((:input '("python setup.py build_ext --inplace && pytest --color=yes --last-failed --no-cov")
+       (compile (command) ((:input '("pip install -e . --no-deps && pytest --color=yes --last-failed --no-cov")
                                    :output 'success :occur 1))))
     (test-cockpit-test-project '("--last-failed" "build_ext"))))
 

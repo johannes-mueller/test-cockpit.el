@@ -16,7 +16,7 @@
 
 (require 'test-cockpit)
 
-(defvar test-cockpit-python-build-ext-command "python setup.py build_ext --inplace"
+(defvar test-cockpit-python-build-ext-command "pip install -e . --no-deps"
   "The command to build the python extensions.")
 
 (defclass test-cockpit-python-engine (test-cockpit--engine) ())
