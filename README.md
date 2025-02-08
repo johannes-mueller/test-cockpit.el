@@ -61,16 +61,7 @@ where `<langauge>` is the programming language you need:
 Language specific
 
 * rust
-  - `emacs-toml` not from MELPA but from my fork branch
-    [johmue-merges](https://github.com/johannes-mueller/emacs-toml/tree/johmue-merges),
-    see issues section.
-    Install it for example this way using [straight.el](https://github.com/raxod502/straight.el)
-``` elisp
-(straight-use-poackage '(toml :type git :host github :repo "gongo/emacs-toml"
-                              :fork (:host github
-                              :repo "johannes-mueller/emacs-toml"
-                              :branch "johmue-merges")))
-```
+  - `emacs-toml`
 
 
 ## Usage
