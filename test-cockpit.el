@@ -266,7 +266,12 @@ FUNC-STRING is the string determining the function to test."
 (defun test-cockpit--issue-compile-command (command)
   "Issue the compile COMMAND with current project root dir as working dir."
   (projectile-with-default-dir (projectile-acquire-root)
-    (compile command)))
+    (compile (test-cockpit--maybe-prepend-devcontainer-exec command))))
+
+(defun test-cockpit--maybe-prepend-devcontainer-exec (command)
+  (if (test-cockpit--has-devcontainer)
+      (concat "devcontainer exec --workspace-folder . " command)
+    command))
 
 (defun test-cockpit--command (func thing args)
   "Setup the compile command to be issued with `compile'.
@@ -711,6 +716,11 @@ with a space."
   (if (string-empty-p switches)
       ""
     (concat " " switches)))
+
+
+(defun test-cockpit--has-devcontainer ()
+  (file-exists-p (concat (projectile-project-root) ".devcontainer")))
+
 
 (defclass test-cockpit--transient-selection (transient-variable)
   ((scope :initarg :scope))
