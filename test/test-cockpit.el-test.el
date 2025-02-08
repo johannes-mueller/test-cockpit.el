@@ -24,6 +24,8 @@
 
 (defun tc--register-foo-project (test-string)
   (setq test-cockpit--project-engines nil)
+  (setq test-cockpit--project-type-custom-actions
+        (assoc-delete-all 'foo-project-type test-cockpit--project-type-custom-actions))
   (test-cockpit-register-project-type 'foo-project-type 'test-cockpit--foo-engine)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type :min-occur 0)))
                (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project" :min-occur 0))))
@@ -413,6 +415,72 @@
     (test-cockpit-repeat-test)))
 
 
+(ert-deftest test-custom-action-simple ()
+  (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/path/to/project")))
+               (buffer-file-name () ((:output "/path/to/project/some/file.el")))
+               (compile (command) ((:input '("custom test command") :output 'success))))
+    (test-cockpit-dynamic-custom-test-command "custom test command")))
+
+
+(ert-deftest test-custom-action-repeat ()
+  (tc--register-foo-project "foo")
+  (mocker-let (;(projectile-project-type () ((:output 'foo-project-type)))
+               (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+               (buffer-file-name () ((:output "/path/to/project/some/file.el")))
+               (compile (command) ((:input '("other custom test action") :output 'success :occur 2))))
+    (test-cockpit-dynamic-custom-test-command "other custom test action")
+    (test-cockpit-repeat-test)))
+
+
+(ert-deftest test-custom-action-replace-project-root ()
+  (tc--register-foo-project "foo")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+               (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/path/to/project")))
+               (buffer-file-name () ((:output "/path/to/project/some/file.el")))
+               (compile (command) ((:input '("command /path/to/project") :output 'success :occur 2))))
+    (test-cockpit-dynamic-custom-test-command "command %P")
+    (test-cockpit-repeat-test)))
+
+(ert-deftest test-custom-action-no-replace-project-root ()
+  (tc--register-foo-project "foo")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+               (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/path/to/project")))
+               (buffer-file-name () ((:output "/path/to/project/some/file.el")))
+               (compile (command) ((:input '("command %Project") :output 'success :occur 2))))
+    (test-cockpit-dynamic-custom-test-command "command %%Project")
+    (test-cockpit-repeat-test)))
+
+
+(ert-deftest test-custom-action-replace-absolute-file ()
+  (tc--register-foo-project "foo")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+               (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/path/to/project/")))
+               (buffer-file-name () ((:output "/path/to/project/some/file.el")))
+               (compile (command) ((:input '("command /path/to/project/some/file.el") :output 'success :occur 2))))
+    (test-cockpit-dynamic-custom-test-command "command %F")
+    (test-cockpit-repeat-test)))
+
+
+(ert-deftest test-custom-action-no-replace-absolute-file ()
+  (tc--register-foo-project "foo")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+               (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/path/to/project/")))
+               (buffer-file-name () ((:output "/path/to/project/some/file.el")))
+               (compile (command) ((:input '("command %Foo") :output 'success :occur 2))))
+    (test-cockpit-dynamic-custom-test-command "command %%Foo")
+    (test-cockpit-repeat-test)))
+
+
+(ert-deftest test-custom-action-replace-relative-file ()
+  (tc--register-foo-project "foo")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+               (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "/path/to/project/")))
+               (buffer-file-name () ((:output "/path/to/project/some/file.el")))
+               (compile (command) ((:input '("command some/file.el") :output 'success :occur 2))))
+    (test-cockpit-dynamic-custom-test-command "command %f")
+    (test-cockpit-repeat-test)))
+
+
 (ert-deftest test-main-suffix--all-nil ()
   (tc--register-foo-project "foo")
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
@@ -424,6 +492,60 @@
                    ["Run tests"
                     ("p" "project" test-cockpit-test-project)
                     ("c" "custom" test-cockpit-custom-test-command)]))))
+
+
+(ert-deftest test-main-suffix--one-custom-actions-added ()
+  (tc--register-foo-project "foo")
+  (test-cockpit-add-custom-action
+   'foo-project-type "C" "some custom action" "some_custom_action --foo")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+               (test-cockpit--current-module-string () ((:output nil)))
+               (test-cockpit--current-function-string () ((:output nil)))
+               (test-cockpit--last-module-string () ((:output nil)))
+               (test-cockpit--last-function-string () ((:output nil))))
+    (should (equal (test-cockpit--main-suffix)
+                   [["Run tests"
+                     ("p" "project" test-cockpit-test-project)
+                     ("c" "custom" test-cockpit-custom-test-command)]
+                    ["Custom actions"
+                     ("C" "some custom action" (lambda () (interactive) (test-cockpit--run-test "some_custom_action --foo")))]]))))
+
+
+(ert-deftest test-main-suffix--two-custom-actions-added ()
+  (tc--register-foo-project "foo")
+  (test-cockpit-add-custom-action
+   'foo-project-type "C" "some strange action" "some_strange_action --foo")
+  (test-cockpit-add-custom-action
+   'foo-project-type "O" "another custom action" #'some-action-function)
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+               (test-cockpit--current-module-string () ((:output nil)))
+               (test-cockpit--current-function-string () ((:output nil)))
+               (test-cockpit--last-module-string () ((:output nil)))
+               (test-cockpit--last-function-string () ((:output nil))))
+    (should (equal (test-cockpit--main-suffix)
+                   [["Run tests"
+                     ("p" "project" test-cockpit-test-project)
+                     ("c" "custom" test-cockpit-custom-test-command)]
+                    ["Custom actions"
+                     ("C" "some strange action" (lambda () (interactive) (test-cockpit--run-test "some_strange_action --foo")))
+                     ("O" "another custom action" some-action-function)]]))))
+
+
+(ert-deftest test-main-suffix--dynamic-custom-actions-added ()
+  (tc--register-foo-project "foo")
+  (test-cockpit-add-dynamic-custom-action
+   'foo-project-type "C" "some custom action" "some_custom_action %f --foo")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+               (test-cockpit--current-module-string () ((:output nil)))
+               (test-cockpit--current-function-string () ((:output nil)))
+               (test-cockpit--last-module-string () ((:output nil)))
+               (test-cockpit--last-function-string () ((:output nil))))
+    (should (equal (test-cockpit--main-suffix)
+                   [["Run tests"
+                     ("p" "project" test-cockpit-test-project)
+                     ("c" "custom" test-cockpit-custom-test-command)]
+                    ["Custom actions"
+                     ("C" "some custom action" (lambda () (interactive) (test-cockpit-dynamic-custom-test-command "some_custom_action %f --foo")))]]))))
 
 
 (ert-deftest test-main-suffix--current-module ()
@@ -738,6 +860,7 @@
                (lambda (_cmd)
                 (should (equal default-directory "foo-project")))))
       (test-cockpit-custom-test-command))))
+
 
 (ert-deftest test-set-infix ()
   (tc--register-foo-project "foo")

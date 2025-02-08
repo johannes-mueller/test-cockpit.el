@@ -40,7 +40,7 @@
 (cl-defmethod test-cockpit--engine-current-function-string ((_obj test-cockpit-cask-engine))
   "Implement test-cockpit--engine-current-function-string."
   (when-let ((fn (buffer-file-name)))
-    (when (string-suffix-p ".el-test.el" fn)
+    (when (string-suffix-p "test.el" fn)
       (which-function))))
 
 

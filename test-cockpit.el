@@ -80,6 +80,10 @@ Usually there is one such engine per project that has been
 visited during the current session.  An engine is an instance of
 a derived class of `test-cockpit--engine'.")
 
+
+(defvar test-cockpit--project-type-custom-actions '()
+  "Custom actions that can be registered on a project type level.")
+
 (defclass test-cockpit--engine ()
   ((last-command :initarg :last-command
                  :initform nil)
@@ -389,6 +393,31 @@ and thus can be repeated using `test-cockpit-repeat-test'."
   (oset (test-cockpit--retrieve-engine) last-custom-command compile-command)
   (oset (test-cockpit--retrieve-engine) last-command compile-command))
 
+(defun test-cockpit--process-custom-command (command regex replacement)
+  "Replace REGEX in COMMAND with REPLACEMENT only if the first character of the match is not '%'"
+  (let ((replace-closure
+         (lambda (match)
+           (let ((marker (substring match 0 1))
+                 (old-text (substring match 1)))
+             (if (equal marker "%")
+                 old-text
+               (concat marker replacement))))))
+    (replace-regexp-in-string regex replace-closure command t)))
+
+;;;###autoload
+(defun test-cockpit-dynamic-custom-test-command (command)
+  "Run `compile' command for a custom test command.
+The command run is determined by COMMAND where
+* %P is replaced with the absolute current procject root path
+* %F is replaced with the absolute current buffer file path
+* %f is replaced with the current buffer file path relative to project root"
+  (let* ((case-fold-search nil)
+         (relative-file-path (substring (buffer-file-name) (length (projectile-project-root))))
+         (command (test-cockpit--process-custom-command command "\\(.\\)%P" (projectile-project-root)))
+         (command (test-cockpit--process-custom-command command "\\(.\\)%F" (buffer-file-name)))
+         (command (test-cockpit--process-custom-command command "\\(.\\)%f" relative-file-path)))
+    (test-cockpit--run-test command)))
+
 ;;;###autoload
 (defun test-cockpit-repeat-test (&optional _args)
   "Repeat the last test if the current project had last test.
@@ -472,8 +501,51 @@ in order to call the last test action with modified ARGS."
       (test-cockpit--launch-dape config)
     (user-error "No recent test-action has been performed or no Dape support for backend")))
 
+ (defun test-cockpit-add-custom-action (project-type shortcut description action)
+  "Add a custom ACTION to a test-cockpit of PROJECT-TYPE.
+
+The PROJECT-TYPE must be a registered project type.  ACTION can be either a function
+or a string.  A string is passed as is to the `compile' function.
+
+SHORTCUT is the transient shortcut and DESCRIPTION is the transient description for
+the action."
+  (let ((action (if (stringp action)
+                    `(lambda () (interactive) (test-cockpit--run-test ,action))
+                  action)))
+    (test-cockpit--add-custom-action-function project-type shortcut description action)))
+
+(defun test-cockpit-add-dynamic-custom-action (project-type shortcut description command-template)
+  "Add a dynamic custom ACTION to a test-cockpit of PROJECT-TYPE.
+
+The PROJECT-TYPE must be a registered project type.  COMMAND-TEMPLATE is a
+string that is used to determine the compile command
+* %P is replaced with the absolute current procject root path
+* %F is replaced with the absolute current buffer file path
+* %f is replaced with the current buffer file path relative to project root
+
+SHORTCUT is the transient shortcut and DESCRIPTION is the transient
+description for the action."
+  (test-cockpit--add-custom-action-function project-type shortcut description
+   `(lambda () (interactive) (test-cockpit-dynamic-custom-test-command ,command-template))))
+
+(defun test-cockpit--add-custom-action-function (project-type shortcut description action)
+  "Register a custom action consisting of SHORTCUT, DESCRIPTION and ACTION to PROJECT-TYPE."
+  (let ((action-list (alist-get project-type test-cockpit--project-type-custom-actions))
+        (action-set `(,shortcut ,description ,action)))
+    (if action-list
+        (setcdr (assoc project-type test-cockpit--project-type-custom-actions)
+                (append action-list `(,action-set)))
+      (push `(,project-type . (,action-set))
+            test-cockpit--project-type-custom-actions))))
+
+(defun test-cockpit--custom-actions ()
+  "Make the transient suffix for the custom actions."
+  (when-let ((custom-actions
+              (alist-get (projectile-project-type) test-cockpit--project-type-custom-actions)))
+    (vconcat ["Custom actions"] (vconcat custom-actions))))
+
 (defun test-cockpit--launch-dape (config)
-  "Launch the dape debug session and memorize that last test was a dape session."
+  "Launch the dape debug session with CONFIG and memorize that last test was a dape session."
   (dape config)
   (oset (test-cockpit--retrieve-engine) last-command 'test-cockpit--last-command-was-dape))
 
@@ -547,12 +619,13 @@ repetition."
   "Get the dape configuration for the last test."
   (test-cockpit--engine-dape-last-test-config (test-cockpit--retrieve-engine)))
 
+
 (transient-define-prefix test-cockpit-prefix ()
   "Test the project."
   :value 'test-cockpit--last-switches
   [])
 
-(defun test-cockpit--main-suffix ()
+(defun test-cockpit--test-action-suffix ()
   "Setup the main menu common for all projects for testing."
   (let ((module-string (or (test-cockpit--current-module-string) (test-cockpit--last-module-string)))
         (function-string (or (test-cockpit--current-function-string) (test-cockpit--last-function-string)))
@@ -573,6 +646,12 @@ repetition."
                                    ("c" "custom" test-cockpit-custom-test-command)
                                    ,(if last-cmd
                                         `("r" "repeat" test-cockpit--repeat-interactive-test))))))))
+
+(defun test-cockpit--main-suffix ()
+  "Setup the main menu common for all projects for testing and actions."
+  (if-let ((custom-actions-suffix (test-cockpit--custom-actions)))
+      `[,(test-cockpit--test-action-suffix) ,custom-actions-suffix]
+    (test-cockpit--test-action-suffix)))
 
 (defun test-cockpit--strip-project-root (path)
   "Strip the project root path from a given PATH."
