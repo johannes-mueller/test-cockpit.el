@@ -130,6 +130,13 @@ the last tested module resp. last tested function are tested.  If there are no
 last tests, an error message is thrown.
 
 
+### Custom test or build actions
+
+There are two functions `test-cockpit-add-custom-action` and
+`test-cockpit-add-dynamic-custom-action` that allow you to register custom
+actions for a project type.
+
+
 ## Dape support
 
 There are stubs to make use of the [Dape](https://github.com/svaante/dape/)

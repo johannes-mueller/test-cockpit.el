@@ -501,34 +501,51 @@ in order to call the last test action with modified ARGS."
       (test-cockpit--launch-dape config)
     (user-error "No recent test-action has been performed or no Dape support for backend")))
 
-(defun test-cockpit-add-custom-action (project-type action)
+ (defun test-cockpit-add-custom-action (project-type shortcut description action)
   "Add a custom ACTION to a test-cockpit of PROJECT-TYPE.
 
-  The PROJECT-TYPE must be a registered project type.  ACTION can
-  be either a function or a string.  A string is passed as is to
-  the `compile' function."
-  (let ((action-list (alist-get project-type test-cockpit--project-type-custom-actions))
-        (action (if (stringp (nth 2 action))
-                    (test-cockpit--make-compile-func action)
+The PROJECT-TYPE must be a registered project type.  ACTION can be either a function
+or a string.  A string is passed as is to the `compile' function.
+
+SHORTCUT is the transient shortcut and DESCRIPTION is the transient description for
+the action."
+  (let ((action (if (stringp action)
+                    `(lambda () (interactive) (test-cockpit--run-test ,action))
                   action)))
+    (test-cockpit--add-custom-action-function project-type shortcut description action)))
+
+(defun test-cockpit-add-dynamic-custom-action (project-type shortcut description command-template)
+  "Add a dynamic custom ACTION to a test-cockpit of PROJECT-TYPE.
+
+The PROJECT-TYPE must be a registered project type.  COMMAND-TEMPLATE is a
+string that is used to determine the compile command
+* %P is replaced with the absolute current procject root path
+* %F is replaced with the absolute current buffer file path
+* %f is replaced with the current buffer file path relative to project root
+
+SHORTCUT is the transient shortcut and DESCRIPTION is the transient
+description for the action."
+  (test-cockpit--add-custom-action-function project-type shortcut description
+   `(lambda () (interactive) (test-cockpit-dynamic-custom-test-command ,command-template))))
+
+(defun test-cockpit--add-custom-action-function (project-type shortcut description action)
+  "Register a custom action consisting of SHORTCUT, DESCRIPTION and ACTION to PROJECT-TYPE."
+  (let ((action-list (alist-get project-type test-cockpit--project-type-custom-actions))
+        (action-set `(,shortcut ,description ,action)))
     (if action-list
         (setcdr (assoc project-type test-cockpit--project-type-custom-actions)
-                (append action-list `(,action)))
-      (push `(,project-type . (,action))
+                (append action-list `(,action-set)))
+      (push `(,project-type . (,action-set))
             test-cockpit--project-type-custom-actions))))
 
-(defun test-cockpit--make-compile-func (action)
-  (let ((shortcut (pop action))
-        (description (pop action))
-        (command-line (pop action)))
-    `(,shortcut ,description (lambda () (interactive) (test-cockpit--run-test ,command-line)))))
-
 (defun test-cockpit--custom-actions ()
-  (when-let ((custom-actions (alist-get (projectile-project-type) test-cockpit--project-type-custom-actions)))
+  "Make the transient suffix for the custom actions."
+  (when-let ((custom-actions
+              (alist-get (projectile-project-type) test-cockpit--project-type-custom-actions)))
     (vconcat ["Custom actions"] (vconcat custom-actions))))
 
 (defun test-cockpit--launch-dape (config)
-  "Launch the dape debug session and memorize that last test was a dape session."
+  "Launch the dape debug session with CONFIG and memorize that last test was a dape session."
   (dape config)
   (oset (test-cockpit--retrieve-engine) last-command 'test-cockpit--last-command-was-dape))
 

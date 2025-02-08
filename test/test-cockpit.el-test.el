@@ -497,7 +497,7 @@
 (ert-deftest test-main-suffix--one-custom-actions-added ()
   (tc--register-foo-project "foo")
   (test-cockpit-add-custom-action
-   'foo-project-type '("C" "some custom action" "some_custom_action --foo"))
+   'foo-project-type "C" "some custom action" "some_custom_action --foo")
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
                (test-cockpit--current-module-string () ((:output nil)))
                (test-cockpit--current-function-string () ((:output nil)))
@@ -514,9 +514,9 @@
 (ert-deftest test-main-suffix--two-custom-actions-added ()
   (tc--register-foo-project "foo")
   (test-cockpit-add-custom-action
-   'foo-project-type '("C" "some strange action" "some_strange_action --foo"))
+   'foo-project-type "C" "some strange action" "some_strange_action --foo")
   (test-cockpit-add-custom-action
-   'foo-project-type '("O" "another custom action" 'some-action-function))
+   'foo-project-type "O" "another custom action" #'some-action-function)
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
                (test-cockpit--current-module-string () ((:output nil)))
                (test-cockpit--current-function-string () ((:output nil)))
@@ -528,7 +528,24 @@
                      ("c" "custom" test-cockpit-custom-test-command)]
                     ["Custom actions"
                      ("C" "some strange action" (lambda () (interactive) (test-cockpit--run-test "some_strange_action --foo")))
-                     ("O" "another custom action" 'some-action-function)]]))))
+                     ("O" "another custom action" some-action-function)]]))))
+
+
+(ert-deftest test-main-suffix--dynamic-custom-actions-added ()
+  (tc--register-foo-project "foo")
+  (test-cockpit-add-dynamic-custom-action
+   'foo-project-type "C" "some custom action" "some_custom_action %f --foo")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+               (test-cockpit--current-module-string () ((:output nil)))
+               (test-cockpit--current-function-string () ((:output nil)))
+               (test-cockpit--last-module-string () ((:output nil)))
+               (test-cockpit--last-function-string () ((:output nil))))
+    (should (equal (test-cockpit--main-suffix)
+                   [["Run tests"
+                     ("p" "project" test-cockpit-test-project)
+                     ("c" "custom" test-cockpit-custom-test-command)]
+                    ["Custom actions"
+                     ("C" "some custom action" (lambda () (interactive) (test-cockpit-dynamic-custom-test-command "some_custom_action %f --foo")))]]))))
 
 
 (ert-deftest test-main-suffix--current-module ()
