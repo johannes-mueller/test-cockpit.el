@@ -275,31 +275,6 @@
   (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project"))))
     (should (eq (test-cockpit--last-interactive-test-command) nil))))
 
-
-(ert-deftest test-transient-repeat-command-last-cmd-project ()
-  (tc--register-foo-project "foo")
-  (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-               (compile (command) ((:input '("test project") :output 'success))))
-    (test-cockpit-test-project)
-    (should (equal (test-cockpit--last-interactive-test-command) 'test-cockpit-test-project))))
-
-
-(ert-deftest test-transient-repeat-command-last-cmd-module ()
-  (tc--register-foo-project "foo")
-  (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-               (compile (command) ((:input '("test module foo-module-string") :output 'success))))
-    (test-cockpit-test-module)
-    (should (equal (test-cockpit--last-interactive-test-command) 'test-cockpit-test-module))))
-
-
-(ert-deftest test-transient-repeat-command-last-cmd-function ()
-  (tc--register-foo-project "foo")
-  (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
-               (compile (command) ((:input '("test function foo-function-string") :output 'success))))
-    (test-cockpit-test-function)
-    (should (equal (test-cockpit--last-interactive-test-command) 'test-cockpit-test-function))))
-
-
 (ert-deftest test-repeat-test-foo-engine ()
   (tc--register-foo-project "foo")
   (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
@@ -836,22 +811,24 @@
   (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
                (compile (command) ((:input '("test module foo-module-string foo bar") :output 'success :occur 1)
                                    (:input '("test module foo-module-string other args") :output 'success :occur 1)
-                                   (:input '("test module foo-module-string even other args") :output 'success :occur 1))))
+                                   (:input '("test module foo-module-string even other args") :output 'success :occur 1)))
+               (test-cockpit--current-module-string () ((:output "foo-module-string" :max-occur 2))))
     (test-cockpit-test-module '("foo" "bar"))
     (test-cockpit--repeat-interactive-test '("other" "args"))
-    (test-cockpit--repeat-interactive-test '("even" "other" "args"))
-    ))
+    (test-cockpit--repeat-interactive-test '("even" "other" "args"))))
 
 (ert-deftest test-interactive-repeat-test-function ()
   (tc--register-foo-project "foo")
   (mocker-let ((projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
                (compile (command) ((:input '("test function foo-function-string foo bar") :output 'success :occur 1)
                                    (:input '("test function foo-function-string other args") :output 'success :occur 1)
-                                   (:input '("test function foo-function-string even other args") :output 'success :occur 1))))
+                                   (:input '("test function foo-function-string even other args") :output 'success :occur 1)))
+               (test-cockpit--current-function-string () ((:input nil :output "foo-function-string" :occur 2)))
+               )
     (test-cockpit-test-function '("foo" "bar"))
     (test-cockpit--repeat-interactive-test '("other" "args"))
-    (test-cockpit--repeat-interactive-test '("even" "other" "args"))
-    ))
+    (test-cockpit--repeat-interactive-test '("even" "other" "args"))))
+
 
 (ert-deftest test-custom-test-command-default-directory ()
   (tc--register-foo-project "foo")

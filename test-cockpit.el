@@ -300,13 +300,18 @@ is tested."
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((module-string (or (test-cockpit--current-module-string)
                               (test-cockpit--last-module-string))))
-      (progn (test-cockpit--run-test
-              (test-cockpit--command 'test-cockpit--make-test-module-command
-                                     module-string
-                                     args))
-             (test-cockpit--update-last-interactive-command 'test-cockpit-test-module)
+      (progn (test-cockpit--run-specific-module-test module-string args)
+             (test-cockpit--update-last-interactive-command
+              (lambda (args) (test-cockpit--run-specific-module-test module-string args)))
              (test-cockpit--update-last-commands args))
     (message "Not in a unit test module file")))
+
+(defun test-cockpit--run-specific-module-test (module-string args)
+  "Run a specific test module specified by MODULE-STRING with ARGS."
+  (test-cockpit--run-test
+   (test-cockpit--command 'test-cockpit--make-test-module-command
+                          module-string
+                          args)))
 
 ;;;###autoload
 (defun test-cockpit-test-function (&optional args)
@@ -321,13 +326,19 @@ were in is tested."
    (list (transient-args 'test-cockpit-prefix)))
   (if-let ((function-string (or (test-cockpit--current-function-string)
                                 (test-cockpit--last-function-string))))
-      (progn (test-cockpit--run-test
-              (test-cockpit--command 'test-cockpit--make-test-function-command
-                                     function-string
-                                     args))
-             (test-cockpit--update-last-interactive-command 'test-cockpit-test-function)
+      (progn (test-cockpit--run-specific-function-test function-string args)
+             (test-cockpit--update-last-interactive-command
+              (lambda (args) (test-cockpit--run-specific-function-test function-string args)))
              (test-cockpit--update-last-commands args))
     (message "Not in a unit test module file")))
+
+
+(defun test-cockpit--run-specific-function-test (function-string args)
+  "Run a specific test function specified by FUNCTION-STRING with ARGS."
+  (test-cockpit--run-test
+   (test-cockpit--command 'test-cockpit--make-test-function-command
+                          function-string
+                          args)))
 
 ;;;###autoload
 (defun test-cockpit-repeat-module ()
