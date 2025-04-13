@@ -278,7 +278,7 @@ arguments."
     command))
 
 ;;;###autoload
-(defun test-cockpit-test-project (&optional args)
+(defun test-cockpit-test-project (&optional args _repeat-last)
   "Test the whole project.
 ARGS is the UI state for language specific settings."
   (interactive
@@ -289,56 +289,57 @@ ARGS is the UI state for language specific settings."
   (test-cockpit--update-last-commands args))
 
 ;;;###autoload
-(defun test-cockpit-test-module (&optional args)
+(defun test-cockpit-test-module (&optional args repeat-last)
   "Test the module of the current buffer.
 The exact determination of the model is done by the language specific package.
 ARGS is the UI state for language specific settings.
 
 If we are not in a test module buffer, the last module we were in
-is tested."
+is tested.
+
+If REPEAT-LAST is non nil, the module of the last test is repeated,
+rather than the one, the cursor is now in."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if-let ((module-string (or (test-cockpit--current-module-string)
+  (if-let ((module-string (or (and (not repeat-last)
+                                   (test-cockpit--current-module-string))
                               (test-cockpit--last-module-string))))
-      (progn (test-cockpit--run-specific-module-test module-string args)
-             (test-cockpit--update-last-interactive-command
-              (lambda (args) (test-cockpit--run-specific-module-test module-string args)))
-             (test-cockpit--update-last-commands args))
+      (let ((engine (test-cockpit--retrieve-engine)))
+        (test-cockpit--run-test
+         (test-cockpit--command 'test-cockpit--make-test-module-command
+                                module-string
+                                args))
+        (oset engine last-interactive-cmd 'test-cockpit-test-module)
+        (test-cockpit--update-last-commands args)
+        (oset engine last-module-string module-string))
     (message "Not in a unit test module file")))
 
-(defun test-cockpit--run-specific-module-test (module-string args)
-  "Run a specific test module specified by MODULE-STRING with ARGS."
-  (test-cockpit--run-test
-   (test-cockpit--command 'test-cockpit--make-test-module-command
-                          module-string
-                          args)))
-
 ;;;###autoload
-(defun test-cockpit-test-function (&optional args)
+(defun test-cockpit-test-function (&optional args repeat-last)
   "Run the test function at point.
 The exact determination of the function is done by the language
 specific package.  ARGS is the UI state for language specific
 settings.
 
 If we are not in a test function, the last module test function we
-were in is tested."
+were in is tested.
+
+If REPEAT-LAST is non nil, the function of the last test is repeated,
+rather than the one, the cursor is now in."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if-let ((function-string (or (test-cockpit--current-function-string)
+  (if-let ((function-string (or (and (not repeat-last)
+                                     (test-cockpit--current-function-string))
                                 (test-cockpit--last-function-string))))
-      (progn (test-cockpit--run-specific-function-test function-string args)
-             (test-cockpit--update-last-interactive-command
-              (lambda (args) (test-cockpit--run-specific-function-test function-string args)))
-             (test-cockpit--update-last-commands args))
+      (let ((engine (test-cockpit--retrieve-engine)))
+        (test-cockpit--run-test
+         (test-cockpit--command 'test-cockpit--make-test-function-command
+                                function-string
+                                args))
+        (oset engine last-interactive-cmd 'test-cockpit-test-function)
+        (test-cockpit--update-last-commands args)
+        (oset engine last-function-string function-string))
     (message "Not in a unit test module file")))
-
-
-(defun test-cockpit--run-specific-function-test (function-string args)
-  "Run a specific test function specified by FUNCTION-STRING with ARGS."
-  (test-cockpit--run-test
-   (test-cockpit--command 'test-cockpit--make-test-function-command
-                          function-string
-                          args)))
 
 ;;;###autoload
 (defun test-cockpit-repeat-module ()
@@ -501,7 +502,7 @@ in order to call the last test action with modified ARGS."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
   (when-let ((last-cmd (test-cockpit--last-interactive-test-command)))
-    (funcall last-cmd args)))
+    (funcall last-cmd args 'repeat-last)))
 
 ;;;###autoload
 (defun test-cockpit-dape-debug-repeat-test ()
