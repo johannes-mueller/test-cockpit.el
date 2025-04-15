@@ -725,7 +725,8 @@ with a space."
     (concat " " switches)))
 
 (defclass test-cockpit--transient-selection (transient-variable)
-  ((scope :initarg :scope))
+  ((scope :initarg :scope)
+   (require-match :initarg :require-match :initform nil))
   "A `transient-variable' to select from a list of mutually non exclusive items.")
 
 (cl-defmethod transient-init-value ((obj test-cockpit--transient-selection))
@@ -736,8 +737,9 @@ with a space."
 (cl-defmethod transient-infix-read ((obj test-cockpit--transient-selection))
   "Implement function `transient-infix-read' for OBJ."
   (let ((prompt (oref obj prompt))
-        (choices (oref obj choices)))
-    (completing-read prompt (funcall choices))))
+        (choices (oref obj choices))
+        (require-match (oref obj require-match)))
+    (completing-read prompt (funcall choices) nil require-match)))
 
 (cl-defmethod transient-infix-set ((obj test-cockpit--transient-selection) item)
   "Implement function `transient-infix-set'.

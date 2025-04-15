@@ -6,6 +6,7 @@
 (depends-on "transient")
 (depends-on "projectile")
 (depends-on "toml")
+(depends-on "tomlparse" :git "https://github.com/johannes-mueller/tomlparse.el" :branch "main")
 
 (development
  (depends-on "mocker")

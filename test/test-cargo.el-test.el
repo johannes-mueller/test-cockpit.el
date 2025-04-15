@@ -27,8 +27,7 @@
   (let ((test-cockpit-cargo--enabled-features '("bar")))
     (should (equal (test-cockpit-cargo--features-switch) "--features bar")))
   (let ((test-cockpit-cargo--enabled-features '("bar" "foo")))
-    (should (equal (test-cockpit-cargo--features-switch) "--features bar foo")))
-  )
+    (should (equal (test-cockpit-cargo--features-switch) "--features bar foo"))))
 
 (ert-deftest test-cargo-current-module-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
@@ -228,12 +227,12 @@ mod bar {
 (ert-deftest test-cargo-read-crate-features ()
   (mocker-let
       ((projectile-project-root () ((:output "/home/user/src/project/foo/")))
-       (toml:read-from-file (file) ((:input
-                                     '("/home/user/src/project/foo/Cargo.toml")
-                                     :output
-                                     '(("package" ("version" . "3.1.4") ("name" . "foo-rs"))
-                                       ("features" ("bar") ("foo"))
-                                       ("dependencies" ("somedep") ("0.1.2")))))))
+       (tomlparse-file (file &rest args) ((:input
+                                           '("/home/user/src/project/foo/Cargo.toml" :object-type alist)
+                                           :output
+                                           '(("package" ("version" . "3.1.4") ("name" . "foo-rs"))
+                                             ("features" ("bar") ("foo"))
+                                             ("dependencies" ("somedep") ("0.1.2")))))))
     (should (equal (test-cockpit-cargo--read-crate-features) '("bar" "foo")))))
 
 (ert-deftest test-cargo-infix ()

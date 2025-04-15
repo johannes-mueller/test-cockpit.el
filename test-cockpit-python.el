@@ -143,7 +143,7 @@
 
 (transient-define-argument test-cockpit-python--marker-switch ()
   :description "Add marker switch "
-  :class 'transient-option
+  :class 'test-cockpit--transient-selection
   :key "-m"
   :argument "-m")
 
@@ -228,6 +228,19 @@
     (concat (test-cockpit--strip-project-root file-name)
             (when-let ((test-function (test-cockpit-python--find-current-test)))
               (concat "::" test-function)))))
+
+(defun test-cockpit-python--pytest-markers ()
+  (when-let* ((pyproject-file (concat (file-name-as-directory (projectile-project-root)) "pyproject.toml"))
+              (_ (file-exists-p pyproject-file))
+              (pyproject-data (tomlparse-file pyproject-file))
+              (tool (gethash "tool" pyproject-data))
+              (pytest (gethash "pytest" tool))
+              (ini-options (gethash "ini_options" pytest))
+              (markers (gethash "markers" ini-options)))
+    (mapcar (lambda (marker-string)
+              (let ((marker (split-string marker-string ":[ \t]*")))
+                `(,(car marker) . ,(cadr marker))))
+            markers)))
 
 (provide 'test-cockpit-python)
 

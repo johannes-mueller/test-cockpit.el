@@ -1,4 +1,5 @@
 (require 'mocker)
+(require 'test-cockpit)
 
 (ert-deftest test-selection-variable-init-nil ()
   (let ((foo-variable nil))
@@ -20,7 +21,7 @@
 
 (defun dummy-choices () '("foo" "bar" "baz"))
 
-(ert-deftest test-selection-variable-read ()
+(ert-deftest test-selection-variable-read-no-match-required ()
   (let ((foo-variable nil))
     (transient-define-infix foo-infix ()
      :class 'test-cockpit--transient-selection
@@ -30,8 +31,23 @@
     (let ((obj (plist-get (symbol-plist 'foo-infix) 'transient--suffix)))
       (mocker-let
           ((transient--show () ((:output nil)))
-           (completing-read (prompt choices)
-                            ((:input '("choicename: " ("foo" "bar" "baz")) :output "bar"))))
+           (completing-read (prompt choices pred require-match)
+                            ((:input '("choicename: " ("foo" "bar" "baz") nil nil) :output "bar"))))
+        (should (equal (transient-infix-read obj) "bar"))))))
+
+(ert-deftest test-selection-variable-read-match-required ()
+  (let ((foo-variable nil))
+    (transient-define-infix foo-infix ()
+      :class 'test-cockpit--transient-selection
+      :prompt "choicename: "
+      :choices 'dummy-choices
+      :require-match t
+      :variable 'foo-variable)
+    (let ((obj (plist-get (symbol-plist 'foo-infix) 'transient--suffix)))
+      (mocker-let
+          ((transient--show () ((:output nil)))
+           (completing-read (prompt choices pred require-match)
+                            ((:input '("choicename: " ("foo" "bar" "baz") nil t) :output "bar"))))
         (should (equal (transient-infix-read obj) "bar"))))))
 
 (ert-deftest test-selection-variable-set ()

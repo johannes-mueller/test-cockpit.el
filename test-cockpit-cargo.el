@@ -5,6 +5,7 @@
 ;; Version: 0.1.0
 ;; License: GPLv3
 ;; SPDX-License-Identifier: GPL-3.0-only
+;; Package-Requires: ((emacs "29.1") ((test-cockpit "0.1.0")))
 
 ;;; Commentary:
 
@@ -15,7 +16,7 @@
 ;;; Code:
 
 (require 'test-cockpit)
-(require 'toml)
+(require 'tomlparse)
 
 (defclass test-cockpit-cargo-engine (test-cockpit--engine) ())
 
@@ -187,14 +188,11 @@
 (defun test-cockpit-cargo--read-crate-features ()
   "Read the features available in the current crate."
   (let ((cargo-toml-data (test-cockpit-cargo--crate-data)))
-    (seq-map (lambda (key-val) (car key-val))
-             (cdr (seq-find
-                   (lambda (group-kv) (string= (car group-kv) "features"))
-                   cargo-toml-data)))))
+    (mapcar 'car (alist-get "features" cargo-toml-data nil nil 'equal))))
 
 (defun test-cockpit-cargo--crate-data ()
   "Read the data for the crate from Cargo.toml."
-  (toml:read-from-file (concat (projectile-project-root) "Cargo.toml")))
+  (tomlparse-file (concat (projectile-project-root) "Cargo.toml") :object-type 'alist))
 
 (transient-define-infix test-cockpit-cargo--toggle-feature ()
   :class 'test-cockpit--transient-selection

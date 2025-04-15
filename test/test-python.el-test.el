@@ -457,3 +457,62 @@ async def test_first_outer():
       (should (equal (aref (aref infix 1) 6) '("-w" "don't output warnings" "--disable-warnings")))
       (should (equal (aref (aref infix 1) 7) '("-n" "don't capture output" "--capture=no")))
       (should (equal (aref (aref infix 1) 8) '("-L" "show locals in tracebacks" "--showlocals"))))))
+
+
+
+(defun alist-to-hash-table (alist)
+  (let ((hash-table (make-hash-table :test 'equal)))
+    (mapcar (lambda (elt)
+              (puthash (car elt) (if (listp (cdr elt)) (alist-to-hash-table (cdr elt))
+                                   (cdr elt))
+                       hash-table)
+              )
+            alist)
+    hash-table))
+
+
+(ert-deftest test-pytest-markers-no-pyproject-toml ()
+  (let ((native-comp-enable-subr-trampolines nil))
+    (mocker-let ((projectile-project-root () ((:output "/foo/bar/project")))
+                 (file-exists-p (filename) ((:input '("/foo/bar/project/pyproject.toml") :output nil))))
+      (should (eq (test-cockpit-python--pytest-markers) nil)))))
+
+
+(ert-deftest test-pytest-markers-no-pytest-section ()
+  (let ((native-comp-enable-subr-trampolines nil))
+    (mocker-let ((projectile-project-root () ((:output "/foo/bar/project")))
+                (file-exists-p (filename) ((:input '("/foo/bar/project/pyproject.toml") :output t)))
+                (tomlparse-file (file) ((:input '("/foo/bar/project/pyproject.toml")
+                                         :output (alist-to-hash-table nil)))))
+     (should (eq (test-cockpit-python--pytest-markers) nil)))))
+
+(ert-deftest test-pytest-markers-simple-markers ()
+  (let ((native-comp-enable-subr-trampolines nil))
+    (mocker-let ((projectile-project-root () ((:output "/foo/bar/project")))
+                (file-exists-p (filename) ((:input '("/foo/bar/project/pyproject.toml") :output t)))
+                (tomlparse-file (file) ((:input '("/foo/bar/project/pyproject.toml")
+                                         :output (alist-to-hash-table
+                                                  '(("tool"
+                                                     ("pytest"
+                                                      ("ini_options"
+                                                       ("markers"
+                                                        . ["slow"
+                                                           "realdata"]))))))))))
+      (should (equal (test-cockpit-python--pytest-markers) '(("slow" . nil)
+                                                             ("realdata" . nil)))))))
+
+
+(ert-deftest test-pytest-markers-annotated-markers ()
+  (let ((native-comp-enable-subr-trampolines nil))
+    (mocker-let ((projectile-project-root () ((:output "/foo/bar/project")))
+                (file-exists-p (filename) ((:input '("/foo/bar/project/pyproject.toml") :output t)))
+                (tomlparse-file (file) ((:input '("/foo/bar/project/pyproject.toml")
+                                         :output (alist-to-hash-table
+                                                  '(("tool"
+                                                     ("pytest"
+                                                      ("ini_options"
+                                                       ("markers"
+                                                        . ["slow: tests that are slow"
+                                                           "realdata:  	tests using real data"]))))))))))
+      (should (equal (test-cockpit-python--pytest-markers) '(("slow" . "tests that are slow")
+                                                             ("realdata" . "tests using real data")))))))
