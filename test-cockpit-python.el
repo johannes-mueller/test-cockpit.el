@@ -63,8 +63,9 @@
 
 (defconst test-cockpit-python--allowed-switches
   '("--last-failed"
-    "--verbose"
+    "-v"
     "-vv"
+    "-vvv"
     "--no-cov"
     "--cov"
     "--cov-report"
@@ -155,6 +156,14 @@
   :choices '("debug" "info" "warn" "error")
   :description "log level")
 
+(transient-define-infix test-cockpit-python--choose-verbose-level ()
+  :class 'transient-switches
+  :key "-v"
+  :argument-format "%s"
+  :argument-regexp "\\(-v\\|-vv\\|-vvv\\)$"
+  :choices '("-v" "-vv" "-vvv")
+  :description "verbosity level")
+
 (transient-define-infix test-cockpit-python--choose-traceback ()
   :class 'transient-switches
   :key "-t"
@@ -162,7 +171,6 @@
   :argument-regexp "--tb=\\(long\\|short\\|line\\|native\\|no\\)"
   :choices '("long" "short" "line" "native" "no")
   :description "show traceback style")
-
 
 (defun test-cockpit-python--infix ()
   "Setup the pytest specific test switches."
@@ -174,8 +182,7 @@
     ("-m" test-cockpit-python--marker-switch)
     ("-M" "test type hints" "--mypy")]
    ["Output"
-    ("-v" "show single tests" "--verbose")
-    ("-V" "verbose output" "-vv")
+    (test-cockpit-python--choose-verbose-level)
     (test-cockpit-python--choose-loglevel)
     ("-c" "print coverage report" "--cov-report=term-missing")
     ("-r" "report output of passed tests" "-rFP")
