@@ -176,7 +176,7 @@ If the current project type is not supported a dummy engine is
 returned."
   (if-let* ((engine-factory (alist-get (projectile-project-type) test-cockpit--project-types))
             (real-engine (funcall engine-factory)))
-      real-engine
+        real-engine
     (test-cockpit--make-dummy-engine)))
 
 (defmacro test-cockpit--engine-for-current-project ()
@@ -300,12 +300,13 @@ is tested."
    (list (transient-args 'test-cockpit-prefix)))
   (if-let* ((module-string (or (test-cockpit--current-module-string)
                               (test-cockpit--last-module-string))))
-      (progn (test-cockpit--run-test
+      (progn
+        (test-cockpit--run-test
               (test-cockpit--command 'test-cockpit--make-test-module-command
                                      module-string
                                      args))
-             (test-cockpit--update-last-interactive-command 'test-cockpit-test-module)
-             (test-cockpit--update-last-commands args))
+        (test-cockpit--update-last-interactive-command 'test-cockpit-test-module)
+        (test-cockpit--update-last-commands args))
     (message "Not in a unit test module file")))
 
 ;;;###autoload

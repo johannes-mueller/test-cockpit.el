@@ -105,7 +105,7 @@
 (ert-deftest test-python-get-python-test-function-command-switches ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
-      ((projectile-project-type () ((:output 'python-pip :occur 1)))
+      ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-bar-project")))
        (projectile-project-name () ((:output "foo-bar-project")))
        (test-cockpit-python--test-function-path () ((:output "test_foo")))
@@ -123,7 +123,7 @@
 (ert-deftest test-python-python-build-ext-switch-default-command ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
-      ((projectile-project-type () ((:output 'python-pip :occur 1)))
+      ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
        (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
        (compile (command) ((:input '("pip install -e . --no-deps && pytest --color=yes --last-failed --no-cov")
@@ -134,7 +134,7 @@
   (setq test-cockpit--project-engines nil)
   (let ((test-cockpit-python-build-ext-command "foo build-ext command"))
     (mocker-let
-       ((projectile-project-type () ((:output 'python-pip :occur 1)))
+        ((projectile-project-type () ((:output 'python-pip)))
         (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
         (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
         (compile (command) ((:input '("foo build-ext command && pytest --color=yes --last-failed --no-cov")
@@ -151,7 +151,7 @@
 (ert-deftest test-python-dape-last-test-project ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
-      ((projectile-project-type () ((:output 'python-pip :occur 1)))
+      ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
        (compile (command) ((:input-matcher (lambda (_dir) t) :output 'success))))
     (test-cockpit-test-project)
@@ -166,7 +166,7 @@
 (ert-deftest test-python-dape-last-test-module ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
-      ((projectile-project-type () ((:output 'python-pip :occur 1)))
+      ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "/home/user/project")))
        (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
        (compile (command) ((:input-matcher (lambda (_dir) t) :output 'success))))
@@ -178,7 +178,7 @@
 (ert-deftest test-python-dape-last-test-function-no-switches ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
-      ((projectile-project-type () ((:output 'python-pip :occur 1)))
+      ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "/home/user/project")))
        (test-cockpit-python--test-function-path () ((:output "test_foo")))
        (compile (command) ((:input-matcher (lambda (_dir) t) :output 'success))))
@@ -190,7 +190,7 @@
 (ert-deftest test-python-dape-last-test-function-switches ()
   (setq test-cockpit--project-engines nil)
   (mocker-let
-      ((projectile-project-type () ((:output 'python-pip :occur 1)))
+      ((projectile-project-type () ((:output 'python-pip)))
        (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "/home/user/project")))
        (test-cockpit-python--test-function-path () ((:output "test_foo")))
        (compile (command) ((:input-matcher (lambda (_dir) t) :output 'success))))
