@@ -153,7 +153,10 @@ PROJECT-TYPE is the type given by `pojectile-project-type' and
 ENGINE-CLASS is a derived class of `test-cockpit-engine'."
   (setq test-cockpit--project-types
         (cons `(,project-type . (lambda () (make-instance ,engine-class)))
-              test-cockpit--project-types)))
+              test-cockpit--project-types))
+  (test-cockpit-register-project-type-alias project-type project-type))
+
+(defvar test-cockpit--project-type-aliases nil)
 
 (defun test-cockpit-register-project-type-alias (alias project-type)
   "Register an alias for a known project type.
@@ -161,9 +164,7 @@ Some project types are similar in a way that they can be tested
 by the same commands, yet they are different for projectile.  In
 those cases the already registered PROJECT-TYPE can be registered
 again as ALIAS."
-  (setq test-cockpit--project-types
-        (cons `(,alias . ,(alist-get project-type test-cockpit--project-types))
-              test-cockpit--project-types)))
+  (push (cons alias project-type) test-cockpit--project-type-aliases))
 
 (defun test-cockpit--make-dummy-engine ()
   "Make a dummy for the case that the project type is not supported.
@@ -754,6 +755,16 @@ OJB is just the self reference."
                 (propertize ", " 'face 'transient-inactive-value))
      (propertize "]" 'face 'transient-inactive-value))))
 
+(defvar test-cockpit--additional-switch-config nil)
+
+(defun test-cockpit-add-additional-switch (project-type switch)
+  (if-let ((switch-list (alist-get project-type test-cockpit--additional-switch-config)))
+      (setcdr (assq project-type test-cockpit--additional-switch-config) (reverse (cons switch switch-list)))
+      (push (cons project-type (list switch)) test-cockpit--additional-switch-config)))
+
+(defun test-cockpit--additional-switches ()
+  (alist-get (alist-get (projectile-project-type) test-cockpit--project-type-aliases)
+             test-cockpit--additional-switch-config))
 
 (provide 'test-cockpit)
 

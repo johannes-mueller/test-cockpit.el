@@ -36,14 +36,17 @@
 
 (ert-deftest test-register-project-type-primary ()
   (tc--register-foo-project "foo")
-  (should (alist-get 'foo-project-type test-cockpit--project-types)))
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type))))
+    (should (test-cockpit--retrieve-engine))))
 
 (ert-deftest test-register-project-type-alias ()
   (tc--register-foo-project "foo")
   (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
-  (should (eq (alist-get 'foo-project-type test-cockpit--project-types)
-              (alist-get 'foo-project-type-alias test-cockpit--project-types))))
-
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type)
+                                            (:output 'foo-project-type-alias))))
+    (let* ((primary (test-cockpit--retrieve-engine))
+           (secondary (test-cockpit--retrieve-engine)))
+      (should (eq primary secondary)))))
 
 (defclass test-cockpit--dape-engine (test-cockpit--engine)
   ((current-module-string :initarg :current-module-string
@@ -935,5 +938,32 @@
   (mocker-let ((projectile-project-type () ((:output 'bar-project-type)))
                (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "bar-project"))))
     (should-error (test-cockpit-dispatch))))
+
+(ert-deftest test-additional-no-additional-switches ()
+  (tc--register-foo-project "foo")
+  (should-not (test-cockpit--additional-switches)))
+
+(ert-deftest test-additional-one-additional-switch ()
+  (tc--register-foo-project "foo")
+  (setq test-cockpit--additional-switch-config nil)
+  (test-cockpit-add-additional-switch 'foo-project-type "--some-switch")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type))))
+    (should (equal (test-cockpit--additional-switches) '("--some-switch")))))
+
+(ert-deftest test-additional-two-additional-switches ()
+  (tc--register-foo-project "foo")
+  (setq test-cockpit--additional-switch-config nil)
+  (test-cockpit-add-additional-switch 'foo-project-type "--first-switch")
+  (test-cockpit-add-additional-switch 'foo-project-type "--second-switch")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type))))
+    (should (equal (test-cockpit--additional-switches) '("--first-switch" "--second-switch")))))
+
+(ert-deftest test-additional-on-project-alias ()
+  (tc--register-foo-project "foo")
+  (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
+  (setq test-cockpit--additional-switch-config nil)
+  (test-cockpit-add-additional-switch 'foo-project-type"--some-switch")
+  (mocker-let ((projectile-project-type () ((:output 'foo-project-type-alias))))
+    (should (equal (test-cockpit--additional-switches) '("--some-switch")))))
 
 ;;; test-cockpit.el-test.el ends here
