@@ -61,24 +61,6 @@
 (test-cockpit-register-project-type-alias 'python-tox 'python-pip)
 (test-cockpit-register-project-type-alias 'python-toml 'python-pip)
 
-(defconst test-cockpit-python--allowed-switches
-  '("--last-failed"
-    "-v"
-    "-vv"
-    "-vvv"
-    "--no-cov"
-    "--cov"
-    "--cov-report"
-    "-r"
-    "--log-level"
-    "--tb"
-    "--disable-warnings"
-    "--capture=no"
-    "-k"
-    "-m"
-    "--mypy"
-    "--exitfirst"
-    "--showlocals"))
 
 (defun test-cockpit-python--test-project-command (_ args)
   "Make the test project command from ARGS."
@@ -110,10 +92,10 @@
   (concat (test-cockpit-python--build-ext-command args)
           "pytest --color=yes"
           (test-cockpit--add-leading-space-to-switches
-           (test-cockpit--join-filter-switches
-            (test-cockpit-python--insert-project-coverage-to-switches
-             (test-cockpit-python--insert-no-coverage-to-switches args))
-            test-cockpit-python--allowed-switches))))
+           (string-join (remove "build_ext"
+                                (test-cockpit-python--insert-project-coverage-to-switches
+                                 (test-cockpit-python--insert-no-coverage-to-switches args)))
+                        " "))))
 
 (defun test-cockpit-python--insert-no-coverage-to-switches (switches)
   "Adjust the coverage report switch according to SWITCHES."
