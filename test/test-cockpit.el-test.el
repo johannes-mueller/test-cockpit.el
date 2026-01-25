@@ -550,7 +550,6 @@
                       ("m" "module: some-last-module" test-cockpit-test-module)
                       ("c" "custom" test-cockpit-custom-test-command)])))))
 
-
 (ert-deftest test-main-suffix--last-function ()
   (project-fixture-mock "foo"
     (mocker-let ((test-cockpit--current-module-string () ((:output nil)))
@@ -562,6 +561,40 @@
                       ("p" "project" test-cockpit-test-project)
                       ("f" "function: some-last-function" test-cockpit-test-function)
                       ("c" "custom" test-cockpit-custom-test-command)])))))
+
+(ert-deftest test-main-suffix--repeat-last-project ()
+  (project-fixture-mock "foo"
+    (mocker-let ((projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "some-project")))
+                 (test-cockpit--last-interactive-test-command () ((:output 'test-cockpit-test-project))))
+      (should (equal (test-cockpit--main-suffix)
+                     ["Run tests"
+                      ("p" "project" test-cockpit-test-project)
+                      ("c" "custom" test-cockpit-custom-test-command)
+                      ("r" "repeat project" test-cockpit-repeat-interactive-test)])))))
+
+(ert-deftest test-main-suffix--repeat-last-module ()
+  (project-fixture-mock "foo"
+    (mocker-let ((projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "some-project")))
+                 (test-cockpit--last-interactive-test-command () ((:output 'test-cockpit-test-module)))
+                 (test-cockpit--last-module-string () ((:output "some-project/some-last-module"))))
+      (should (equal (test-cockpit--main-suffix)
+                     ["Run tests"
+                      ("p" "project" test-cockpit-test-project)
+                      ("m" "module: some-last-module" test-cockpit-test-module)
+                      ("c" "custom" test-cockpit-custom-test-command)
+                      ("r" "repeat module: some-last-module" test-cockpit-repeat-interactive-test)])))))
+
+(ert-deftest test-main-suffix--repeat-last-function ()
+  (project-fixture-mock "foo"
+    (mocker-let ((projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "some-project")))
+                 (test-cockpit--last-interactive-test-command () ((:output 'test-cockpit-test-function)))
+                 (test-cockpit--last-function-string () ((:output "some-project/some-last-function"))))
+      (should (equal (test-cockpit--main-suffix)
+                     ["Run tests"
+                      ("p" "project" test-cockpit-test-project)
+                      ("f" "function: some-last-function" test-cockpit-test-function)
+                      ("c" "custom" test-cockpit-custom-test-command)
+                      ("r" "repeat function: some-last-function" test-cockpit-repeat-interactive-test)])))))
 
 (ert-deftest test-main-suffix-dape-debug-no-last-test ()
   (tc--register-dape-project "dape")
@@ -584,15 +617,14 @@
                (test-cockpit--current-function-string () ((:output nil)))
                (test-cockpit--last-module-string () ((:output nil)))
                (test-cockpit--last-function-string () ((:output "dape-project/some-last-function")))
-               (test-cockpit--last-interactive-test-command () ((:output 'some-cmd))))
+               (test-cockpit--last-interactive-test-command () ((:output 'test-cockpit-test-function))))
     (should (equal (test-cockpit--main-suffix)
                    ["Run tests"
                     ("p" "project" test-cockpit-test-project)
                     ("f" "function: some-last-function" test-cockpit-test-function)
                     ("d" "dape debug repeat" test-cockpit-dape-debug-repeat-test)
                     ("c" "custom" test-cockpit-custom-test-command)
-                    ("r" "repeat" test-cockpit-repeat-interactive-test)]))))
-
+                    ("r" "repeat function: some-last-function" test-cockpit-repeat-interactive-test)]))))
 
 (ert-deftest test-repeat-transient-suffix-nil ()
   (project-fixture "foo"
