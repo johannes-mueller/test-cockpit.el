@@ -51,14 +51,31 @@
      ,@body))
 
 (ert-deftest test-register-project-type-primary ()
-  (project-fixture "foo"(should (alist-get 'foo-project-type test-cockpit--project-types))))
+  (project-fixture-mock "foo"
+    (should (equal (oref (test-cockpit--retrieve-engine) project-type)
+                   "foo-project-type"))))
 
 (ert-deftest test-register-project-type-alias ()
   (project-fixture "foo"
     (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
-    (should (eq (alist-get 'foo-project-type test-cockpit--project-types)
-                (alist-get 'foo-project-type-alias test-cockpit--project-types)))))
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type-alias))))
+      (should (equal (oref (test-cockpit--retrieve-engine) project-type)
+                     "foo-project-type")))))
 
+(ert-deftest test-primary-project-type-not-found ()
+  (mocker-let ((projectile-project-type () ((:output 'unknown-project-type))))
+    (should-not (test-cockpit--primary-project-type))))
+
+(ert-deftest test-primary-project-type-found-directly ()
+  (project-fixture "foo"
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type))))
+     (should (equal (test-cockpit--primary-project-type) 'foo-project-type)))))
+
+(ert-deftest test-primary-project-type-found-by-alias ()
+  (project-fixture "foo"
+    (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type-alias))))
+      (should (equal (test-cockpit--primary-project-type) 'foo-project-type)))))
 
 (defclass test-cockpit--dape-engine (test-cockpit--engine)
   ((current-module-string :initarg :current-module-string

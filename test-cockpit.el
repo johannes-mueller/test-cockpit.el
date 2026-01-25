@@ -103,8 +103,8 @@ a derived class of `test-cockpit--engine'.")
               :initform nil)
    (last-interactive-cmd :initarg :last-interactive-cmd
                          :initform nil)
-   (is-dummy-engine :initarg :is-dummy-engine
-                    :initform nil))
+   (project-type :initarg :project-type
+                 :initform nil))
   "The base class for a test-cockpit engine.
 For every project type supported by `test-cockpit.el' a derived
 class is needed which implements the methods of the base class.")
@@ -152,8 +152,11 @@ the argument list passed to the test frame work."
 PROJECT-TYPE is the type given by `pojectile-project-type' and
 ENGINE-CLASS is a derived class of `test-cockpit-engine'."
   (setq test-cockpit--project-types
-        (cons `(,project-type . (lambda () (make-instance ,engine-class)))
-              test-cockpit--project-types)))
+        (cons `(,project-type . (lambda () (make-instance ,engine-class :project-type ,(symbol-name project-type))))
+              test-cockpit--project-types))
+  (test-cockpit-register-project-type-alias project-type project-type))
+
+(defvar test-cockpit--project-type-aliases nil)
 
 (defun test-cockpit-register-project-type-alias (alias project-type)
   "Register an alias for a known project type.
@@ -161,20 +164,23 @@ Some project types are similar in a way that they can be tested
 by the same commands, yet they are different for projectile.  In
 those cases the already registered PROJECT-TYPE can be registered
 again as ALIAS."
-  (setq test-cockpit--project-types
-        (cons `(,alias . ,(alist-get project-type test-cockpit--project-types))
-              test-cockpit--project-types)))
+  (push (cons alias project-type) test-cockpit--project-type-aliases))
+
+(defun test-cockpit--primary-project-type (&optional project-type)
+  "Return the primary project type for the PROJECT-TYPE or detected project type."
+  (alist-get (or project-type (projectile-project-type))
+             test-cockpit--project-type-aliases nil nil 'equal))
 
 (defun test-cockpit--make-dummy-engine ()
   "Make a dummy for the case that the project type is not supported.
 In those cases we fall back to `porjectile-test-project'."
-  (make-instance 'test-cockpit--engine :is-dummy-engine t))
+  (make-instance 'test-cockpit--engine))
 
 (defun test-cockpit--make-engine ()
   "Make a new engine for the current project type.
 If the current project type is not supported a dummy engine is
 returned."
-  (if-let* ((engine-factory (alist-get (projectile-project-type) test-cockpit--project-types))
+  (if-let* ((engine-factory (alist-get (test-cockpit--primary-project-type) test-cockpit--project-types))
             (real-engine (funcall engine-factory)))
         real-engine
     (test-cockpit--make-dummy-engine)))
@@ -192,10 +198,14 @@ If no engine is yet started for the project, it will be started."
       (setf (test-cockpit--engine-for-current-project) new-engine)
       new-engine)))
 
+(defun test-cockpit--dummy-engine-p (&optional engine)
+  "Return non-nil if ENGINE or the current project enigne is a dummy engine."
+    (not (oref (or engine (test-cockpit--retrieve-engine)) project-type)))
+
 (defun test-cockpit--real-engine-or-error ()
   "Retrieve the engine for the project; error if the project type is unsupported."
   (let ((engine (test-cockpit--retrieve-engine)))
-    (if (oref engine is-dummy-engine)
+    (if (test-cockpit--dummy-engine-p engine)
         (signal "Project type %s not supported by test-cockpit or engine not installed"
                 (projectile-project-type))
       engine)))
@@ -439,7 +449,7 @@ If the project type is supported, function
 `test-cockpit-repeat-test' is run.  Otherwise the project build
 is launched by calling the function `projectile-compile-project'."
   (interactive)
-  (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
+  (if (test-cockpit--dummy-engine-p)
       (test-cockpit--projectile-build)
     (test-cockpit-dispatch)))
 
@@ -454,7 +464,7 @@ build command is repeated by the function
 `projectile-build-project' a prompt to type a build command is
 shown."
   (interactive)
-  (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
+  (if (test-cockpit--dummy-engine-p)
       (test-cockpit--repeat-projectile-build)
     (test-cockpit-repeat-test)))
 
@@ -465,7 +475,7 @@ If the project type is supported, function
 `test-cockpit-repeat-test' is run.  Otherwise the project tested
 calling the function `projectile-test-project'."
   (interactive)
-  (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
+  (if (test-cockpit--dummy-engine-p)
       (test-cockpit--projectile-test)
     (test-cockpit-dispatch)))
 
@@ -479,7 +489,7 @@ test menu is shown.  If the project type is unknown the last test
 command is repeated by the function `projectile-test-project' a
 prompt to type a test command is shown."
   (interactive)
-  (if (oref (test-cockpit--retrieve-engine) is-dummy-engine)
+  (if (test-cockpit--dummy-engine-p)
       (test-cockpit--repeat-projectile-test)
     (test-cockpit-repeat-test)))
 

@@ -4,16 +4,16 @@
 (require 'test-cockpit-python)
 
 (ert-deftest test-python-project-python-pip-type-available ()
-  (should (alist-get 'python-pip test-cockpit--project-types)))
+  (should (test-cockpit--primary-project-type 'python-pip)))
 
 (ert-deftest test-python-project-python-pkg-type-available ()
-  (should (alist-get 'python-pkg test-cockpit--project-types)))
+  (should (test-cockpit--primary-project-type 'python-pkg)))
 
 (ert-deftest test-python-project-python-tox-type-available ()
-  (should (alist-get 'python-tox test-cockpit--project-types)))
+  (should (test-cockpit--primary-project-type 'python-tox)))
 
 (ert-deftest test-python-project-python-toml-type-available ()
-  (should (alist-get 'python-toml test-cockpit--project-types)))
+  (should (test-cockpit--primary-project-type 'python-toml)))
 
 (ert-deftest test-python-current-module-string-no-file-buffer-is-nil ()
   (mocker-let ((buffer-file-name () ((:output nil))))
