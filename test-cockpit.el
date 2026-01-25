@@ -283,7 +283,7 @@ FUNC-STRING is the string determining the function to test."
 FUNC is the engine function responsible to setup the
 command.  THING is the thing to be tested.  ARGS the additional
 arguments."
-  (let ((command (funcall func thing args)))
+  (let ((command (funcall func thing (append args (test-cockpit--additional-switches)))))
     (oset (test-cockpit--retrieve-engine) last-switches args)
     command))
 
@@ -773,6 +773,17 @@ OJB is just the self reference."
                 (propertize ", " 'face 'transient-inactive-value))
      (propertize "]" 'face 'transient-inactive-value))))
 
+(defvar test-cockpit--additional-switch-config nil)
+
+(defun test-cockpit-add-additional-switch (project-type switch)
+  "Add the additional switch SWITCH to projects of PROJECT-TYPE."
+  (if-let ((switch-list (alist-get project-type test-cockpit--additional-switch-config)))
+      (setcdr (assq project-type test-cockpit--additional-switch-config) (reverse (cons switch switch-list)))
+      (push (cons project-type (list switch)) test-cockpit--additional-switch-config)))
+
+(defun test-cockpit--additional-switches ()
+  "Lookup the additional switches for the current project type."
+  (alist-get (test-cockpit--primary-project-type) test-cockpit--additional-switch-config))
 
 (provide 'test-cockpit)
 

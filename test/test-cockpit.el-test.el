@@ -914,4 +914,38 @@
                  (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "bar-project"))))
       (should-error (test-cockpit-dispatch)))))
 
+(ert-deftest test-additional-no-additional-switches ()
+  (project-fixture "foo"
+    (should-not (test-cockpit--additional-switches))))
+
+(ert-deftest test-additional-one-additional-switch ()
+  (project-fixture "foo"
+    (setq test-cockpit--additional-switch-config nil)
+    (test-cockpit-add-additional-switch 'foo-project-type "--some-switch")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type))))
+      (should (equal (test-cockpit--additional-switches) '("--some-switch"))))))
+
+(ert-deftest test-additional-two-additional-switches ()
+  (project-fixture "foo"
+    (setq test-cockpit--additional-switch-config nil)
+    (test-cockpit-add-additional-switch 'foo-project-type "--first-switch")
+    (test-cockpit-add-additional-switch 'foo-project-type "--second-switch")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type))))
+      (should (equal (test-cockpit--additional-switches) '("--first-switch" "--second-switch"))))))
+
+(ert-deftest test-additional-on-project-type-alias ()
+  (project-fixture "foo"
+    (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
+    (test-cockpit-add-additional-switch 'foo-project-type"--some-switch")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type-alias))))
+      (should (equal (test-cockpit--additional-switches) '("--some-switch"))))))
+
+(ert-deftest test-addition-switches-test-project ()
+  (project-fixture "foo"
+    (test-cockpit-add-additional-switch 'foo-project-type "--some-switch")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+                 (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
+                 (compile (command) ((:input '("test project foo bar --some-switch") :output 'success))))
+      (test-cockpit-test-project '("foo" "bar")))))
+
 ;;; test-cockpit.el-test.el ends here
