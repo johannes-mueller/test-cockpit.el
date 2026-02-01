@@ -80,19 +80,18 @@
   "Make the test function command from STRING and ARGS."
   (concat (test-cockpit-python--common-switches args) " " string))
 
-(defun test-cockpit-python--build-ext-command (args)
-  "Add the build extensions command if ARGS demands it."
-  (if (member "build_ext" args)
-      (concat test-cockpit-python-build-ext-command " && ")
-    ""))
+(defun test-cockpit-python--cmd-prefix (args)
+  "Add command prefix command if ARGS demands it."
+  (cond ((member "build_ext" args) (concat test-cockpit-python-build-ext-command " && "))
+        ((member "use-uv" args) "uv run ")
+        (t "")))
 
 (defun test-cockpit-python--common-switches (args)
   "Extract the common python switches from ARGS."
-
-  (concat (test-cockpit-python--build-ext-command args)
+  (concat (test-cockpit-python--cmd-prefix args)
           "pytest --color=yes"
           (test-cockpit--add-leading-space-to-switches
-           (string-join (remove "build_ext"
+           (string-join (seq-remove (lambda (elt) (member elt '("use-uv" "build_ext")))
                                 (test-cockpit-python--insert-project-coverage-to-switches
                                  (test-cockpit-python--insert-no-coverage-to-switches args)))
                         " "))))
@@ -161,6 +160,7 @@
     ("-f" "only lastly failed tests" "--last-failed")
     ("-x" "exit after first fail" "--exitfirst")
     ("-b" "build extensions before testing" "build_ext")
+    ("-u" "use `uv run' to run pytest" "use-uv")
     ("-m" test-cockpit-python--marker-switch)
     ("-M" "test type hints" "--mypy")]
    ["Output"
