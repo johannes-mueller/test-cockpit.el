@@ -231,7 +231,7 @@ The additional arguments are shipped as ARGS."
     (oset engine last-args args)))
 
 (defun test-cockpit--update-last-interactive-command (function)
-  "Update thte last interactive command function"
+  "Update thte last interactive command function to FUNCTION."
   (let ((engine (test-cockpit--retrieve-engine)))
     (oset engine last-interactive-cmd function)))
 
@@ -655,7 +655,8 @@ repetition."
                                         `("d" "dape debug repeat" test-cockpit-dape-debug-repeat-test))
                                    ("c" "custom" test-cockpit-custom-test-command)
                                    ,(if last-cmd
-                                        `("r" "repeat" test-cockpit-repeat-interactive-test))))))))
+                                        `("r" ,(format "repeat %s" (test-cockpit--last-test-target))
+                                          test-cockpit-repeat-interactive-test))))))))
 
 (defun test-cockpit--main-suffix ()
   "Setup the main menu common for all projects for testing and actions."
@@ -681,6 +682,14 @@ repetition."
                                             `("F"
                                               ,(format "last function: %s" (test-cockpit--strip-project-root function-string))
                                               test-cockpit--do-repeat-function)))))))))
+
+(defun test-cockpit--last-test-target ()
+  "Determine the semantics of the last test command."
+  (pcase (test-cockpit--last-interactive-test-command)
+    ('test-cockpit-test-project "project")
+    ('test-cockpit-test-module (format "module: %s" (test-cockpit--strip-project-root (test-cockpit--last-module-string))))
+    ('test-cockpit-test-function (format "function: %s" (test-cockpit--strip-project-root (test-cockpit--last-function-string))))
+    (_ "")))
 
 (defun test-cockpit--append-repeat-suffix ()
   "Append the repeat suffix to the transient prefix if possible.
