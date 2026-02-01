@@ -862,6 +862,13 @@
                 (should (equal default-directory "foo-project")))))
       (test-cockpit-custom-test-command))))
 
+(defun suffix-ref (suffix ref)
+  "Hack to make tests work with transient <9 and >=9."
+  (let ((offset (if (or (not (boundp 'transient-version))
+                        (string-version-lessp transient-version "0.9.0"))
+                    1
+                  0)))
+    (aref suffix (+ ref offset))))
 
 (ert-deftest test-set-infix ()
   (tc--register-foo-project "foo")
@@ -869,10 +876,10 @@
     (transient-append-suffix 'test-cockpit-prefix '(-1) (test-cockpit--main-suffix))
     (test-cockpit--insert-infix)
     (should (equal
-             (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
+             (suffix-ref (transient-get-suffix 'test-cockpit-prefix '(0)) 1)
              '(:description "Foo")))
     (should (equal
-             (aref (transient-get-suffix 'test-cockpit-prefix '(1)) 2)
+             (suffix-ref (transient-get-suffix 'test-cockpit-prefix '(1)) 1)
              '(:description "Run tests")))))
 
 (defclass test-cockpit--no-infix-engine (test-cockpit--engine) ())
@@ -884,7 +891,7 @@
     (transient-append-suffix 'test-cockpit-prefix '(-1) (test-cockpit--main-suffix))
     (test-cockpit--insert-infix)
     (should (equal
-             (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
+             (suffix-ref (transient-get-suffix 'test-cockpit-prefix '(0)) 1)
              '(:description "Run tests")))))
 
 (ert-deftest test-join-filter-switches ()
