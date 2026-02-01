@@ -124,13 +124,13 @@ A marker is a marker for a test or a test group understood by
 --testNamePattern of jest."
   (let ((forward-sexp-function nil)
         (old-point (point)))
-    (when-let ((start-pos (test-cockpit-npm-jest--goto-initial-marker marker-regexp)))
+    (when-let* ((start-pos (test-cockpit-npm-jest--goto-initial-marker marker-regexp)))
       (if (< (test-cockpit-npm-jest--end-point-of-entity) old-point)
           (progn
             (goto-char start-pos)
             (test-cockpit-npm-jest--find-marker marker-regexp))
         (test-cockpit-npm-jest--skip-potential-each-table)
-        (when-let ((result-string (test-cockpit-npm-jest--unqote-test-name-sexp
+        (when-let* ((result-string (test-cockpit-npm-jest--unqote-test-name-sexp
                                    (test-cockpit-npm-jest--test-name-sexp))))
           `(,start-pos ,result-string))))))
 

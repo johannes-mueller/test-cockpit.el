@@ -33,11 +33,11 @@
 
 (cl-defmethod test-cockpit--engine-current-module-string ((_obj test-cockpit-mix--engine))
   "Implement test-cockpit--engine-current-module-string."
-  (when-let ((fn (buffer-file-name))) (when (string-suffix-p "_test.exs" fn) fn)))
+  (when-let* ((fn (buffer-file-name))) (when (string-suffix-p "_test.exs" fn) fn)))
 
 (cl-defmethod test-cockpit--engine-current-function-string ((_obj test-cockpit-mix--engine))
   "Implement test-cockpit--engine-current-function-string."
-  (when-let ((fn (buffer-file-name)))
+  (when-let* ((fn (buffer-file-name)))
     (when (string-suffix-p "_test.exs" fn)
       (concat fn ":" (number-to-string (line-number-at-pos))))))
 

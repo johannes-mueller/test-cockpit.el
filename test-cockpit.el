@@ -186,7 +186,7 @@ returned."
 (defun test-cockpit--retrieve-engine ()
   "Retrieve the engine valid for the current project.
 If no engine is yet started for the project, it will be started."
-  (if-let ((existing-engine (test-cockpit--engine-for-current-project)))
+  (if-let* ((existing-engine (test-cockpit--engine-for-current-project)))
       existing-engine
     (let ((new-engine (test-cockpit--make-engine)))
       (setf (test-cockpit--engine-for-current-project) new-engine)
@@ -214,9 +214,9 @@ trimmed string is then returned."
 The current module and function are determined automatically.
 The additional arguments are shipped as ARGS."
   (let ((engine (test-cockpit--retrieve-engine)))
-    (when-let ((last-module (test-cockpit--current-module-string)))
+    (when-let* ((last-module (test-cockpit--current-module-string)))
       (oset engine last-module-string last-module))
-    (when-let ((last-function (test-cockpit--current-function-string)))
+    (when-let* ((last-function (test-cockpit--current-function-string)))
       (oset engine last-function-string last-function))
     (oset engine last-args args)))
 
@@ -255,7 +255,7 @@ FUNC-STRING is the string determining the function to test."
   (unless (equal (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
                  '(:description "Run test"))
     (transient-remove-suffix 'test-cockpit-prefix '(0)))
-  (if-let (infix (test-cockpit--infix))
+  (if-let* ((infix (test-cockpit--infix)))
       (transient-insert-suffix 'test-cockpit-prefix '(0) infix)))
 
 (defun test-cockpit--run-test (command)
@@ -298,7 +298,7 @@ If we are not in a test module buffer, the last module we were in
 is tested."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if-let ((module-string (or (test-cockpit--current-module-string)
+  (if-let* ((module-string (or (test-cockpit--current-module-string)
                               (test-cockpit--last-module-string))))
       (progn (test-cockpit--run-test
               (test-cockpit--command 'test-cockpit--make-test-module-command
@@ -319,7 +319,7 @@ If we are not in a test function, the last module test function we
 were in is tested."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if-let ((function-string (or (test-cockpit--current-function-string)
+  (if-let* ((function-string (or (test-cockpit--current-function-string)
                                 (test-cockpit--last-function-string))))
       (progn (test-cockpit--run-test
               (test-cockpit--command 'test-cockpit--make-test-function-command
@@ -387,7 +387,7 @@ The command run is then stored in as last command of the project
 and thus can be repeated using `test-cockpit-repeat-test'."
   (interactive)
   (projectile-with-default-dir (projectile-project-root)
-    (when-let ((last-cmd (test-cockpit--last-custom-command)))
+    (when-let* ((last-cmd (test-cockpit--last-custom-command)))
       (setq compile-command last-cmd))
     (call-interactively #'compile))
   (oset (test-cockpit--retrieve-engine) last-custom-command compile-command)
@@ -425,10 +425,10 @@ If the for the project no test has been run during the current
 session, the main dispatch dialog is invoked."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if-let (last-cmd (oref (test-cockpit--real-engine-or-error) last-command))
+  (if-let* ((last-cmd (oref (test-cockpit--real-engine-or-error) last-command)))
       (if (eq last-cmd 'test-cockpit--last-command-was-dape)
           (test-cockpit-dape-debug-repeat-test)
-      (test-cockpit--run-test last-cmd))
+        (test-cockpit--run-test last-cmd))
     (test-cockpit-dispatch)))
 
 ;;;###autoload
@@ -489,15 +489,14 @@ This is not meant to be called directly but as a result the transient dispatch
 in order to call the last test action with modified ARGS."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (when-let ((last-cmd (test-cockpit--last-interactive-test-command)))
+  (when-let* ((last-cmd (test-cockpit--last-interactive-test-command)))
     (funcall last-cmd args)))
 
 ;;;###autoload
 (defun test-cockpit-dape-debug-repeat-test ()
   "Repeat the last test action calling the dape debugger, if available."
   (interactive)
-  (if-let
-      ((config (test-cockpit--dape-debug-last-test)))
+  (if-let* ((config (test-cockpit--dape-debug-last-test)))
       (test-cockpit--launch-dape config)
     (user-error "No recent test-action has been performed or no Dape support for backend")))
 
@@ -540,7 +539,7 @@ description for the action."
 
 (defun test-cockpit--custom-actions ()
   "Make the transient suffix for the custom actions."
-  (when-let ((custom-actions
+  (when-let* ((custom-actions
               (alist-get (projectile-project-type) test-cockpit--project-type-custom-actions)))
     (vconcat ["Custom actions"] (vconcat custom-actions))))
 
@@ -649,7 +648,7 @@ repetition."
 
 (defun test-cockpit--main-suffix ()
   "Setup the main menu common for all projects for testing and actions."
-  (if-let ((custom-actions-suffix (test-cockpit--custom-actions)))
+  (if-let* ((custom-actions-suffix (test-cockpit--custom-actions)))
       `[,(test-cockpit--test-action-suffix) ,custom-actions-suffix]
     (test-cockpit--test-action-suffix)))
 
@@ -675,7 +674,7 @@ repetition."
 (defun test-cockpit--append-repeat-suffix ()
   "Append the repeat suffix to the transient prefix if possible.
 If possible the suffix is returned if not nil."
-  (if-let ((repeat-suffix (test-cockpit--transient-suffix-for-repeat)))
+  (if-let* ((repeat-suffix (test-cockpit--transient-suffix-for-repeat)))
       (transient-append-suffix 'test-cockpit-prefix '(-1) repeat-suffix)
     nil))
 

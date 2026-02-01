@@ -1,3 +1,5 @@
+;;; test-npm-jest.el-test.el --- Tests for test-cockpit.el -*- lexical-binding: t; -*-
+
 (require 'mocker)
 (require 'test-cockpit-npm-jest)
 
@@ -28,7 +30,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'npm :min-occur 0)))
-    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
     (compile (command) ((:input '("npm test -- --color") :output 'success))))
    (test-cockpit-test-project)))
 
@@ -36,7 +38,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'npm :min-occur 0)))
-    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
     (compile (command) ((:input '("npm test -- --color --onlyChanged") :output 'success))))
    (test-cockpit-test-project '("--onlyChanged"))))
 
@@ -44,7 +46,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'npm :min-occur 0)))
-    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
     (compile (command) ((:input '("npm test -- --color --onlyChanged --coverage") :output 'success))))
    (test-cockpit-test-project '("--onlyChanged" "--coverage"))))
 
@@ -53,7 +55,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'npm :min-occur 0)))
-    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
     (buffer-file-name () ((:output "/path/to/file.test.js")))
     (compile (command) ((:input '("npm test -- --color --testPathPattern '/path/to/file\\.test\\.js'") :output 'success))))
    (test-cockpit-test-module)))
@@ -62,7 +64,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'npm :min-occur 0)))
-    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
     (buffer-file-name () ((:output "/path/to/otherfile.test.js")))
     (compile (command) ((:input '("npm test -- --color --testPathPattern '/path/to/otherfile\\.test\\.js' --onlyFailures") :output 'success))))
    (test-cockpit-test-module '("--onlyFailures"))))
@@ -71,7 +73,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'npm :min-occur 0)))
-    (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+    (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
     (buffer-file-name () ((:output "/path/to/otherfile.test.js")))
     (compile (command)
              ((:input

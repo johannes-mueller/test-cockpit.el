@@ -1,4 +1,8 @@
+;;; test-transient.el-test.el --- Tests for test-cockpit.el -*- lexical-binding: t; -*-
+
 (require 'mocker)
+
+(defvar foo-variable nil)
 
 (ert-deftest test-selection-variable-init-nil ()
   (let ((foo-variable nil))
@@ -91,4 +95,4 @@
       ))
 
 
-;;; test-rust.el-test.el ends here
+;;; test-transient.el-test.el ends here
