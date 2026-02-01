@@ -1,3 +1,4 @@
+;;; test-cockpit-cargo.el-test.el --- Tests for test-cockpit.el -*- lexical-binding: t; -*-
 
 (require 'mocker)
 (require 'test-cockpit-cargo)
@@ -43,7 +44,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
-       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
        (test-cockpit-cargo--build-module-path-or-file-path-fallback () ((:output "bar")))
        (compile (command) ((:input '("cargo test --color=always") :output 'success :occur 1))))
     (test-cockpit-test-project)))
@@ -52,7 +53,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
-       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
        (buffer-file-name () ((:output "bar")))
        (test-cockpit-cargo--append-test-switches (args) ((:input '(nil) :output " appended")))
        (test-cockpit-cargo--build-module-path () ((:output "bar")))
@@ -64,7 +65,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
-       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
        (buffer-file-name () ((:output "bar")))
        (test-cockpit-cargo--build-module-path () ((:output "bar")))
        (compile (command) ((:input '("cargo test --color=always bar::") :output 'success :occur 1))))
@@ -74,7 +75,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
-       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
        (buffer-file-name () ((:output "bar")))
        (test-cockpit-cargo--append-test-switches (args) ((:input '(nil) :output " appended")))
        (test-cockpit-cargo--build-module-path () ((:output "bar")))
@@ -85,7 +86,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
-       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
        (buffer-file-name () ((:output "bar")))
        (test-cockpit-cargo--build-test-fn-path () ((:output "bar::foo_function")))
        (test-cockpit-cargo--build-module-path () ((:output "bar")))
@@ -96,7 +97,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
       ((projectile-project-type () ((:output 'rust-cargo)))
-       (projectile-project-root (&optional _dir) ((:input-matcher (lambda (_) t) :output "foo-project")))
+       (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
        (buffer-file-name () ((:output "bar")))
        (test-cockpit-cargo--append-test-switches (args) ((:input '(nil) :output " appended")))
        (test-cockpit-cargo--build-test-fn-path () ((:output "bar::foo_function")))
