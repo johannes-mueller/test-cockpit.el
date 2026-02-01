@@ -483,7 +483,7 @@ prompt to type a test command is shown."
     (test-cockpit-repeat-test)))
 
 ;;;###autoload
-(defun test-cockpit--repeat-interactive-test (&optional args)
+(defun test-cockpit-repeat-interactive-test (&optional args)
   "Repeat the last interactive test command.
 This is not meant to be called directly but as a result the transient dispatch
 in order to call the last test action with modified ARGS."
@@ -644,7 +644,7 @@ repetition."
                                         `("d" "dape debug repeat" test-cockpit-dape-debug-repeat-test))
                                    ("c" "custom" test-cockpit-custom-test-command)
                                    ,(if last-cmd
-                                        `("r" "repeat" test-cockpit--repeat-interactive-test))))))))
+                                        `("r" "repeat" test-cockpit-repeat-interactive-test))))))))
 
 (defun test-cockpit--main-suffix ()
   "Setup the main menu common for all projects for testing and actions."

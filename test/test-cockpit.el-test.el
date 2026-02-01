@@ -627,7 +627,7 @@
                     ("f" "function: some-last-function" test-cockpit-test-function)
                     ("d" "dape debug repeat" test-cockpit-dape-debug-repeat-test)
                     ("c" "custom" test-cockpit-custom-test-command)
-                    ("r" "repeat" test-cockpit--repeat-interactive-test)]))))
+                    ("r" "repeat" test-cockpit-repeat-interactive-test)]))))
 
 
 (ert-deftest test-repeat-transient-suffix-nil ()
@@ -820,7 +820,7 @@
   (tc--register-foo-project "foo")
   (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
                (compile (command) ((:input '(_dir) :output nil :occur 0))))
-    (test-cockpit--repeat-interactive-test '())))
+    (test-cockpit-repeat-interactive-test '())))
 
 (ert-deftest test-interactive-repeat-test-project ()
   (tc--register-foo-project "foo")
@@ -829,8 +829,8 @@
                                    (:input '("test project other args") :output 'success :occur 1)
                                    (:input '("test project even other args") :output 'success :occur 1))))
     (test-cockpit-test-project '("foo" "bar"))
-    (test-cockpit--repeat-interactive-test '("other" "args"))
-    (test-cockpit--repeat-interactive-test '("even" "other" "args"))))
+    (test-cockpit-repeat-interactive-test '("other" "args"))
+    (test-cockpit-repeat-interactive-test '("even" "other" "args"))))
 
 (ert-deftest test-interactive-repeat-test-module ()
   (tc--register-foo-project "foo")
@@ -839,8 +839,8 @@
                                    (:input '("test module foo-module-string other args") :output 'success :occur 1)
                                    (:input '("test module foo-module-string even other args") :output 'success :occur 1))))
     (test-cockpit-test-module '("foo" "bar"))
-    (test-cockpit--repeat-interactive-test '("other" "args"))
-    (test-cockpit--repeat-interactive-test '("even" "other" "args"))
+    (test-cockpit-repeat-interactive-test '("other" "args"))
+    (test-cockpit-repeat-interactive-test '("even" "other" "args"))
     ))
 
 (ert-deftest test-interactive-repeat-test-function ()
@@ -850,8 +850,8 @@
                                    (:input '("test function foo-function-string other args") :output 'success :occur 1)
                                    (:input '("test function foo-function-string even other args") :output 'success :occur 1))))
     (test-cockpit-test-function '("foo" "bar"))
-    (test-cockpit--repeat-interactive-test '("other" "args"))
-    (test-cockpit--repeat-interactive-test '("even" "other" "args"))
+    (test-cockpit-repeat-interactive-test '("other" "args"))
+    (test-cockpit-repeat-interactive-test '("even" "other" "args"))
     ))
 
 (ert-deftest test-custom-test-command-default-directory ()
