@@ -90,7 +90,7 @@
 
 (defun test-cockpit-python--choose-module ()
   "Find the current test module."
-  (when-let ((file-name-path (buffer-file-name))
+  (when-let* ((file-name-path (buffer-file-name))
              ((string-prefix-p "test_" (file-name-nondirectory file-name-path))))
     (test-cockpit--strip-project-root file-name-path)))
 
@@ -218,7 +218,7 @@
 
 (defun test-cockpit-python--test-method-or-class (line pos)
   "Determine the current test at LINE and POS (class or method)."
-  (when-let ((test-class (test-cockpit-python--class-in-line line)))
+  (when-let* ((test-class (test-cockpit-python--class-in-line line)))
     (concat test-class (test-cockpit-python--maybe-test-method pos))))
 
 (defun test-cockpit-python--find-current-test ()
@@ -233,7 +233,7 @@
   (when-let* ((file-name (buffer-file-name))
               ((string-prefix-p "test_" (file-name-nondirectory file-name))))
     (concat (test-cockpit--strip-project-root file-name)
-            (when-let ((test-function (test-cockpit-python--find-current-test)))
+            (when-let* ((test-function (test-cockpit-python--find-current-test)))
               (concat "::" test-function)))))
 
 (provide 'test-cockpit-python)

@@ -96,7 +96,7 @@
   (set-match-data nil)
   (save-excursion
     (search-backward-regexp test-cockpit-cargo--mod-regexp nil t)
-    (if-let ((mod (match-string 1)))
+    (if-let* ((mod (match-string 1)))
         (concat (save-excursion
                   (goto-char (match-beginning 0))
                   (test-cockpit-cargo--track-module-path initial-point))
@@ -116,7 +116,7 @@
 
 (defun test-cockpit-cargo--build-module-path-or-file-path-fallback ()
   "Return the qualified module path at point or if not available the filename base."
-  (when-let ((file-name (buffer-file-name)))
+  (when-let* ((file-name (buffer-file-name)))
     (concat (or (test-cockpit-cargo--build-module-path)
                 (file-name-base (buffer-file-name)))
             "::")))
@@ -126,8 +126,8 @@
 
 (defun test-cockpit-cargo--build-test-fn-path ()
   "Determine the qualified function path at point."
-  (when-let ((fn (test-cockpit-cargo--find-test-fn-name)))
-    (if-let ((mod (test-cockpit-cargo--build-module-path)))
+  (when-let* ((fn (test-cockpit-cargo--find-test-fn-name)))
+    (if-let* ((mod (test-cockpit-cargo--build-module-path)))
         (concat mod "::" fn)
       fn)))
 
