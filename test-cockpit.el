@@ -776,7 +776,7 @@ OJB is just the self reference."
 
 (defun test-cockpit-add-additional-switch (project-type switch)
   "Add the additional switch SWITCH to projects of PROJECT-TYPE."
-  (if-let ((switch-list (alist-get project-type test-cockpit--additional-switch-config)))
+  (if-let* ((switch-list (alist-get project-type test-cockpit--additional-switch-config)))
       (setcdr (assq project-type test-cockpit--additional-switch-config) (reverse (cons switch switch-list)))
       (push (cons project-type (list switch)) test-cockpit--additional-switch-config)))
 
