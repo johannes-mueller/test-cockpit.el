@@ -257,8 +257,7 @@ FUNC-STRING is the string determining the function to test."
 
 (defun test-cockpit--infix ()
   "Call the infix function of the current project type and return the infix array."
-  (test-cockpit--transient-infix
-   (funcall (alist-get (projectile-project-type) test-cockpit--project-types))))
+  (test-cockpit--transient-infix (test-cockpit--retrieve-engine)))
 
 (defun test-cockpit--insert-infix ()
   "Insert the infix array into the `transient-prefix'."

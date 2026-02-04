@@ -868,6 +868,12 @@
              (suffix-ref (transient-get-suffix 'test-cockpit-prefix '(0)) 1)
              '(:description "Run tests")))))
 
+(ert-deftest test-set-infix-project-type-alias ()
+  (project-fixture "foo"
+    (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type-alias))))
+      (should (test-cockpit--infix)))))
+
 (ert-deftest test-join-filter-switches ()
   (let ((allowed '("foo" "bar")))
     (should (equal (test-cockpit--join-filter-switches '( "foo" "bar") allowed) "foo bar"))
