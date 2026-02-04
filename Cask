@@ -8,7 +8,7 @@
 (depends-on "toml")
 
 (development
- (depends-on "mocker" :git "https://github.com/johannes-mueller/mocker.el.git" :branch "initarg-slot-access")
+ (depends-on "mocker")
  (depends-on "ert-runner")
  (depends-on "package-lint")
 )
