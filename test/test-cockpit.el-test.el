@@ -21,7 +21,8 @@
   (oref obj current-module-string))
 (cl-defmethod test-cockpit--engine-current-function-string ((obj test-cockpit--foo-engine))
   (oref obj current-function-string))
-
+(cl-defmethod test-cockpit--engine-switch-filter ((_obj test-cockpit--engine))
+  '("filtered=.*"))
 
 (defmacro project-fixture (test-string &rest body)
   (declare (indent 1))
@@ -249,6 +250,12 @@
   (project-fixture-mock "foo"
       (mocker-let ((compile (command) ((:input '("test project foo bar") :output 'success))))
         (test-cockpit-test-project '("foo" "bar"))
+        (should (equal (test-cockpit--last-switches) '("foo" "bar"))))))
+
+(ert-deftest test-test-project-with-filtered-args ()
+  (project-fixture-mock "foo"
+      (mocker-let ((compile (command) ((:input '("test project foo bar filtered=foo") :output 'success))))
+        (test-cockpit-test-project '("foo" "bar" "filtered=foo"))
         (should (equal (test-cockpit--last-switches) '("foo" "bar"))))))
 
 (ert-deftest test-test-module-no-args ()

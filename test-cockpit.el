@@ -147,6 +147,10 @@ the argument list passed to the test frame work."
   "Supply the dape testing configuration."
   nil)
 
+(cl-defmethod test-cockpit--engine-switch-filter ((_obj test-cockpit--engine))
+  "Specifies the switches not to be put to `last-switches'."
+  nil)
+
 (defun test-cockpit-register-project-type (project-type engine-class)
   "Register a language testing package.
 PROJECT-TYPE is the type given by `pojectile-project-type' and
@@ -283,8 +287,18 @@ FUNC is the engine function responsible to setup the
 command.  THING is the thing to be tested.  ARGS the additional
 arguments."
   (let ((command (funcall func thing (append args (test-cockpit--additional-switches)))))
-    (oset (test-cockpit--retrieve-engine) last-switches args)
+    (test-cockpit--memorize-last-switches-from-args args)
     command))
+
+(defun test-cockpit--memorize-last-switches-from-args (args)
+  "Store the switches to be memorized for the next transient menu."
+  (oset (test-cockpit--retrieve-engine) last-switches
+        (seq-filter (lambda (switch) (test-cockpit--switch-persistent-p switch)) args)))
+
+(defun test-cockpit--switch-persistent-p (switch)
+  "Non-nil if SWITCH is persistent according to current engine."
+  (not (seq-find (lambda (cand) (string-match-p cand switch))
+                 (test-cockpit--engine-switch-filter (test-cockpit--retrieve-engine)))))
 
 ;;;###autoload
 (defun test-cockpit-test-project (&optional args)
@@ -708,8 +722,8 @@ accumulate."
   (test-cockpit--insert-infix)
   (let ((appended-suffix-must-be-removed (test-cockpit--append-repeat-suffix)))
     (transient-setup 'test-cockpit-prefix)
-    (if appended-suffix-must-be-removed
-        (transient-remove-suffix 'test-cockpit-prefix '(-1)))
+    (when appended-suffix-must-be-removed
+      (transient-remove-suffix 'test-cockpit-prefix '(-1)))
     (transient-remove-suffix 'test-cockpit-prefix '(-1))))
 
 (defun test-cockpit--join-filter-switches (candidates allowed)
