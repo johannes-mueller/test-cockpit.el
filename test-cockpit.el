@@ -69,6 +69,8 @@
 (require 'projectile)
 (require 'subr-x)
 
+(declare-function dape "dape" (config &optional skip-compile))
+
 (defvar test-cockpit--project-types nil
   "List of known project types.
 Project types can be added to the list using
@@ -537,14 +539,15 @@ in order to call the last test action with modified ARGS."
       (test-cockpit--launch-dape config)
     (user-error "No recent test-action has been performed or no Dape support for backend")))
 
- (defun test-cockpit-add-custom-action (project-type shortcut description action)
+(defun test-cockpit-add-custom-action (project-type shortcut description action)
   "Add a custom ACTION to a test-cockpit of PROJECT-TYPE.
 
-The PROJECT-TYPE must be a registered project type.  ACTION can be either a function
-or a string.  A string is passed as is to the `compile' function.
+The PROJECT-TYPE must be a registered project type.  ACTION can be
+either a function or a string.  A string is passed as is to the
+`compile' function.
 
-SHORTCUT is the transient shortcut and DESCRIPTION is the transient description for
-the action."
+SHORTCUT is the transient shortcut and DESCRIPTION is the transient
+description for the action."
   (let ((action (if (stringp action)
                     `(lambda () (interactive) (test-cockpit--run-test ,action))
                   action)))
@@ -565,7 +568,7 @@ description for the action."
    `(lambda () (interactive) (test-cockpit-dynamic-custom-test-command ,command-template))))
 
 (defun test-cockpit--add-custom-action-function (project-type shortcut description action)
-  "Register a custom action consisting of SHORTCUT, DESCRIPTION and ACTION to PROJECT-TYPE."
+  "Register a custom action of SHORTCUT, DESCRIPTION and ACTION to PROJECT-TYPE."
   (let* ((project-type (test-cockpit--primary-project-type project-type))
          (action-list (alist-get project-type test-cockpit--project-type-custom-actions))
          (action-set `(,shortcut ,description ,action)))
@@ -582,7 +585,8 @@ description for the action."
     (vconcat ["Custom actions"] (vconcat custom-actions))))
 
 (defun test-cockpit--launch-dape (config)
-  "Launch the dape debug session with CONFIG and memorize that last test was a dape session."
+  "Launch the dape debug session with CONFIG.
+Then memorize that last test was a dape session."
   (dape config)
   (oset (test-cockpit--retrieve-engine) last-command 'test-cockpit--last-command-was-dape))
 
