@@ -470,11 +470,49 @@
                       ("c" "custom" test-cockpit-custom-test-command)])))))
 
 
-(ert-deftest test-main-suffix--one-custom-actions-added ()
+(ert-deftest test-main-suffix--one-custom-action-added ()
   (project-fixture-mock "foo"
       (test-cockpit-add-custom-action
        'foo-project-type "C" "some custom action" "some_custom_action --foo")
     (mocker-let ((test-cockpit--current-module-string () ((:output nil)))
+                 (test-cockpit--current-function-string () ((:output nil)))
+                 (test-cockpit--last-module-string () ((:output nil)))
+                 (test-cockpit--last-function-string () ((:output nil))))
+      (should (equal (test-cockpit--main-suffix)
+                     [["Run tests"
+                       ("p" "project" test-cockpit-test-project)
+                       ("c" "custom" test-cockpit-custom-test-command)]
+                      ["Custom actions"
+                       ("C" "some custom action" (lambda () (interactive)
+                                                   (test-cockpit--run-test "some_custom_action --foo")))]])))))
+
+
+(ert-deftest test-main-suffix--one-custom-action-to-alias-type-added ()
+  (project-fixture-mock "foo"
+    (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
+    (test-cockpit-add-custom-action
+       'foo-project-type-alias "C" "some custom action" "some_custom_action --foo")
+    (mocker-let ((test-cockpit--current-module-string () ((:output nil)))
+                 (test-cockpit--current-function-string () ((:output nil)))
+                 (test-cockpit--last-module-string () ((:output nil)))
+                 (test-cockpit--last-function-string () ((:output nil))))
+      (should (equal (test-cockpit--main-suffix)
+                     [["Run tests"
+                       ("p" "project" test-cockpit-test-project)
+                       ("c" "custom" test-cockpit-custom-test-command)]
+                      ["Custom actions"
+                       ("C" "some custom action" (lambda () (interactive)
+                                                   (test-cockpit--run-test "some_custom_action --foo")))]])))))
+
+
+(ert-deftest test-main-suffix--alias-type-one-custom-action-added ()
+  (project-fixture "foo"
+    (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
+    (test-cockpit-add-custom-action
+       'foo-project-type "C" "some custom action" "some_custom_action --foo")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type-alias)))
+                 (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
+                 (test-cockpit--current-module-string () ((:output nil)))
                  (test-cockpit--current-function-string () ((:output nil)))
                  (test-cockpit--last-module-string () ((:output nil)))
                  (test-cockpit--last-function-string () ((:output nil))))

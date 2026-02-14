@@ -553,8 +553,9 @@ description for the action."
 
 (defun test-cockpit--add-custom-action-function (project-type shortcut description action)
   "Register a custom action consisting of SHORTCUT, DESCRIPTION and ACTION to PROJECT-TYPE."
-  (let ((action-list (alist-get project-type test-cockpit--project-type-custom-actions))
-        (action-set `(,shortcut ,description ,action)))
+  (let* ((project-type (test-cockpit--primary-project-type project-type))
+         (action-list (alist-get project-type test-cockpit--project-type-custom-actions))
+         (action-set `(,shortcut ,description ,action)))
     (if action-list
         (setcdr (assoc project-type test-cockpit--project-type-custom-actions)
                 (append action-list `(,action-set)))
@@ -564,7 +565,7 @@ description for the action."
 (defun test-cockpit--custom-actions ()
   "Make the transient suffix for the custom actions."
   (when-let* ((custom-actions
-              (alist-get (projectile-project-type) test-cockpit--project-type-custom-actions)))
+               (alist-get (test-cockpit--primary-project-type) test-cockpit--project-type-custom-actions)))
     (vconcat ["Custom actions"] (vconcat custom-actions))))
 
 (defun test-cockpit--launch-dape (config)
