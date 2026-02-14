@@ -43,6 +43,9 @@
     (when (string-suffix-p "test.el" fn)
       (which-function))))
 
+(cl-defmethod test-cockpit--engine-switch-filter ((_obj test-cockpit-cask-engine))
+  "Filter `install' switch not to be persistent."
+  '("install"))
 
 (test-cockpit-register-project-type 'emacs-cask 'test-cockpit-cask-engine)
 
