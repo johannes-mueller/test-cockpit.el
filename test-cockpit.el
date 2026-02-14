@@ -302,7 +302,7 @@ arguments."
     command))
 
 (defun test-cockpit--memorize-last-switches-from-args (args)
-  "Store the switches to be memorized for the next transient menu."
+  "Store the switches in ARGS to be memorized for the next transient menu."
   (oset (test-cockpit--retrieve-engine) last-switches
         (seq-filter (lambda (switch) (test-cockpit--switch-persistent-p switch)) args)))
 
@@ -429,7 +429,9 @@ and thus can be repeated using `test-cockpit-repeat-test'."
   (oset (test-cockpit--retrieve-engine) last-command compile-command))
 
 (defun test-cockpit--process-custom-command (command regex replacement)
-  "Replace REGEX in COMMAND with REPLACEMENT only if the first character of the match is not '%'"
+  "Replace placeholder for an argument by the argument in a command.
+Basically replace REGEX in COMMAND with REPLACEMENT only if the first
+character of the match is not '%'."
   (let ((replace-closure
          (lambda (match)
            (let ((marker (substring match 0 1))

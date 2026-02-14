@@ -43,6 +43,7 @@
   (test-cockpit-python--test-function-path))
 
 (cl-defmethod test-cockpit--engine-dape-last-test-config ((_obj test-cockpit-python-engine))
+  "Implement the invokation of dape for the last test."
   (let* ((last-cmd (test-cockpit--last-interactive-test-command))
          (args (vconcat (pcase last-cmd
                           ('test-cockpit-test-project [])
