@@ -470,11 +470,49 @@
                       ("c" "custom" test-cockpit-custom-test-command)])))))
 
 
-(ert-deftest test-main-suffix--one-custom-actions-added ()
+(ert-deftest test-main-suffix--one-custom-action-added ()
   (project-fixture-mock "foo"
       (test-cockpit-add-custom-action
        'foo-project-type "C" "some custom action" "some_custom_action --foo")
     (mocker-let ((test-cockpit--current-module-string () ((:output nil)))
+                 (test-cockpit--current-function-string () ((:output nil)))
+                 (test-cockpit--last-module-string () ((:output nil)))
+                 (test-cockpit--last-function-string () ((:output nil))))
+      (should (equal (test-cockpit--main-suffix)
+                     [["Run tests"
+                       ("p" "project" test-cockpit-test-project)
+                       ("c" "custom" test-cockpit-custom-test-command)]
+                      ["Custom actions"
+                       ("C" "some custom action" (lambda () (interactive)
+                                                   (test-cockpit--run-test "some_custom_action --foo")))]])))))
+
+
+(ert-deftest test-main-suffix--one-custom-action-to-alias-type-added ()
+  (project-fixture-mock "foo"
+    (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
+    (test-cockpit-add-custom-action
+       'foo-project-type-alias "C" "some custom action" "some_custom_action --foo")
+    (mocker-let ((test-cockpit--current-module-string () ((:output nil)))
+                 (test-cockpit--current-function-string () ((:output nil)))
+                 (test-cockpit--last-module-string () ((:output nil)))
+                 (test-cockpit--last-function-string () ((:output nil))))
+      (should (equal (test-cockpit--main-suffix)
+                     [["Run tests"
+                       ("p" "project" test-cockpit-test-project)
+                       ("c" "custom" test-cockpit-custom-test-command)]
+                      ["Custom actions"
+                       ("C" "some custom action" (lambda () (interactive)
+                                                   (test-cockpit--run-test "some_custom_action --foo")))]])))))
+
+
+(ert-deftest test-main-suffix--alias-type-one-custom-action-added ()
+  (project-fixture "foo"
+    (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
+    (test-cockpit-add-custom-action
+       'foo-project-type "C" "some custom action" "some_custom_action --foo")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type-alias)))
+                 (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
+                 (test-cockpit--current-module-string () ((:output nil)))
                  (test-cockpit--current-function-string () ((:output nil)))
                  (test-cockpit--last-module-string () ((:output nil)))
                  (test-cockpit--last-function-string () ((:output nil))))
@@ -949,8 +987,15 @@
 (ert-deftest test-additional-on-project-type-alias ()
   (project-fixture "foo"
     (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
-    (test-cockpit-add-additional-switch 'foo-project-type"--some-switch")
+    (test-cockpit-add-additional-switch 'foo-project-type "--some-switch")
     (mocker-let ((projectile-project-type () ((:output 'foo-project-type-alias))))
+      (should (equal (test-cockpit--additional-switches) '("--some-switch"))))))
+
+(ert-deftest test-additional-alias-on-project-type ()
+  (project-fixture "foo"
+    (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
+    (test-cockpit-add-additional-switch 'foo-project-type-alias "--some-switch")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type))))
       (should (equal (test-cockpit--additional-switches) '("--some-switch"))))))
 
 (ert-deftest test-addition-switches-test-project ()
@@ -960,5 +1005,54 @@
                  (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
                  (compile (command) ((:input '("test project foo bar --some-switch") :output 'success))))
       (test-cockpit-test-project '("foo" "bar")))))
+
+(ert-deftest test-preselected-switch-passed-to-infix ()
+  (setq test-cockpit--switch-preselections nil)
+  (project-fixture "foo"
+    (test-cockpit-preselect-switch 'foo-project-type "--some-switch")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+                 (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project"))))
+      (should (equal (test-cockpit--last-switches) '("--some-switch"))))))
+
+
+(ert-deftest test-preselected-switch-alias-passed-to-infix ()
+  (setq test-cockpit--switch-preselections nil)
+  (project-fixture "foo"
+    (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
+    (test-cockpit-preselect-switch 'foo-project-type-alias "--some-switch")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+                 (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project"))))
+      (should (equal (test-cockpit--last-switches) '("--some-switch"))))))
+
+
+(ert-deftest test-preselected-switch-passed-to-alias-infix ()
+  (setq test-cockpit--switch-preselections nil)
+  (project-fixture "foo"
+    (test-cockpit-register-project-type-alias 'foo-project-type-alias 'foo-project-type)
+    (test-cockpit-preselect-switch 'foo-project-type "--some-switch")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type-alias)))
+                 (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project"))))
+      (should (equal (test-cockpit--last-switches) '("--some-switch"))))))
+
+
+(ert-deftest test-two-preselected-switches-passed-to-infix ()
+  (setq test-cockpit--switch-preselections nil)
+  (project-fixture "foo"
+    (test-cockpit-preselect-switch 'foo-project-type "--some-switch")
+    (test-cockpit-preselect-switch 'foo-project-type "--another-switch")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+                 (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project"))))
+      (should (equal (test-cockpit--last-switches) '("--some-switch" "--another-switch"))))))
+
+
+(ert-deftest test-same-preselected-switch-only-once-passed-to-infix ()
+  (setq test-cockpit--switch-preselections nil)
+  (project-fixture "foo"
+    (test-cockpit-preselect-switch 'foo-project-type "--some-switch")
+    (test-cockpit-preselect-switch 'foo-project-type "--some-switch")
+    (mocker-let ((projectile-project-type () ((:output 'foo-project-type)))
+                 (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project"))))
+      (should (equal (test-cockpit--last-switches) '("--some-switch"))))))
+
 
 ;;; test-cockpit.el-test.el ends here
