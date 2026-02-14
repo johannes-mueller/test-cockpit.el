@@ -80,9 +80,14 @@ Usually there is one such engine per project that has been
 visited during the current session.  An engine is an instance of
 a derived class of `test-cockpit--engine'.")
 
-
 (defvar test-cockpit--project-type-custom-actions '()
   "Custom actions that can be registered on a project type level.")
+
+(defvar test-cockpit--additional-switch-config nil
+  "Project type specific additional switches to be passed to the test command.")
+
+(defvar test-cockpit--switch-preselections nil
+  "Project type specific preselected switches.")
 
 (defclass test-cockpit--engine ()
   ((last-command :initarg :last-command
@@ -186,8 +191,14 @@ If the current project type is not supported a dummy engine is
 returned."
   (if-let* ((engine-factory (alist-get (test-cockpit--primary-project-type) test-cockpit--project-types))
             (real-engine (funcall engine-factory)))
-        real-engine
+      (test-cockpit--initialize-preselected-switches real-engine)
     (test-cockpit--make-dummy-engine)))
+
+(defun test-cockpit--initialize-preselected-switches (engine)
+  "Pass the preselected switches to the newly created ENGINE."
+  (let ((preselected-switches (alist-get (test-cockpit--primary-project-type) test-cockpit--switch-preselections)))
+    (oset engine last-switches preselected-switches))
+  engine)
 
 (defmacro test-cockpit--engine-for-current-project ()
   "Provide the engine for the current project."
@@ -787,17 +798,24 @@ OJB is just the self reference."
                 (propertize ", " 'face 'transient-inactive-value))
      (propertize "]" 'face 'transient-inactive-value))))
 
-(defvar test-cockpit--additional-switch-config nil)
-
 (defun test-cockpit-add-additional-switch (project-type switch)
   "Add the additional switch SWITCH to projects of PROJECT-TYPE."
-  (if-let* ((switch-list (alist-get project-type test-cockpit--additional-switch-config)))
-      (setcdr (assq project-type test-cockpit--additional-switch-config) (reverse (cons switch switch-list)))
-      (push (cons project-type (list switch)) test-cockpit--additional-switch-config)))
+  (let ((project-type (test-cockpit--primary-project-type project-type)))
+    (if-let* ((switch-list (alist-get project-type test-cockpit--additional-switch-config)))
+        (setcdr (assq project-type test-cockpit--additional-switch-config) (reverse (cons switch switch-list)))
+      (push (cons project-type (list switch)) test-cockpit--additional-switch-config))))
 
 (defun test-cockpit--additional-switches ()
   "Lookup the additional switches for the current project type."
   (alist-get (test-cockpit--primary-project-type) test-cockpit--additional-switch-config))
+
+(defun test-cockpit-preselect-switch (project-type switch)
+  "Preselect SWITCH for testing command for projects of PROJECT-TYPE."
+  (let ((project-type (test-cockpit--primary-project-type project-type)))
+    (if-let* ((preselection (alist-get project-type test-cockpit--switch-preselections)))
+        (unless (member switch preselection)
+          (setcdr (assq project-type test-cockpit--switch-preselections) (reverse (cons switch preselection))))
+      (push (cons project-type (list switch)) test-cockpit--switch-preselections))))
 
 (provide 'test-cockpit)
 
