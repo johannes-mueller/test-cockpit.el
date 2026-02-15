@@ -160,6 +160,16 @@ for more short term goals.
 Lots. I implement stuff as soon as I need it and have some time.
 
 
+## Developer Documentation
+
+### Transient Menu Development
+
+If you're extending test-cockpit with new transient menus, be aware of a common recursion issue when using predicates with `:refresh-suffixes`. See [TRANSIENT-RECURSION-FIX.md](TRANSIENT-RECURSION-FIX.md) for details on:
+
+- Why `transient-args` causes recursion in predicate functions
+- How to correctly use `transient-get-value` instead
+- Examples of proper predicate implementation
+
 ## Contributing
 
 Ideas, issues, feature requests, PRs always welcome.

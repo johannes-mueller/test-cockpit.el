@@ -17,6 +17,11 @@ This documents the changes of every release starting of 0.1.0.
 
 * Fix test-cockpit--repeat-interactive-test function name
 
+### Documentation
+
+* Add documentation about transient recursion issue with `:inapt-if-not` predicates
+* Explain proper usage of `transient-get-value` vs `transient-args` in predicates
+* Add comprehensive guide in TRANSIENT-RECURSION-FIX.md
 
 ### Other changes
 
