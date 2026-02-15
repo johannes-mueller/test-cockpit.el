@@ -84,7 +84,9 @@
 (defun test-cockpit-python--cmd-prefix (args)
   "Add command prefix command if ARGS demands it."
   (cond ((member "build_ext" args) (concat test-cockpit-python-build-ext-command " && "))
-        ((member "use-uv" args) "uv run ")
+        ((member "use-uv" args)
+         (let ((python-version-switch (seq-find (lambda (cand) (string-prefix-p "--python=" cand)) args)))
+           (replace-regexp-in-string " +" " " (concat "uv run " python-version-switch " "))))
         (t "")))
 
 (defun test-cockpit-python--common-switches (args)
@@ -92,7 +94,8 @@
   (concat (test-cockpit-python--cmd-prefix args)
           "pytest --color=yes"
           (test-cockpit--add-leading-space-to-switches
-           (string-join (seq-remove (lambda (elt) (member elt '("use-uv" "build_ext")))
+           (string-join (seq-remove (lambda (elt) (or (member elt '("use-uv" "build_ext"))
+                                                      (string-prefix-p "--python=" elt)))
                                 (test-cockpit-python--insert-project-coverage-to-switches
                                  (test-cockpit-python--insert-no-coverage-to-switches args)))
                         " "))))
@@ -124,6 +127,11 @@
   :key "-k"
   :argument "-k")
 
+(transient-define-argument test-cockpit-python--python-version ()
+  :description "use python version (uv)"
+  :class 'transient-option
+  :argument "--python=")
+
 (transient-define-argument test-cockpit-python--marker-switch ()
   :description "Add marker switch "
   :class 'transient-option
@@ -154,14 +162,28 @@
   :choices '("long" "short" "line" "native" "no")
   :description "show traceback style")
 
+(defvar test-cockpit-python--using-uv nil)
+
+(defun test-cockpit--use-uv-on-p ()
+  "Non-nil if uv is not to be used."
+  (member "use-uv" (transient-get-value)))
+
+(defun test-cockpit-python--uv-available ()
+  "Non-nil if uv is available."
+  (executable-find "uv"))
+
 (defun test-cockpit-python--infix ()
   "Setup the pytest specific test switches."
+  (setq test-cockpit-python--using-uv (member "use-uv" (test-cockpit--last-switches)))
   [["Switches"
     ("-k" test-cockpit-python--restrict-substring)
     ("-f" "only lastly failed tests" "--last-failed")
     ("-x" "exit after first fail" "--exitfirst")
     ("-b" "build extensions before testing" "build_ext")
-    ("-u" "use `uv run' to run pytest" "use-uv")
+    ("-u" "use `uv run' to run pytest" "use-uv" :if test-cockpit-python--uv-available)
+    ("-p" test-cockpit-python--python-version
+     :if test-cockpit-python--uv-available
+     :inapt-if-not test-cockpit--use-uv-on-p)
     ("-m" test-cockpit-python--marker-switch)
     ("-M" "test type hints" "--mypy")]
    ["Output"
