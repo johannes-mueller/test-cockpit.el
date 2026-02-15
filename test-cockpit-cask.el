@@ -70,8 +70,8 @@
 
 (defun test-cockpit-cask--infix ()
   "Setup project type specific switch menu."
-  ["Cask specific switches"
-   ("-i" "Run `cask install` before test" "install")])
+  [["Cask specific switches"
+    ("-i" "Run `cask install` before test" "install")]])
 
 (provide 'test-cockpit-cask)
 
