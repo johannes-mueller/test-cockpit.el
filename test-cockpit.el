@@ -63,6 +63,31 @@
 
 ;; There is experimental state support of the Dape package to run DAP debug sessions.
 
+;;; Transient Usage Note:
+
+;; When creating transient prefixes with predicates (like `:inapt-if-not',
+;; `:inapt-if', etc.) that need to check the current transient arguments,
+;; ALWAYS use `transient-get-value' instead of `transient-args'.
+;;
+;; Using `transient-args' in predicates with `:refresh-suffixes t' causes
+;; infinite recursion:
+;;   1. Transient refreshes suffixes
+;;   2. Predicate calls `transient-args' to check current state
+;;   3. This triggers another refresh (due to :refresh-suffixes)
+;;   4. Back to step 2 -> infinite recursion
+;;
+;; The correct approach:
+;;   - Use `transient-get-value' in predicates (safe within menu context)
+;;   - Use `transient-args' only in suffix command bodies
+;;
+;; Example (BROKEN - causes recursion):
+;;   (defun check-option-p ()
+;;     (member "option" (transient-args 'my-prefix)))  ; BAD!
+;;
+;; Example (CORRECT - no recursion):
+;;   (defun check-option-p ()
+;;     (member "option" (transient-get-value 'my-prefix)))  ; GOOD!
+
 ;;; Code:
 
 (require 'transient)
