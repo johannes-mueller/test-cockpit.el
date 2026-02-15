@@ -72,7 +72,7 @@
   (setq test-cockpit--project-engines nil)
   (mocker-let
    ((projectile-project-type () ((:output 'emacs-cask))))
-   (let ((infix (test-cockpit--infix)))
+   (let ((infix (aref (test-cockpit--infix) 0)))
      (should
       (and (equal (aref infix 0) "Cask specific switches")
            (equal (aref infix 1) '("-i" "Run `cask install` before test" "install")))))))

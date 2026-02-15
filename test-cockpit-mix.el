@@ -73,11 +73,11 @@ Some switches are not actual switches but are realized as environment variable."
 
 (defun test-cockpit-mix--infix ()
   "Setup project type specific infix."
-  ["Mix specific switches"
-   ("-r" "Reset Ecto before test" "reset")
-   ("-f" "Only lastly failed tests" "--failed")
-   ("-d" "Set loglevel to \"debug\"" "debuglog")
-   ("-t" "Output trace" "--trace")])
+  [["Mix specific switches"
+    ("-r" "Reset Ecto before test" "reset")
+    ("-f" "Only lastly failed tests" "--failed")
+    ("-d" "Set loglevel to \"debug\"" "debuglog")
+    ("-t" "Output trace" "--trace")]])
 
 (provide 'test-cockpit-mix)
 

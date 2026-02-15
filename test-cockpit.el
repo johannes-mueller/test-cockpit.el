@@ -276,14 +276,6 @@ FUNC-STRING is the string determining the function to test."
   "Call the infix function of the current project type and return the infix array."
   (test-cockpit--transient-infix (test-cockpit--retrieve-engine)))
 
-(defun test-cockpit--insert-infix ()
-  "Insert the infix array into the `transient-prefix'."
-  (unless (equal (aref (transient-get-suffix 'test-cockpit-prefix '(0)) 2)
-                 '(:description "Run test"))
-    (transient-remove-suffix 'test-cockpit-prefix '(0)))
-  (if-let* ((infix (test-cockpit--infix)))
-      (transient-insert-suffix 'test-cockpit-prefix '(0) infix)))
-
 (defun test-cockpit--run-test (command)
   "Run the test command COMMAND and remembers for the case the test is repeated."
   (oset (test-cockpit--retrieve-engine) last-command command)
@@ -390,8 +382,8 @@ the user can repeat the last module test with different ARGS."
       (test-cockpit--run-test (test-cockpit--command
                                'test-cockpit--make-test-module-command
                                (test-cockpit--last-module-string)
-                               args)))
-  (test-cockpit-dispatch))
+                               args))
+    (test-cockpit-dispatch)))
 
 ;;;###autoload
 (defun test-cockpit-repeat-function ()
@@ -414,8 +406,8 @@ the user can repeat the last function test with different ARGS."
       (test-cockpit--run-test (test-cockpit--command
                                'test-cockpit--make-test-function-command
                                (test-cockpit--last-function-string)
-                               args)))
-  (test-cockpit-dispatch))
+                               args))
+    (test-cockpit-dispatch)))
 
 ;;;###autoload
 (defun test-cockpit-custom-test-command ()
@@ -664,7 +656,11 @@ repetition."
 (transient-define-prefix test-cockpit-prefix ()
   "Test the project."
   :value 'test-cockpit--last-switches
-  [])
+  :refresh-suffixes t
+  [:class transient-columns
+   :setup-children (lambda (_) (transient-parse-suffixes 'test-cockpit-prefix (test-cockpit--infix)))]
+  [:class transient-columns
+   :setup-children (lambda (_) (transient-parse-suffixes 'test-cockpit-prefix (test-cockpit--main-suffix)))])
 
 (defun test-cockpit--test-action-suffix ()
   "Setup the main menu common for all projects for testing."
@@ -691,9 +687,11 @@ repetition."
 
 (defun test-cockpit--main-suffix ()
   "Setup the main menu common for all projects for testing and actions."
-  (if-let* ((custom-actions-suffix (test-cockpit--custom-actions)))
-      `[,(test-cockpit--test-action-suffix) ,custom-actions-suffix]
-    (test-cockpit--test-action-suffix)))
+  (let ((action-suffix (vconcat (test-cockpit--test-action-suffix)
+                                (test-cockpit--transient-suffix-for-repeat))))
+    (if-let* ((custom-actions-suffix (test-cockpit--custom-actions)))
+        `[,action-suffix ,custom-actions-suffix]
+     `[,action-suffix])))
 
 (defun test-cockpit--strip-project-root (path)
   "Strip the project root path from a given PATH."
@@ -704,7 +702,8 @@ repetition."
   (let ((module-string (test-cockpit--last-module-string))
         (function-string (test-cockpit--last-function-string)))
     (if (or module-string function-string)
-        (vconcat (remove nil (append `("Repeat tests"
+        (vconcat (remove nil (append `(""
+                                       "Repeat tests"
                                        ,(if module-string
                                             `("M"
                                               ,(format "last module: %s" (test-cockpit--strip-project-root module-string))
@@ -722,27 +721,14 @@ repetition."
     ('test-cockpit-test-function (format "function: %s" (test-cockpit--strip-project-root (test-cockpit--last-function-string))))
     (_ "")))
 
-(defun test-cockpit--append-repeat-suffix ()
-  "Append the repeat suffix to the transient prefix if possible.
-If possible the suffix is returned if not nil."
-  (if-let* ((repeat-suffix (test-cockpit--transient-suffix-for-repeat)))
-      (transient-append-suffix 'test-cockpit-prefix '(-1) repeat-suffix)
-    nil))
-
 (defun test-cockpit-dispatch ()
   "Invoke the user interface of to setup and run tests.
 If the repeat suffix has been appended it is removed afterwards
 as will be no longer valid and we don't want the suffixes to
 accumulate."
   (interactive)
-  (transient-append-suffix 'test-cockpit-prefix '(-1) (test-cockpit--main-suffix))
   (test-cockpit--real-engine-or-error)
-  (test-cockpit--insert-infix)
-  (let ((appended-suffix-must-be-removed (test-cockpit--append-repeat-suffix)))
-    (transient-setup 'test-cockpit-prefix)
-    (when appended-suffix-must-be-removed
-      (transient-remove-suffix 'test-cockpit-prefix '(-1)))
-    (transient-remove-suffix 'test-cockpit-prefix '(-1))))
+  (test-cockpit-prefix))
 
 (defun test-cockpit--join-filter-switches (candidates allowed)
   "Join the list of strings CANDIDATES together.
