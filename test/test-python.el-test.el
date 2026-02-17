@@ -140,7 +140,7 @@
                                       :output 'success :occur 1))))
       (test-cockpit-test-project '("--last-failed" "build_ext")))))
 
-(ert-deftest test-python-uv-prefixed ()
+(ert-deftest test-python-uv-prefixed-no-python-version ()
   (setq test-cockpit--project-engines nil)
   (mocker-let ((projectile-project-type () ((:output 'python-pip)))
                (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
@@ -148,6 +148,15 @@
                (compile (command) ((:input '("uv run pytest --color=yes --last-failed --no-cov")
                                     :output 'success :occur 1))))
     (test-cockpit-test-project '("--last-failed" "use-uv"))))
+
+(ert-deftest test-python-uv-prefixed-python-version ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let ((projectile-project-type () ((:output 'python-pip)))
+               (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
+               (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
+               (compile (command) ((:input '("uv run --python=3.14 pytest --color=yes --last-failed --no-cov")
+                                    :output 'success :occur 1))))
+    (test-cockpit-test-project '("--last-failed" "use-uv" "--python=3.14"))))
 
 (ert-deftest test-python-insert-no-coverage-to-switches ()
   (dolist (struct '((("--last-failed") ("--last-failed" "--no-cov"))
@@ -453,13 +462,17 @@ async def test_first_outer():
   (mocker-let ((projectile-project-type () ((:output 'python-pip))))
     (let ((infix (test-cockpit--infix)))
       (should (equal (aref (aref infix 0) 0) "Switches"))
-      (should (equal (car (aref (aref infix 0) 1)) "-k"))
+      (should (equal (aref (aref infix 0) 1) '("-k" test-cockpit-python--restrict-substring)))
       (should (equal (aref (aref infix 0) 2) '("-f" "only lastly failed tests" "--last-failed")))
       (should (equal (aref (aref infix 0) 3) '("-x" "exit after first fail" "--exitfirst")))
       (should (equal (aref (aref infix 0) 4) '("-b" "build extensions before testing" "build_ext")))
-      (should (equal (aref (aref infix 0) 5) '("-u" "use `uv run' to run pytest" "use-uv")))
-      (should (equal (car (aref (aref infix 0) 6)) "-m"))
-      (should (equal (aref (aref infix 0) 7) '("-M" "test type hints" "--mypy")))
+      (should (equal (aref (aref infix 0) 5) '("-u" "use `uv run' to run pytest" "use-uv"
+                                               :if test-cockpit-python--uv-available)))
+      (should (equal (aref (aref infix 0) 6) '("-p" test-cockpit-python--python-version
+                                               :if test-cockpit-python--uv-available
+                                               :inapt-if-not test-cockpit--use-uv-on-p)))
+      (should (equal (car (aref (aref infix 0) 7)) "-m"))
+      (should (equal (aref (aref infix 0) 8) '("-M" "test type hints" "--mypy")))
       (should (equal (aref (aref infix 1) 0) "Output"))
       (should (equal (aref (aref infix 1) 3) '("-c" "print coverage report" "--cov-report=term-missing")))
       (should (equal (aref (aref infix 1) 4) '("-r" "report output of passed tests" "-rFP")))
