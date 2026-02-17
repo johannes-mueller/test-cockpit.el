@@ -3,7 +3,7 @@
 
 ;(package-file "TODO")
 
-(depends-on "transient")
+(depends-on "transient" "0.7.0")
 (depends-on "projectile")
 (depends-on "toml")
 
