@@ -81,12 +81,19 @@
   "Make the test function command from STRING and ARGS."
   (concat (test-cockpit-python--common-switches args) " " string))
 
+
+(defconst test-cockpit--python-uv-prepend-args '("--python=" "--with="))
+
+(defun test-cockpit-python--arg-uv-prepended-p (arg)
+  "Non-nil if ARG is a uv prepended argument."
+  (seq-find (lambda (cand) (string-prefix-p cand arg)) test-cockpit--python-uv-prepend-args))
+
 (defun test-cockpit-python--cmd-prefix (args)
   "Add command prefix command if ARGS demands it."
   (cond ((member "build_ext" args) (concat test-cockpit-python-build-ext-command " && "))
         ((member "use-uv" args)
-         (let ((python-version-switch (seq-find (lambda (cand) (string-prefix-p "--python=" cand)) args)))
-           (replace-regexp-in-string " +" " " (concat "uv run " python-version-switch " "))))
+         (let ((prepended (or (seq-filter 'test-cockpit-python--arg-uv-prepended-p args) '(""))))
+           (replace-regexp-in-string " +" " " (concat (string-join `("uv run" . ,prepended) " ") " "))))
         (t "")))
 
 (defun test-cockpit-python--common-switches (args)
@@ -95,9 +102,9 @@
           "pytest --color=yes"
           (test-cockpit--add-leading-space-to-switches
            (string-join (seq-remove (lambda (elt) (or (member elt '("use-uv" "build_ext"))
-                                                      (string-prefix-p "--python=" elt)))
-                                (test-cockpit-python--insert-project-coverage-to-switches
-                                 (test-cockpit-python--insert-no-coverage-to-switches args)))
+                                                      (test-cockpit-python--arg-uv-prepended-p elt)))
+                                    (test-cockpit-python--insert-project-coverage-to-switches
+                                     (test-cockpit-python--insert-no-coverage-to-switches args)))
                         " "))))
 
 (defun test-cockpit-python--insert-no-coverage-to-switches (switches)
@@ -131,6 +138,11 @@
   :description "use python version (uv)"
   :class 'transient-option
   :argument "--python=")
+
+(transient-define-argument test-cockpit-python--with-package-directive ()
+  :description "specify version of python package (uv)"
+  :class 'transient-option
+  :argument "--with=")
 
 (transient-define-argument test-cockpit-python--marker-switch ()
   :description "Add marker switch "
@@ -182,6 +194,9 @@
     ("-b" "build extensions before testing" "build_ext")
     ("-u" "use `uv run' to run pytest" "use-uv" :if test-cockpit-python--uv-available)
     ("-p" test-cockpit-python--python-version
+     :if test-cockpit-python--uv-available
+     :inapt-if-not test-cockpit--use-uv-on-p)
+    ("-W" test-cockpit-python--with-package-directive
      :if test-cockpit-python--uv-available
      :inapt-if-not test-cockpit--use-uv-on-p)
     ("-m" test-cockpit-python--marker-switch)

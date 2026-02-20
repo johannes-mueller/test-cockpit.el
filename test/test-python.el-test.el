@@ -158,6 +158,24 @@
                                     :output 'success :occur 1))))
     (test-cockpit-test-project '("--last-failed" "use-uv" "--python=3.14"))))
 
+(ert-deftest test-python-uv-prefixed-with-directive ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let ((projectile-project-type () ((:output 'python-pip)))
+               (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
+               (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
+               (compile (command) ((:input '("uv run --with=pandas==2.3.3 pytest --color=yes --last-failed --no-cov")
+                                    :output 'success :occur 1))))
+    (test-cockpit-test-project '("--last-failed" "use-uv" "--with=pandas==2.3.3"))))
+
+(ert-deftest test-python-uv-prefixed-with-both-python-version-and-withdirective ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let ((projectile-project-type () ((:output 'python-pip)))
+               (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
+               (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
+               (compile (command) ((:input '("uv run --python=3.14 --with=pandas==2.3.3 pytest --color=yes --last-failed --no-cov")
+                                    :output 'success :occur 1))))
+    (test-cockpit-test-project '("--last-failed" "use-uv" "--python=3.14" "--with=pandas==2.3.3"))))
+
 (ert-deftest test-python-insert-no-coverage-to-switches ()
   (dolist (struct '((("--last-failed") ("--last-failed" "--no-cov"))
                     (("--last-failed" "--cov-report=term-missing") ("--last-failed" "--cov-report=term-missing"))))
@@ -471,8 +489,11 @@ async def test_first_outer():
       (should (equal (aref (aref infix 0) 6) '("-p" test-cockpit-python--python-version
                                                :if test-cockpit-python--uv-available
                                                :inapt-if-not test-cockpit--use-uv-on-p)))
-      (should (equal (car (aref (aref infix 0) 7)) "-m"))
-      (should (equal (aref (aref infix 0) 8) '("-M" "test type hints" "--mypy")))
+      (should (equal (aref (aref infix 0) 7) '("-W" test-cockpit-python--with-package-directive
+                                               :if test-cockpit-python--uv-available
+                                               :inapt-if-not test-cockpit--use-uv-on-p)))
+      (should (equal (car (aref (aref infix 0) 8)) "-m"))
+      (should (equal (aref (aref infix 0) 9) '("-M" "test type hints" "--mypy")))
       (should (equal (aref (aref infix 1) 0) "Output"))
       (should (equal (aref (aref infix 1) 3) '("-c" "print coverage report" "--cov-report=term-missing")))
       (should (equal (aref (aref infix 1) 4) '("-r" "report output of passed tests" "-rFP")))
