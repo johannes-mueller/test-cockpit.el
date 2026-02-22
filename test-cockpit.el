@@ -71,6 +71,11 @@
 
 (declare-function dape "dape" (config &optional skip-compile))
 
+(defcustom test-cockpit-fallback-test-command #'projectile-test-project
+  "Fall back function for unsupported project types."
+  :group 'test-cockpit
+  :type 'function)
+
 (defvar test-cockpit--project-types nil
   "List of known project types.
 Project types can be added to the list using
@@ -120,7 +125,8 @@ class is needed which implements the methods of the base class.")
   "Supply the function to be called when the whole project is to be tested.
 The function has to have the signature `(defun fun (_ ARGS))' where
 ARGS is the argument list passed to the test frame work."
-  nil)
+  (when test-cockpit-fallback-test-command
+    (call-interactively test-cockpit-fallback-test-command)))
 
 (cl-defmethod test-cockpit--test-module-command ((_obj test-cockpit--engine))
   "Supply the function to be called when a module is to be tested.
@@ -214,18 +220,6 @@ If no engine is yet started for the project, it will be started."
     (let ((new-engine (test-cockpit--make-engine)))
       (setf (test-cockpit--engine-for-current-project) new-engine)
       new-engine)))
-
-(defun test-cockpit--dummy-engine-p (&optional engine)
-  "Return non-nil if ENGINE or the current project enigne is a dummy engine."
-    (not (oref (or engine (test-cockpit--retrieve-engine)) project-type)))
-
-(defun test-cockpit--real-engine-or-error ()
-  "Retrieve the engine for the project; error if the project type is unsupported."
-  (let ((engine (test-cockpit--retrieve-engine)))
-    (if (test-cockpit--dummy-engine-p engine)
-        (signal "Project type %s not supported by test-cockpit or engine not installed"
-                (projectile-project-type))
-      engine)))
 
 (defun test-cockpit--make-test-command (method thing args)
   "Setup the test command to be issued.
@@ -419,8 +413,9 @@ and thus can be repeated using `test-cockpit-repeat-test'."
     (when-let* ((last-cmd (test-cockpit--last-custom-command)))
       (setq compile-command last-cmd))
     (call-interactively #'compile))
-  (oset (test-cockpit--retrieve-engine) last-custom-command compile-command)
-  (oset (test-cockpit--retrieve-engine) last-command compile-command))
+  (let ((engine (test-cockpit--retrieve-engine)))
+    (oset engine last-custom-command compile-command)
+    (oset engine last-command compile-command)))
 
 (defun test-cockpit--process-custom-command (command regex replacement)
   "Replace placeholder for an argument by the argument in a command.
@@ -456,7 +451,7 @@ If the for the project no test has been run during the current
 session, the main dispatch dialog is invoked."
   (interactive
    (list (transient-args 'test-cockpit-prefix)))
-  (if-let* ((last-cmd (oref (test-cockpit--real-engine-or-error) last-command)))
+  (if-let* ((last-cmd (oref (test-cockpit--retrieve-engine) last-command)))
       (if (eq last-cmd 'test-cockpit--last-command-was-dape)
           (test-cockpit-dape-debug-repeat-test)
         (test-cockpit--run-test last-cmd))
@@ -640,13 +635,14 @@ Then memorize that last test was a dape session."
     ('test-cockpit-test-function (format "function: %s" (test-cockpit--strip-project-root (test-cockpit--last-function-string))))
     (_ "")))
 
+
+;;;###autoload
 (defun test-cockpit-dispatch ()
   "Invoke the user interface of to setup and run tests.
 If the repeat suffix has been appended it is removed afterwards
 as will be no longer valid and we don't want the suffixes to
 accumulate."
   (interactive)
-  (test-cockpit--real-engine-or-error)
   (test-cockpit-prefix))
 
 (defun test-cockpit--join-filter-switches (candidates allowed)
