@@ -463,57 +463,6 @@ session, the main dispatch dialog is invoked."
     (test-cockpit-dispatch)))
 
 ;;;###autoload
-(defun test-cockpit-test-or-projectile-build ()
-  "Test or build the project depending on if the project type is supported.
-If the project type is supported, function
-`test-cockpit-repeat-test' is run.  Otherwise the project build
-is launched by calling the function `projectile-compile-project'."
-  (interactive)
-  (if (test-cockpit--dummy-engine-p)
-      (test-cockpit--projectile-build)
-    (test-cockpit-dispatch)))
-
-;;;###autoload
-(defun test-cockpit-repeat-test-or-projectile-build ()
-  "Repeat the last test or build action (native or projectile).
-If the project type is supported, function `test-cockpit-repeat'
-test is invoked.  That means, the last test action is repeated or
-if the project has not seen a test action during the session, the
-test menu is shown.  If the project type is unknown the last
-build command is repeated by the function
-`projectile-build-project' a prompt to type a build command is
-shown."
-  (interactive)
-  (if (test-cockpit--dummy-engine-p)
-      (test-cockpit--repeat-projectile-build)
-    (test-cockpit-repeat-test)))
-
-;;;###autoload
-(defun test-cockpit-test-or-projectile-test ()
-  "Test the project falling back projectile if project type is not supported.
-If the project type is supported, function
-`test-cockpit-repeat-test' is run.  Otherwise the project tested
-calling the function `projectile-test-project'."
-  (interactive)
-  (if (test-cockpit--dummy-engine-p)
-      (test-cockpit--projectile-test)
-    (test-cockpit-dispatch)))
-
-;;;###autoload
-(defun test-cockpit-repeat-test-or-projectile-test ()
-  "Repeat the last test action (native or projectile).
-If the project type is supported, function `test-cockpit-repeat'
-test is invoked.  That means, the last test action is repeated or
-if the project has not seen a test action during the session, the
-test menu is shown.  If the project type is unknown the last test
-command is repeated by the function `projectile-test-project' a
-prompt to type a test command is shown."
-  (interactive)
-  (if (test-cockpit--dummy-engine-p)
-      (test-cockpit--repeat-projectile-test)
-    (test-cockpit-repeat-test)))
-
-;;;###autoload
 (defun test-cockpit-repeat-interactive-test (&optional args)
   "Repeat the last interactive test command.
 This is not meant to be called directly but as a result the transient dispatch
@@ -581,36 +530,6 @@ description for the action."
 Then memorize that last test was a dape session."
   (dape config)
   (oset (test-cockpit--retrieve-engine) last-command 'test-cockpit--last-command-was-dape))
-
-(defun test-cockpit--projectile-build (&optional last-cmd)
-  "Launch a projectile driven build process.
-If last executed command LAST-CMD is given the command is
-repeated as is.  Otherwise function `projectile-compile-project'
-is called interactively and the actual compile command is stored
-for repetition."
-  (if last-cmd
-      (test-cockpit--issue-compile-command last-cmd)
-    (projectile-compile-project nil)
-    (oset (test-cockpit--retrieve-engine) last-build-command compile-command)))
-
-(defun test-cockpit--repeat-projectile-build ()
-  "Repeat the last projectile driven build process."
-  (test-cockpit--projectile-build (test-cockpit--last-build-command)))
-
-(defun test-cockpit--projectile-test (&optional last-cmd)
-  "Launch a projectile driven test process.
-If last executed command LAST-CMD is given the command is
-repeated as is.  Otherwise function `projectile-test-project' is
-called interactively and the actual test command is stored for
-repetition."
-  (if last-cmd
-      (test-cockpit--issue-compile-command last-cmd)
-    (projectile-test-project nil)
-    (oset (test-cockpit--retrieve-engine) last-test-command compile-command)))
-
-(defun test-cockpit--repeat-projectile-test ()
-  "Repeat the last projectile driven test process."
-  (test-cockpit--projectile-test (test-cockpit--last-test-command)))
 
 (defun test-cockpit--current-module-string ()
   "Ask the current engine for the current module string."
