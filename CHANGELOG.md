@@ -4,6 +4,11 @@ This documents the changes of every release starting of 0.1.0.
 
 ## Unstable
 
+### Breaking changes
+
+All the `*-or-projectile-*` commands have been dropped. The functionality is
+now done by other means. (Will be documented)
+
 ### New features
 
 * Implement pytest cycling verbosity levels (#38)
