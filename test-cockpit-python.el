@@ -16,6 +16,11 @@
 
 (require 'test-cockpit)
 
+(defcustom test-cockpit-python-uv-switches '("--all-extras" "--all-groups")
+  "Additional switches to be applied to `uv run'."
+  :group 'test-cockpit
+  :type '(list string))
+
 (defvar test-cockpit-python-build-ext-command "pip install -e . --no-deps"
   "The command to build the python extensions.")
 
@@ -92,7 +97,8 @@
   "Add command prefix command if ARGS demands it."
   (cond ((member "build_ext" args) (concat test-cockpit-python-build-ext-command " && "))
         ((member "use-uv" args)
-         (let ((prepended (or (seq-filter 'test-cockpit-python--arg-uv-prepended-p args) '(""))))
+         (let ((prepended (append test-cockpit-python-uv-switches
+                                  (seq-filter 'test-cockpit-python--arg-uv-prepended-p args))))
            (replace-regexp-in-string " +" " " (concat (string-join `("uv run" . ,prepended) " ") " "))))
         (t "")))
 
