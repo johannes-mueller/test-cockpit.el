@@ -145,7 +145,7 @@
   (mocker-let ((projectile-project-type () ((:output 'python-pip)))
                (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
                (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
-               (compile (command) ((:input '("uv run pytest --color=yes --last-failed --no-cov")
+               (compile (command) ((:input '("uv run --all-extras --all-groups pytest --color=yes --last-failed --no-cov")
                                     :output 'success :occur 1))))
     (test-cockpit-test-project '("--last-failed" "use-uv"))))
 
@@ -154,7 +154,7 @@
   (mocker-let ((projectile-project-type () ((:output 'python-pip)))
                (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
                (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
-               (compile (command) ((:input '("uv run --python=3.14 pytest --color=yes --last-failed --no-cov")
+               (compile (command) ((:input '("uv run --all-extras --all-groups --python=3.14 pytest --color=yes --last-failed --no-cov")
                                     :output 'success :occur 1))))
     (test-cockpit-test-project '("--last-failed" "use-uv" "--python=3.14"))))
 
@@ -163,7 +163,7 @@
   (mocker-let ((projectile-project-type () ((:output 'python-pip)))
                (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
                (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
-               (compile (command) ((:input '("uv run --with=pandas==2.3.3 pytest --color=yes --last-failed --no-cov")
+               (compile (command) ((:input '("uv run --all-extras --all-groups --with=pandas==2.3.3 pytest --color=yes --last-failed --no-cov")
                                     :output 'success :occur 1))))
     (test-cockpit-test-project '("--last-failed" "use-uv" "--with=pandas==2.3.3"))))
 
@@ -172,9 +172,19 @@
   (mocker-let ((projectile-project-type () ((:output 'python-pip)))
                (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
                (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
-               (compile (command) ((:input '("uv run --python=3.14 --with=pandas==2.3.3 pytest --color=yes --last-failed --no-cov")
+               (compile (command) ((:input '("uv run --all-extras --all-groups --python=3.14 --with=pandas==2.3.3 pytest --color=yes --last-failed --no-cov")
                                     :output 'success :occur 1))))
     (test-cockpit-test-project '("--last-failed" "use-uv" "--python=3.14" "--with=pandas==2.3.3"))))
+
+(ert-deftest test-python-uv-prefixed-modified-switches ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let ((projectile-project-type () ((:output 'python-pip)))
+               (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
+               (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py")))
+               (compile (command) ((:input '("uv run --foo --bar pytest --color=yes --last-failed --no-cov")
+                                    :output 'success :occur 1))))
+    (let ((test-cockpit-python-uv-switches '("--foo" "--bar")))
+      (test-cockpit-test-project '("--last-failed" "use-uv")))))
 
 (ert-deftest test-python-insert-no-coverage-to-switches ()
   (dolist (struct '((("--last-failed") ("--last-failed" "--no-cov"))
