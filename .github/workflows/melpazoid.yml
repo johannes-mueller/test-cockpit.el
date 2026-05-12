@@ -12,7 +12,7 @@ on:
     paths-ignore:
       - '**.md'
     branches:
-      - main
+      - master
       - ci-debug
   schedule:
     - cron: "0 12 * * 0"
