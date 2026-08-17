@@ -66,6 +66,7 @@
 (test-cockpit-register-project-type-alias 'python-pkg 'python-pip)
 (test-cockpit-register-project-type-alias 'python-tox 'python-pip)
 (test-cockpit-register-project-type-alias 'python-toml 'python-pip)
+(test-cockpit-register-project-type-alias 'python-uv 'python-pip)
 
 
 (defun test-cockpit-python--test-project-command (_ args)
