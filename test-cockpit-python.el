@@ -143,6 +143,14 @@
   :choices '("debug" "info" "warn" "error")
   :description "log level")
 
+(transient-define-infix test-cockpit-python--choose-coverage-report ()
+  :class 'transient-switches
+  :key "-c"
+  :argument-format "--cov --cov-report=%s"
+  :argument-regexp "\\(--cov --cov-report=\\(term-missing\\|term\\|html\\)\\)"
+  :choices '("term-missing" "term" "html")
+  :description "log level")
+
 (transient-define-infix test-cockpit-python--choose-verbose-level ()
   :class 'transient-switches
   :key "-v"
@@ -189,7 +197,7 @@
    ["Output"
     (test-cockpit-python--choose-verbose-level)
     (test-cockpit-python--choose-loglevel)
-    ("-c" "print coverage report" "--cov --cov-report=term-missing")
+    (test-cockpit-python--choose-coverage-report)
     ("-r" "report output of passed tests" "-rFP")
     ("-w" "don't output warnings" "--disable-warnings")
     ("-n" "don't capture output" "--capture=no")

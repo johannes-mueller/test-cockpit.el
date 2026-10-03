@@ -494,7 +494,6 @@ async def test_first_outer():
       (should (equal (car (aref (aref infix 0) 8)) "-m"))
       (should (equal (aref (aref infix 0) 9) '("-M" "test type hints" "--mypy")))
       (should (equal (aref (aref infix 1) 0) "Output"))
-      (should (equal (aref (aref infix 1) 3) '("-c" "print coverage report" "--cov --cov-report=term-missing")))
       (should (equal (aref (aref infix 1) 4) '("-r" "report output of passed tests" "-rFP")))
       (should (equal (aref (aref infix 1) 5) '("-w" "don't output warnings" "--disable-warnings")))
       (should (equal (aref (aref infix 1) 6) '("-n" "don't capture output" "--capture=no")))
