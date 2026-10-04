@@ -1,0 +1,18 @@
+; -*- mode: emacs-lisp; lexical-binding: t -*-
+
+;; Autodetermined by `eldev init'.
+(eldev-use-package-archive 'melpa-unstable)
+;; GNU ELPA is not mirrored by MELPA, and the current `projectile' depends on
+;; `compat', which is bundled with Emacs 30+ but absent from Emacs 29.  Without
+;; this archive, dependency resolution fails on Emacs 29.
+(eldev-use-package-archive 'gnu)
+
+;; Several files at the top level carry valid package headers.  Without this,
+;; Eldev (and Emacs' `package-dir-info') picks one at random and we lose the
+;; Package-Requires of test-cockpit.el, i.e. no dependencies get installed.
+;; Emacs 30 sorts candidates by file name, Emacs 31 by file name length.
+(setq eldev-project-main-file "test-cockpit.el")
+
+(eldev-use-plugin 'autoloads)
+
+(eldev-add-extra-dependencies 'test 'mocker)
