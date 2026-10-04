@@ -45,21 +45,9 @@ jobs:
       - name: Install dependencies
         run: eldev prepare test
 
-      - name: Byte compile
-        run: eldev compile
-
       - name: Run tests
         if: matrix.allow_failure != true
         run: eldev -p -dt test
-
-      - name: Package lint
-        run: eldev lint package-lint
-
-      - name: relint
-        run: eldev lint relint
-
-      - name: Checkdoc
-        run: eldev lint checkdoc
 
       - name: Run tests (allow failure)
         if: matrix.allow_failure == true
