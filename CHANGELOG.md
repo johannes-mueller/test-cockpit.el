@@ -11,6 +11,7 @@ now done by other means. (Will be documented)
 
 ### New features
 
+* Add eldev test engine for elisp
 * Implement pytest cycling verbosity levels (#38)
 * Issue hint what test repeat is going to do (#40)
 * Support additional constant switches for test runs
@@ -19,6 +20,7 @@ now done by other means. (Will be documented)
 * Support to specify a specific version of a package, when uv is used
 * Support preselection of switches for test commands (#42)
 * Support for non persistent flags (#41)
+* More flexible switch for pytest coverage report
 
 ### Bug fixes
 
@@ -28,10 +30,10 @@ now done by other means. (Will be documented)
 ### Other changes
 
 * Make CI/CD fit for Emacs 31
-* Make codebase Emacs 31 compliatn
+* Make codebase Emacs 31 compliant
 * Refactor test suite
 * Refactor engine discovery
-
+* Change build and CI/CD system from Cask to Eldev
 
 ## Release 0.1.0
 
