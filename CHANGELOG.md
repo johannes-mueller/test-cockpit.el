@@ -2,14 +2,17 @@
 
 This documents the changes of every release starting of 0.1.0.
 
-## Unstable
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Breaking changes
+## [Unreleased]
+
+### Breaking
 
 All the `*-or-projectile-*` commands have been dropped. The functionality is
 now done by other means. (Will be documented)
 
-### New features
+### Added
 
 * Add eldev test engine for elisp
 * Implement pytest cycling verbosity levels (#38)
@@ -22,12 +25,11 @@ now done by other means. (Will be documented)
 * Support for non persistent flags (#41)
 * More flexible switch for pytest coverage report
 
-### Bug fixes
+### Fixed
 
 * Fix test-cockpit--repeat-interactive-test function name
 
-
-### Other changes
+### Changed
 
 * Make CI/CD fit for Emacs 31
 * Make codebase Emacs 31 compliant
@@ -35,6 +37,6 @@ now done by other means. (Will be documented)
 * Refactor engine discovery
 * Change build and CI/CD system from Cask to Eldev
 
-## Release 0.1.0
+## [0.1.0] – 2025-02-16
 
 Initial release
