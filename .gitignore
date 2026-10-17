@@ -2,3 +2,4 @@
 *~
 /.eldev/
 .cecli*
+*-autoloads.el
