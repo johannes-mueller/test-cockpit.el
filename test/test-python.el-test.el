@@ -41,7 +41,9 @@
        (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
        (buffer-file-name () ((:output "/home/user/project/tests/path/to/test_foo.py"))))
     (dolist (struct '((("--cov --cov-report=term-missing" "-mslow")
-                       "pytest --color=yes --cov --cov-report=term-missing -mslow")))
+                       "pytest --color=yes --cov --cov-report=term-missing -mslow")
+                      (("--cov --cov-report=term-missing" "-mnot (slow or fast)")
+                       "pytest --color=yes --cov --cov-report=term-missing -mnot\\ \\(slow\\ or\\ fast\\)")))
       (let ((arglist (pop struct))
             (expected (pop struct)))
         (mocker-let
@@ -498,3 +500,142 @@ async def test_first_outer():
       (should (equal (aref (aref infix 1) 5) '("-w" "don't output warnings" "--disable-warnings")))
       (should (equal (aref (aref infix 1) 6) '("-n" "don't capture output" "--capture=no")))
       (should (equal (aref (aref infix 1) 7) '("-L" "show locals in tracebacks" "--showlocals"))))))
+
+(ert-deftest test-python-parse-markers ()
+  (let ((output "
+registered markers:
+@pytest.mark.slow
+@pytest.mark.integration
+@pytest.mark.django_db
+
+@pytest.mark.skipif(condition)
+    skip the given test if condition is true.
+@pytest.mark.parametrize(argnames, argvalues)
+    Join a fixture with test parameters.
+
+no markers registered"))
+    (should (equal (test-cockpit-python--parse-markers output)
+                   '("slow" "integration" "django_db")))
+    (should (equal (test-cockpit-python--parse-markers "") nil))))
+
+(ert-deftest test-python-available-markers ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let ((test-cockpit--last-switches () ((:output nil :min-occur 0)))
+               (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
+               (shell-command-to-string (command) ((:input '("pytest --markers")
+                                                    :output "@pytest.mark.slow\n"))))
+    (should (equal (test-cockpit-python--available-markers) '("slow")))))
+
+(ert-deftest test-python-available-markers-fail ()
+  (setq test-cockpit--project-engines nil)
+  (mocker-let ((test-cockpit--last-switches () ((:output nil :min-occur 0)))
+               (projectile-project-root (&optional dir) ((:input-matcher (lambda (_dir) t) :output "foo-project")))
+               (shell-command-to-string (command) ((:input '("pytest --markers") :output ""))))
+    (should (eq (test-cockpit-python--available-markers) nil))))
+
+(ert-deftest test-python-uv-prefixed-marker-command ()
+  (mocker-let ((test-cockpit--last-switches () ((:output '("use-uv" "--python=3.14")))))
+    (should (equal (test-cockpit-python--markers-command)
+                   "uv run --all-extras --all-groups --python=3.14 pytest --markers"))))
+
+(ert-deftest test-python-marker-candidates ()
+  (should (equal (test-cockpit-python--marker-candidates '("slow" "fast"))
+                 '("and" "or" "not" "(" ")" "slow" "fast" "not slow" "not fast")))
+  (should (equal (test-cockpit-python--marker-candidates nil)
+                 '("and" "or" "not" "(" ")"))))
+
+(ert-deftest test-python-quote-marker-arg ()
+  (should (equal (test-cockpit-python--quote-marker-arg "-mslow") "-mslow"))
+  (should (equal (test-cockpit-python--quote-marker-arg "--last-failed") "--last-failed"))
+  (should (equal (test-cockpit-python--quote-marker-arg "-mnot (slow or fast)")
+                 "-mnot\\ \\(slow\\ or\\ fast\\)")))
+
+(ert-deftest test-python-marker-expression-error-valid ()
+  (dolist (expr '("" " " "slow" "not slow" "slow and fast" "slow and not fast"
+                  "slow or fast" "(slow or fast) and not flaky" "not (slow or fast)"
+                  "(slow)"))
+    (should (eq (test-cockpit-python--marker-expression-error expr) nil))))
+
+(ert-deftest test-python-marker-expression-error-invalid ()
+  (dolist (struct '(("slow and" "incomplete marker expression")
+                    ("and slow" "expected a marker term, got \"and\"")
+                    ("slow or" "incomplete marker expression")
+                    ("a b" "unexpected token \"b\"")
+                    ("not" "incomplete marker expression")
+                    ("()" "unmatched \"(\" at \"\"")
+                    ("(slow" "unmatched \"(\" at \"\"")
+                    ("slow)" "unexpected token \")\"")
+                    ("(a b)" "missing \")\" at \"b\"")))
+    (let ((expr (pop struct))
+          (expected (pop struct)))
+      (should (equal (test-cockpit-python--marker-expression-error expr) expected)))))
+
+(ert-deftest test-python-marker-read-reprompts-on-error ()
+  (mocker-let ((completing-read
+                (prompt table pred require-match initial-input history)
+                ((:input-matcher (lambda (_prompt _table _pred _req init _hist)
+                                   (equal init "slow or"))
+                 :output "(slow or fast")
+                 (:input-matcher (lambda (_prompt _table _pred _req init _hist)
+                                   (equal init "(slow or fast"))
+                 :output "not (slow or fast)"))))
+    (should (equal (test-cockpit-python--read-marker-expression
+                    "Marker expression" "slow or" nil)
+                   "not (slow or fast)"))))
+
+(ert-deftest test-python-marker-read-accepts-empty-input ()
+  (mocker-let ((completing-read
+                (prompt table pred require-match initial-input history)
+                ((:input-matcher (lambda (_prompt _table _pred _req init _hist)
+                                   (equal init "(a b)"))
+                 :output ""))))
+    (should (equal (test-cockpit-python--read-marker-expression
+                    "Marker expression" "(a b)" nil)
+                   ""))))
+
+(ert-deftest test-python-marker-read-new-input-works ()
+  (mocker-let ((completing-read
+                (prompt table pred require-match initial-input history)
+                ((:input-matcher (lambda (_prompt _table _pred _req init _hist)
+                                   (eq init nil))
+                 :output "slow"))))
+    (should (equal (test-cockpit-python--read-marker-expression "Marker expression" nil nil)
+                   "slow"))))
+
+(ert-deftest test-python-marker-completion-fn ()
+  (let* ((candidates '("and" "or" "not" "(" ")" "slow" "fast" "integration" "not slow" "not fast"))
+         (table (test-cockpit-python--marker-completion-table (lambda () candidates))))
+    (should (equal (funcall table "slow or in" nil nil) "slow or integration"))
+    (should (equal (funcall table "not (s" nil nil) "not (slow"))
+    (should (equal (funcall table "not sl" nil nil) "not slow"))
+    (should (equal (funcall table "slow " nil t) candidates))))
+
+(ert-deftest test-python-marker-completion-fn-lazy ()
+  (let* ((count 0)
+         (table (test-cockpit-python--marker-completion-table
+                 (test-cockpit-python--lazy
+                  (lambda () (setq count (1+ count)) '("and" "slow"))))))
+    (funcall table "slow " nil t)
+    (funcall table "slow " nil t)
+    (should (equal count 1))))
+
+(ert-deftest test-python-marker-highlighting ()
+  (with-temp-buffer
+    (insert "slow and")
+    (setq-local test-cockpit-python--marker-input-overlay nil)
+    (test-cockpit-python--highlight-marker-input (point-min) (point-max) 0)
+    (should test-cockpit-python--marker-input-overlay)
+    (should (eq (get-char-property (point-min) 'face)
+                'test-cockpit-python-invalid-marker))
+    (insert " fast")
+    (test-cockpit-python--highlight-marker-input (point-min) (point-max) 0)
+    (should (eq test-cockpit-python--marker-input-overlay nil))))
+
+(ert-deftest test-python-marker-highlight-no-double-outline ()
+  (with-temp-buffer
+    (insert "(slow")
+    (setq-local test-cockpit-python--marker-input-overlay nil)
+    (test-cockpit-python--highlight-marker-input (point-min) (point-max) 0)
+    (let ((first-overlay test-cockpit-python--marker-input-overlay))
+      (test-cockpit-python--highlight-marker-input (point-min) (point-max) 0)
+      (should (eq test-cockpit-python--marker-input-overlay first-overlay)))))
